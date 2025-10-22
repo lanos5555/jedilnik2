@@ -1,193 +1,52 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jedilni list - Femec, Gastro House in Vinka</title>
-  <link rel="preconnect" href="https://api.allorigins.win">
-  <link rel="preconnect" href="http://www.femec.si">
-  <link rel="preconnect" href="https://www.gastrohouse.si">
-  <link rel="preconnect" href="https://www.vinka.si">
 
+  <!-- Preconnects2 -->
+  <link rel="preconnect" href="https://api.allorigins.win"/>
+  <link rel="preconnect" href="http://www.femec.si"/>
+  <link rel="preconnect" href="https://www.gastrohouse.si"/>
+  <link rel="preconnect" href="https://www.vinka.si"/>
+
+  <!-- CRITICAL CSS (first paint) -->
   <style id="critical-css">
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      text-align: center;
-      background-color: #f4f7f6;
-      margin: 0;
-      padding: 20px 10px;
-      color: #333;
-      overflow-x: hidden; /* Prepreči horizontalno drsenje */
-    }
-    h1 {
-      margin: 20px 0 30px 0;
-      color: #2c3e50;
-      font-weight: 600;
-      font-size: 2rem;
-    }
-    #restaurant-switcher {
-      margin: 20px auto;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      max-width: 600px;
-    }
-    .daysbutton {
-      display: inline-block;
-      margin: 5px;
-      padding: 12px 20px;
-      background: #5dade2;
-      color: white;
-      cursor: pointer;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem; /* Uporaba rem za skalabilnost */
-      font-weight: 500;
-      transition: background 0.2s ease, transform 0.2s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .daysbutton:hover {
-      background: #3498db;
-      transform: translateY(-2px);
-    }
-    .daysbutton.active {
-      background: #2ecc71 !important;
-      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
-    }
-    #refresh-button {
-      background: #A8E6CF;
-      color: #2c3e50;
-    }
-    #refresh-button:hover {
-      background: #81D4A3;
-    }
-    #days {
-        margin: 20px auto;
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        flex-wrap: wrap;
-        max-width: 700px;
-    }
-    .menu {
-      margin-top: 20px;
-      padding: 20px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-      display: none;
-      text-align: left;
-      min-height: 200px;
-    }
-    /* Osnovni stili za loader, ki morajo biti na voljo takoj */
-    .loader-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 15px;
-      margin: 30px auto;
-      padding: 20px;
-      min-height: 150px;
-    }
-    .loader-text {
-      font-size: 1.1rem;
-      color: #555;
-      font-weight: 500;
-    }
-    .loader-icon-wrapper {
-      font-size: 2.5rem;
-      display: inline-block;
-      animation: pulseEmoji 1.5s ease-in-out infinite;
-    }
-    @keyframes pulseEmoji {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-    }
-    /* Osnovni stili za skeleton, ki morajo biti na voljo takoj */
-    .skeleton-dish {
-      background-color: #e0e0e0;
-      background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%);
-      background-size: 200% 100%;
-      background-repeat: no-repeat;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-      height: 80px;
-      animation: shimmerSkeleton 1.8s infinite linear;
-    }
-    .skeleton-dish .skeleton-line {
-        background: #c7c7c7; /* Ta barva bo prekrita s shimmerjem */
-        height: 16px;
-        margin-bottom: 10px;
-        border-radius: 4px;
-    }
-    .skeleton-dish .skeleton-line.short { width: 60%; }
-    @keyframes shimmerSkeleton {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    :root { --brand:#5dade2; --ok:#2ecc71; --ink:#2c3e50; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background:#f4f7f6; margin:0; padding:20px 10px; color:#333; overflow-x:hidden; }
+    h1 { margin:20px 0 30px; color:var(--ink); font-weight:600; font-size:2rem; }
+    #restaurant-switcher { margin: 20px auto; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; max-width: 680px; }
+    .daysbutton{ display:inline-block; margin:5px; padding:12px 20px; background:var(--brand); color:#fff; cursor:pointer; border:none; border-radius:8px; font-size:1rem; font-weight:500; transition:background .15s ease, transform .15s ease; box-shadow:0 2px 4px rgba(0,0,0,.08) }
+    .daysbutton:hover{ background:#3498db; transform:translateY(-1px) }
+    .daysbutton.active{ background:var(--ok)!important; box-shadow:0 4px 10px rgba(46,204,113,.28) }
+    #refresh-button{ background:#A8E6CF; color:var(--ink) }
+    #refresh-button:hover{ background:#81D4A3 }
+    #days{ margin:20px auto; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; max-width:760px }
+    .menu{ margin:20px auto 0; padding:20px; background:#fff; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,.08); width:92%; max-width:760px; display:none; text-align:left; min-height:200px }
+
+    /* Loader + skeleton */
+    .loader-container{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; margin:10px auto 18px; padding:10px; min-height:120px }
+    .loader-text{ font-size:1rem; color:#555; font-weight:500 }
+    .loader-icon-wrapper{ font-size:2.2rem; display:inline-block; animation:pulseEmoji 1.4s ease-in-out infinite }
+    @keyframes pulseEmoji{ 0%,100%{ transform:scale(1)} 50%{ transform:scale(1.15)} }
+    .skeleton-dish{ background:#e9ecef; background-image:linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.45) 50%, rgba(255,255,255,0) 100%); background-size:200% 100%; border-radius:8px; padding:14px; margin-bottom:12px; height:72px; animation:shimmer 1.5s infinite linear }
+    .skeleton-dish .skeleton-line{ background:#cfd4da; height:14px; margin-bottom:8px; border-radius:4px }
+    .skeleton-dish .skeleton-line.short{ width:60% }
+    @keyframes shimmer{ 0%{ background-position:200% 0 } 100%{ background-position:-200% 0 } }
   </style>
 
+  <!-- NON-CRITICAL CSS (lazy) -->
   <style>
-    /* Ti stili se lahko naložijo kasneje, ker niso kritični za prvi prikaz */
-    .day-heading {
-      background-color: #5dade2;
-      color: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 25px;
-      text-align: center;
-    }
-    .day-heading h2 {
-      margin: 0;
-      font-size: 1.3rem;
-      font-weight: 600;
-    }
-    .dish {
-      background: #ecf0f1;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .dish:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-    .dish h4 {
-      font-size: 1.1rem;
-      margin: 0 0 8px 0;
-      display: flex;
-      align-items: center;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-    .dish h4 span.emoji-icon {
-      font-size: 1.3rem;
-      margin-right: 10px;
-      min-width: 28px; /* Zagotovi prostor za emoji */
-      display: inline-block;
-      text-align: center;
-    }
-    .dish p {
-      margin: 5px 0 0 0;
-      font-size: 0.95rem;
-      color: #555;
-      line-height: 1.6;
-      white-space: pre-line; /* Pomembno za Vinko meni */
-    }
-    .side-dish {
-        padding-left: 20px;
-        font-style: italic;
-        color: #777;
-    }
+    .day-heading{ background:var(--brand); color:#fff; padding:14px; border-radius:8px; margin-bottom:18px; text-align:center }
+    .day-heading h2{ margin:0; font-size:1.2rem; font-weight:600 }
+    .dish{ background:#ecf0f1; border-radius:8px; padding:14px; margin-bottom:12px; box-shadow:0 2px 5px rgba(0,0,0,.05); transition:transform .15s ease, box-shadow .15s ease }
+    .dish:hover{ transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,.1) }
+    .dish h4{ font-size:1.05rem; margin:0 0 6px; display:flex; align-items:center; font-weight:600; color:var(--ink) }
+    .dish h4 span.emoji-icon{ font-size:1.25rem; margin-right:10px; min-width:28px; display:inline-block; text-align:center }
+    .dish p{ margin:4px 0 0; font-size:.95rem; color:#555; line-height:1.55; white-space:pre-line }
+    .side-dish{ padding-left:20px; font-style:italic; color:#777 }
   </style>
 </head>
 <body>
@@ -201,615 +60,355 @@
   </div>
 
   <div id="days"></div>
-  <div id="menu" class="menu">
-    </div>
+  <div id="menu" class="menu"></div>
 
-  <script>
-    // --- KONSTANTE IN GLOBALNE SPREMENLJIVKE ---
-    const PROXY_URL = "https://api.allorigins.win/raw?url=";
-    const FEMEC_URL = "http://www.femec.si/";
-    const GASTRO_URL = "https://www.gastrohouse.si/index.php/tedenska-ponudba";
-    const VINKA_URL = "https://www.vinka.si/malice-in-kosila.html";
+  <script defer>
+  // ====== PERFORMANCE FOCUS: instant cached render + SWR revalidate, parsed-data cache, timeouts, and lighter DOM work ======
+  const PROXY = "https://api.allorigins.win/raw?url=";
+  const FEMEC_URL = "http://www.femec.si/";
+  const GASTRO_URL = "https://www.gastrohouse.si/index.php/tedenska-ponudba";
+  const VINKA_URL = "https://www.vinka.si/malice-in-kosila.html";
 
-    let globalFemecHtml = null;
-    let globalGastroHtml = null;
-    let globalVinkaHtml = null;
-    let currentRestaurant = "femec";
-    let currentActiveDay = null;
+  const TTL_MS = 15 * 60 * 1000; // 15 min logical freshness
+  const FETCH_TIMEOUT_MS = 6500;  // abort slow requests
+  const RETRIES = 1;              // one retry after timeout
 
-    const daysSlo = {
-      "ponedeljek": "Ponedeljek",
-      "torek": "Torek",
-      "sreda": "Sreda",
-      "cetrtek": "Četrtek",
-      "petek": "Petek"
-    };
-    let dayButtons = {};
+  const daysSlo = { ponedeljek:"Ponedeljek", torek:"Torek", sreda:"Sreda", cetrtek:"Četrtek", petek:"Petek" };
+  let currentRestaurant = "femec";
+  let currentActiveDay = null;
 
-    let loaderInterval = null;
-    const loaderIcons = ["🍕", "🍔", "🍣", "🍜", "🍝", "🥗", "🍦", "🌮", "🍩", "🍰", "🍿", "🥪", "🍤", "🍖", "🍗"];
-    let currentLoaderIconIndex = 0;
-    let isRefreshing = false;
+  // in-memory parsed caches to avoid repeated DOM parsing
+  let femecParsed = null; // { dayKey -> [{name, sides, type}] }
+  let gastroParsed = null; // { tabs: [name], dishesByTabIndex: {i: [{name, sides}]} }
+  let vinkaParsed = null; // HTML string already formatted
 
-    // --- POMOŽNE FUNKCIJE ---
+  // Loader state
+  let loaderInterval = null, currentLoaderIconIndex = 0;
+  const loaderIcons = ["🍕","🍔","🍣","🍜","🍝","🥗","🍦","🌮","🍩","🍰","🍿","🥪","🍤","🍖","🍗"]; 
 
-    // Funkcija za določanje emodžija glede na ime jedi
-    function getEmojiForDish(dishName) {
-        const nameLower = dishName.toLowerCase();
-        // Ključne besede in ustrezni emodžiji
-        // Razvrščeno po specifičnosti (bolj specifične besede najprej), da se prepreči napačno ujemanje
-         const emojiMap = [
-            { key: "tortilija", emoji: "🌯" }, { key: "tortilja", emoji: "🌯" },
-            { key: "lignji", emoji: "🦑" }, { key: "lignje", emoji: "🦑" },
-            { key: "pizza", emoji: "🍕" }, { key: "pica", emoji: "🍕" },
-            { key: "burger", emoji: "🍔" },
-            { key: "sendvič", emoji: "🥪" },
-            { key: "lazanja", emoji: "🍝" },
-            { key: "špageti", emoji: "🍝" }, { key: "makaroni", emoji: "🍝" }, { key: "tortelini", emoji: "🍝" }, { key: "testenine", emoji: "🍝" },
-            { key: "njoki", emoji: "🥔" },
-            { key: "rižota", emoji: "🍚" }, { key: "riž", emoji: "🍚" },
-            { key: "solatni krožnik", emoji: "🥗" }, { key: "solatni bar", emoji: "🥗" }, { key: "solata", emoji: "🥗" }, { key: "solato", emoji: "🥗" },
-            { key: "piščančji file", emoji: "🍗" }, { key: "piščanec", emoji: "🍗" }, { key: "piščančja", emoji: "🍗" }, { key: "puran", emoji: "🍗" },
-            { key: "dunajski zrezek", emoji: "🥩" }, { key: "dunajski", emoji: "🥩" },
-            { key: "goveji file", emoji: "🥩" }, { key: "goveja", emoji: "🐄" }, { key: "govedina", emoji: "🐄" }, { key: "biftek", "emoji": "🥩" },
-            { key: "svinjska pečenka", emoji: "🍖" }, { key: "svinjski", emoji: "🐖" }, { key: "svinjska", emoji: "🐖" }, { key: "pečenka", emoji: "🍖" }, { key: "zrezek", emoji: "🥩" }, { key: "kotlet", emoji: "🥩" }, { key: "krača", emoji: "🍖" },
-            { key: "čevapčiči", emoji: "🥩" }, { key: "pleskavica", emoji: "🥩" }, { key: "ražnjiči", emoji: "🍢" },
-            { key: "golaž", emoji: "🍲" }, { key: "obara", emoji: "🍲" }, { key: "enolončnica", emoji: "🍲" }, { key: "pasulj", emoji: "🍲" },
-            { key: "juha", emoji: "🥣" }, { key: "juho", emoji: "🥣" },
-            { key: "jetrca", emoji: "🍳" },
-            { key: "klobasa", emoji: "🌭" }, { key: "hrenovka", emoji: "🌭" },
-            { key: "jajc", emoji: "🥚" }, { key: "omleta", emoji: "🍳" }, { key: "fritata", emoji: "🍳" },
-            { key: "ocvrt sir", emoji: "🧀" }, { key: "sir", emoji: "🧀" }, { key: "mozzarella", emoji: "🧀" },
-            { key: "ocvrt", emoji: "🍳" },
-            { key: "pečen", emoji: "🍖" },
-			{ key: "POSTRV NA ŽARU, MASLEN KROMPIR Z DROBNJAKOM", emoji: "🐟" },
-            { key: "na žaru", emoji: "🔥" },
-            { key: "morski sadeži", emoji: "🦞" }, // Specifično za "sadeže", pred splošnim "morski"
-            { key: "škampi", emoji: "🦐"},
-            { key: "losos", emoji: "🐟" }, { key: "oslič", emoji: "🐟" }, { key: "postrv", emoji: "🐟" }, { key: "sardele", emoji: "🐟" }, { key: "skuša", emoji: "🐟" }, { key: "brancin", emoji: "🐟" }, { key: "orada", emoji: "🐟" }, { key: "bakalar", emoji: "🐟" }, { key: "file ribe", emoji: "🐟" }, { key: "riba", emoji: "🐟" }, // Specifične ribe in splošno "riba"
-            { key: "morska", emoji: "🐟" }, { key: "morski", emoji: "🐟" }, // Splošno "morski" kot riba, če ni bila prej ujeta bolj specifična morska jed
-            { key: "krompir", emoji: "🥔" }, { key: "pire", emoji: "🥔" },
-            { key: "zelenjavna", emoji: "🥕" }, { key: "zelenjavo", emoji: "🥕" }, { key: "zelenjava", emoji: "🥕" }, { key: "bučke", emoji: "🥒" }, { key: "paprika", emoji: "🌶️" }, { key: "paradižnik", emoji: "🍅" },
-            { key: "brokoli", emoji: "🥦" }, { key: "cvetača", emoji: "🥦" },
-            { key: "grah", emoji: "🫛" }, { key: "fižol", emoji: "🫘" }, { key: "leča", emoji: "🥣" },
-            { key: "sladica", emoji: "🍰" }, { key: "torta", emoji: "🍰" }, { key: "palačinke", emoji: "🥞" }, { key: "zavitek", emoji: "🥧" }, { key: "štrudelj", emoji: "🥧" }, { key: "sadje", emoji: "🍓" }, { key: "jogurt", emoji: "🍦" }, { key: "krema", emoji: "🍮" }
-        ];
+  // ============ Utils ============
+  const q = (sel, root=document) => root.querySelector(sel);
+  const qa = (sel, root=document) => [...root.querySelectorAll(sel)];
 
-        for (const item of emojiMap) { // Uporaba for...of za ohranitev vrstnega reda (če je emojiMap array)
-            if (nameLower.includes(item.key)) {
-                return item.emoji;
-            }
-        }
-        return "🍴"; // Privzeti emoji, če ni ujemanja
+  function makeKey(key){ return `menus:${key}` }
+  function now(){ return Date.now() }
+
+  function getCache(key){
+    try{ const s = localStorage.getItem(makeKey(key)); if(!s) return null; const v = JSON.parse(s); return v; }catch{ return null }
+  }
+  function setCache(key, value){
+    try{ localStorage.setItem(makeKey(key), JSON.stringify(value)) }catch{}
+  }
+  function setParsedCache(key, value){
+    try{ sessionStorage.setItem(makeKey("parsed:"+key), JSON.stringify(value)) }catch{}
+  }
+  function getParsedCache(key){
+    try{ const s = sessionStorage.getItem(makeKey("parsed:"+key)); return s? JSON.parse(s): null }catch{ return null }
+  }
+
+  function withTimeout(promise, ms){
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), ms);
+    return Promise.race([
+      fetch(promise, { signal: ctrl.signal }),
+      new Promise((_,rej)=>ctrl.signal.addEventListener('abort', ()=>rej(new Error('timeout'))))
+    ]).finally(()=>clearTimeout(t));
+  }
+
+  function proxied(url, bust=false){
+    const u = new URL(url);
+    if(bust){ u.searchParams.set('_', String(Date.now())); }
+    return PROXY + encodeURIComponent(u.toString());
+  }
+
+  // Stale-While-Revalidate fetch: show cached instantly; revalidate in background and update if content changed.
+  async function fetchSWR(urlKey, url, {ttl=TTL_MS, bustOnRevalidate=false}={}){
+    const cached = getCache(urlKey);
+    let html = cached?.html || null;
+    let isFresh = cached && (now() - cached.timestamp < ttl);
+
+    // 1) immediate return of cached content to render instantly
+    if(html){
+      // trigger background revalidate only if stale
+      if(!isFresh) revalidate();
+      return { html, fromCache: true };
+    }
+    // 2) no cache – do network fetch fast path
+    try{
+      const resp = await fetch(proxied(url, false), { cache: 'no-store' });
+      if(!resp.ok) throw new Error('network');
+      html = await resp.text();
+      setCache(urlKey, { html, timestamp: now() });
+      // background revalidate shortly (to beat proxy stale cases) but don't block paint
+      setTimeout(()=>revalidate(), 0);
+      return { html, fromCache: false };
+    }catch(e){
+      // last resort – return what we have (null) and let caller handle
+      return { html: null, fromCache: false };
     }
 
-
-    // Pridobivanje HTML z predpomnjenjem
-    function fetchHTMLWithCache(url, cacheKey, ttl = 15 * 60 * 1000, retries = 2) {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (new Date().getTime() - parsed.timestamp < ttl) {
-            console.log(`Uporabljam predpomnilnik za ${cacheKey}`);
-            return Promise.resolve(parsed.html);
+    async function revalidate(){
+      let attempt = 0; let ok=false;
+      while(attempt<=RETRIES && !ok){
+        try{
+          const resp = await fetch(proxied(url, bustOnRevalidate || attempt>0), { cache:'no-store' });
+          if(!resp.ok) throw new Error('network');
+          const fresh = await resp.text();
+          if(!cached || fresh !== cached.html){
+            setCache(urlKey, { html: fresh, timestamp: now() });
+            onRevalidated(urlKey, fresh); // live update if viewing this restaurant
+          }else{
+            setCache(urlKey, { html: cached.html, timestamp: now() }); // refresh timestamp
           }
-        } catch (e) {
-          console.warn("Predpomnilnik je poškodovan za " + cacheKey + ", brišem.");
-          localStorage.removeItem(cacheKey);
-        }
-      }
-      const fetchUrl = url + (url.includes('?') ? '&_=' : '?_=') + new Date().getTime();
-      console.log(`Nalagam sveže podatke za ${cacheKey} iz ${fetchUrl}`);
-      return fetch(PROXY_URL + encodeURIComponent(fetchUrl), { cache: "no-store" })
-        .then(response => {
-          if (!response.ok) throw new Error(`Network error: ${response.status} for ${url}`);
-          return response.text();
-        })
-        .catch(error => {
-          console.error(`Poskus nalaganja (ostalo ${retries} poskusov) za ${cacheKey} ni uspel:`, error.message);
-          if (retries > 0) {
-            return new Promise(resolve => setTimeout(resolve, 1000)).then(() =>
-                fetchHTMLWithCache(url, cacheKey, ttl, retries - 1)
-            );
-          }
-          throw error;
-        })
-        .then(html => {
-          localStorage.setItem(cacheKey, JSON.stringify({ html: html, timestamp: new Date().getTime() }));
-          return html;
-        });
-    }
-
-    // Prikaz nalagalnika
-    function showLoader(message = "Nalaganje jedilnika...", showSkeleton = false) {
-      const menuDiv = document.getElementById("menu");
-      clearLoaderInterval();
-
-      let skeletonHTML = '';
-      if (showSkeleton) {
-        for (let i = 0; i < 3; i++) {
-            skeletonHTML += `<div class="skeleton-dish">
-                               <div class="skeleton-line"></div>
-                               <div class="skeleton-line short"></div>
-                             </div>`;
-        }
-      }
-
-      menuDiv.innerHTML = `
-        <div class="loader-container">
-          <span class="loader-text">${message}</span>
-          <div class="loader-icon-wrapper">
-            <span id="loader-icon-animated">${loaderIcons[currentLoaderIconIndex]}</span>
-          </div>
-        </div>
-        ${skeletonHTML} 
-      `;
-      menuDiv.style.display = "block";
-
-      const iconElement = document.getElementById("loader-icon-animated");
-      if (iconElement) {
-        loaderInterval = setInterval(() => {
-          currentLoaderIconIndex = (currentLoaderIconIndex + 1) % loaderIcons.length;
-          iconElement.textContent = loaderIcons[currentLoaderIconIndex];
-        }, 800);
+          ok=true;
+        }catch{ attempt++; }
       }
     }
+  }
 
-    function clearLoaderInterval() {
-      if (loaderInterval) {
-        clearInterval(loaderInterval);
-        loaderInterval = null;
+  // Live update after revalidate if user is on that view
+  function onRevalidated(key, freshHtml){
+    if(currentRestaurant==='femec' && key==='femec'){
+      femecParsed = parseFemec(freshHtml); setParsedCache('femec', femecParsed);
+      if(currentActiveDay) renderFemec(currentActiveDay);
+    }else if(currentRestaurant==='gastro' && key==='gastro'){
+      gastroParsed = parseGastro(freshHtml); setParsedCache('gastro', gastroParsed);
+      renderGastro(0);
+    }else if(currentRestaurant==='vinka' && key==='vinka'){
+      vinkaParsed = parseVinka(freshHtml); setParsedCache('vinka', vinkaParsed);
+      renderVinka();
+    }
+  }
+
+  // ======= UI helpers =======
+  function showLoader(message="Nalaganje jedilnika...", showSkeleton=false){
+    clearInterval(loaderInterval); const menuDiv = q('#menu');
+    let skeleton=""; if(showSkeleton){ for(let i=0;i<3;i++){ skeleton += `<div class="skeleton-dish"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>`; } }
+    menuDiv.innerHTML = `<div class="loader-container"><span class="loader-text">${message}</span><div class="loader-icon-wrapper"><span id="loader-icon-animated">${loaderIcons[currentLoaderIconIndex]}</span></div></div>${skeleton}`;
+    menuDiv.style.display='block';
+    const icon = q('#loader-icon-animated');
+    if(icon){ loaderInterval = setInterval(()=>{ currentLoaderIconIndex=(currentLoaderIconIndex+1)%loaderIcons.length; icon.textContent=loaderIcons[currentLoaderIconIndex]; }, 900); }
+  }
+
+  function renderHeading(txt){ return `<div class="day-heading"><h2>${txt}</h2></div>` }
+  function clearLoader(){ if(loaderInterval){ clearInterval(loaderInterval); loaderInterval=null; } }
+
+  function getFormattedDateForWeekday(dayKey){
+    if(!dayKey) return ""; const map={ ponedeljek:1, torek:2, sreda:3, cetrtek:4, petek:5 };
+    const idx = map[dayKey]; if(idx===undefined) return "";
+    const d = new Date(); let wd=d.getDay(); if(wd===0) wd=7; const monday=new Date(d); monday.setDate(d.getDate()-(wd-1));
+    const target=new Date(monday); target.setDate(monday.getDate()+(idx-1));
+    let s = target.toLocaleDateString('sl-SI', { day:'numeric', month:'long' });
+    return s.replace(/(\d+\. )([a-zčšžđ])/,(m,p1,p2)=>p1+p2.toUpperCase());
+  }
+
+  function emojiFor(dish){
+    const nameLower = dish.toLowerCase();
+    const map=[
+      {k:"tortilija",e:"🌯"},{k:"tortilja",e:"🌯"},
+      {k:"lignji",e:"🦑"},{k:"lignje",e:"🦑"},
+      {k:"pizza",e:"🍕"},{k:"pica",e:"🍕"},
+      {k:"burger",e:"🍔"},{k:"sendvič",e:"🥪"},
+      {k:"lazanja",e:"🍝"},{k:"špageti",e:"🍝"},{k:"makaroni",e:"🍝"},{k:"tortelini",e:"🍝"},{k:"testenine",e:"🍝"},
+      {k:"njoki",e:"🥔"},
+      {k:"rižota",e:"🍚"},{k:"riž",e:"🍚"},
+      {k:"solatni krožnik",e:"🥗"},{k:"solatni bar",e:"🥗"},{k:"solata",e:"🥗"},{k:"solato",e:"🥗"},
+      {k:"piščan",e:"🍗"},{k:"puran",e:"🍗"},
+      {k:"dunajski",e:"🥩"},{k:"biftek",e:"🥩"},
+      {k:"gove",e:"🐄"},
+      {k:"svinjs",e:"🐖"},{k:"pečenka",e:"🍖"},{k:"zrezek",e:"🥩"},{k:"kotlet",e:"🥩"},{k:"krača",e:"🍖"},
+      {k:"čevap",e:"🥩"},{k:"pleskav",e:"🥩"},{k:"ražnji",e:"🍢"},
+      {k:"golaž",e:"🍲"},{k:"obara",e:"🍲"},{k:"enolonč",e:"🍲"},{k:"pasulj",e:"🍲"},
+      {k:"juha",e:"🥣"},{k:"jetrca",e:"🍳"},
+      {k:"klobasa",e:"🌭"},{k:"hrenovka",e:"🌭"},
+      {k:"jajc",e:"🥚"},{k:"omleta",e:"🍳"},{k:"fritata",e:"🍳"},{k:"ocvrt",e:"🍳"},
+      {k:"sir",e:"🧀"},{k:"mozzarella",e:"🧀"},
+      {k:"pečen",e:"🍖"},{k:"na žaru",e:"🔥"},
+      {k:"morski sadeži",e:"🦞"},{k:"škampi",e:"🦐"},
+      {k:"losos",e:"🐟"},{k:"oslič",e:"🐟"},{k:"postrv",e:"🐟"},{k:"sardel",e:"🐟"},{k:"skuša",e:"🐟"},{k:"brancin",e:"🐟"},{k:"orada",e:"🐟"},{k:"bakalar",e:"🐟"},{k:"riba",e:"🐟"},
+      {k:"krompir",e:"🥔"},{k:"pire",e:"🥔"},
+      {k:"zelenjav",e:"🥕"},{k:"bučke",e:"🥒"},{k:"paprika",e:"🌶️"},{k:"paradižnik",e:"🍅"},
+      {k:"brokoli",e:"🥦"},{k:"cvetača",e:"🥦"},
+      {k:"grah",e:"🫛"},{k:"fižol",e:"🫘"},{k:"leča",e:"🥣"},
+      {k:"sladica",e:"🍰"},{k:"torta",e:"🍰"},{k:"palačinke",e:"🥞"},{k:"zavitek",e:"🥧"},{k:"štrudelj",e:"🥧"},{k:"sadje",e:"🍓"},{k:"jogurt",e:"🍦"},{k:"krema",e:"🍮"}
+    ];
+    for(const it of map){ if(nameLower.includes(it.k)) return it.e; } return "🍴";
+  }
+
+  // ======= Parsing (done once per source, then reused) =======
+  function parseFemec(html){
+    const out={}; const doc=new DOMParser().parseFromString(html,'text/html');
+    for(const key of Object.keys(daysSlo)){
+      const sec = doc.getElementById(key); if(!sec){ continue }
+      const items = qa('.menucontent p', sec); const dishes=[];
+      let current=null; let weekly=false;
+      for(const el of items){ const t=el.textContent.trim(); if(!t) continue;
+        const low=t.toLowerCase();
+        if(low.includes('tedensk ponudba')){ if(current) dishes.push(current); dishes.push({name:'TEDENSKA PONUDBA', type:'special_header', sides:[]}); current=null; weekly=true; continue; }
+        if(low.includes('samopostrežni solatni bar')){ if(current && !weekly){ current.sides.push(t); } else { if(current) dishes.push(current); dishes.push({name:t, type:'normal', sides:[]}); current=null; } continue; }
+        if(current) dishes.push(current); current={name:t, type:'normal', sides:[]};
       }
+      if(current) dishes.push(current); out[key]=dishes;
     }
+    return out; // { dayKey: [dish] }
+  }
 
-    function renderDayHeading(headingText) {
-      return `<div class="day-heading"><h2>${headingText}</h2></div>`;
-    }
-
-    function getFormattedDateForWeekday(dayKey) {
-      if (!dayKey) return "";
-      const mapping = { "ponedeljek": 1, "torek": 2, "sreda": 3, "cetrtek": 4, "petek": 5 };
-      let targetIndex = mapping[dayKey];
-      if (targetIndex === undefined) return "";
-
-      let now = new Date();
-      let currentDayOfWeek = now.getDay();
-      if (currentDayOfWeek === 0) currentDayOfWeek = 7;
-
-      let monday = new Date(now);
-      monday.setDate(now.getDate() - (currentDayOfWeek - 1));
-
-      let targetDate = new Date(monday);
-      targetDate.setDate(monday.getDate() + (targetIndex - 1));
-
-      let formatted = targetDate.toLocaleDateString('sl-SI', { day: 'numeric', month: 'long' });
-      return formatted.replace(/(\d+\. )([a-zčšžđ])/, (match, p1, p2) => p1 + p2.toUpperCase());
-    }
-
-    // --- FUNKCIJE ZA POSAMEZNE RESTAVRACIJE ---
-
-    // FEMEC
-    function displayFemecMenu(day, htmlData) {
-      clearLoaderInterval();
-      let parser = new DOMParser();
-      let doc = parser.parseFromString(htmlData, "text/html");
-      let menuSection = doc.getElementById(day);
-      let dayNameDisplay = daysSlo[day] || day;
-      let heading = `Femec - ${dayNameDisplay}, ${getFormattedDateForWeekday(day)} (11:00 - 14:00)`;
-
-      if (menuSection) {
-        let dishes = [];
-        let items = [...menuSection.querySelectorAll(".menucontent p")];
-        let currentDish = null;
-        let isWeeklySpecialSection = false;
-
-        items.forEach(el => {
-          let text = el.textContent.trim();
-          if (text.length === 0) return;
-
-          if (text.toLowerCase().includes("tedensk ponudba")) {
-            if (currentDish) dishes.push(currentDish);
-            dishes.push({ name: "TEDENSKA PONUDBA", type: "special_header", sides: [] });
-            currentDish = null;
-            isWeeklySpecialSection = true;
-          } else if (text.toLowerCase().includes("samopostrežni solatni bar")) {
-            if (currentDish && !isWeeklySpecialSection) {
-                currentDish.sides.push(text);
-            } else {
-                if (currentDish) dishes.push(currentDish);
-                dishes.push({ name: text, type: "normal", sides: [] }); // Tudi solatni bar lahko dobi svojo ikono
-                currentDish = null;
-            }
-          } else {
-            if (currentDish) dishes.push(currentDish);
-            currentDish = { name: text, type: "normal", sides: [] };
-          }
-        });
-        if (currentDish) dishes.push(currentDish);
-
-        let menuHTML = dishes.map(dish => {
-            const emoji = dish.type === "special_header" ? "" : getEmojiForDish(dish.name);
-            if (dish.type === "special_header") {
-                return `<div class="dish"><h4>${dish.name}</h4></div>`; // Brez ikone za glavo sekcije
-            }
-            return `
-            <div class="dish">
-              <h4><span class="emoji-icon">${emoji}</span> ${dish.name}</h4>
-              ${dish.sides.map(side => `<p class="side-dish">${side}</p>`).join("")}
-            </div>`;
-        }).join("");
-
-        document.getElementById("menu").innerHTML = renderDayHeading(heading) + menuHTML;
-      } else {
-        document.getElementById("menu").innerHTML = renderDayHeading(heading) + "<p>Meni za ta dan ni na voljo ali pa je prišlo do napake pri razčlenjevanju.</p>";
-      }
-      document.getElementById("menu").style.display = "block";
-    }
-
-    function fetchFemecForDay(dayKey) {
-      showLoader(`Nalagam meni za Femec (${daysSlo[dayKey] || dayKey})...`, true);
-      return fetchHTMLWithCache(FEMEC_URL, 'femecMenu')
-        .then(html => {
-          globalFemecHtml = html;
-          currentActiveDay = dayKey;
-          displayFemecMenu(dayKey, html);
-        })
-        .catch(error => {
-          console.error("Napaka pri nalaganju Femec menija:", error);
-          document.getElementById("menu").innerHTML = `<p>Napaka pri nalaganju jedilnika za Femec. Poskusite osvežiti stran.</p>`;
-          clearLoaderInterval();
-          throw error;
-        });
-    }
-
-    function initializeFemecDaysUI() {
-      const daysContainer = document.getElementById("days");
-      daysContainer.innerHTML = "";
-      dayButtons = {};
-      Object.keys(daysSlo).forEach(dayKey => {
-        let button = document.createElement("div");
-        button.classList.add("daysbutton");
-        button.innerText = daysSlo[dayKey];
-        button.onclick = () => {
-          document.querySelectorAll("#days .daysbutton.active").forEach(btn => btn.classList.remove("active"));
-          button.classList.add("active");
-          currentActiveDay = dayKey;
-          if (globalFemecHtml) {
-            displayFemecMenu(dayKey, globalFemecHtml);
-          } else {
-            fetchFemecForDay(dayKey).catch(() => {});
-          }
-        };
-        daysContainer.appendChild(button);
-        dayButtons[dayKey] = button;
-      });
-    }
-
-    // GASTRO HOUSE
-    function displayGastroMenu(htmlData, dayTabIndex) {
-      clearLoaderInterval();
-      let parser = new DOMParser();
-      let doc = parser.parseFromString(htmlData, "text/html");
-      let panels = doc.querySelectorAll('.sprocket-tabs-panel');
-      let navItems = doc.querySelectorAll('.sprocket-tabs-nav li');
-
-      let dayNameFromTab = "Današnji meni";
-      if (navItems && navItems.length > dayTabIndex) {
-          dayNameFromTab = navItems[dayTabIndex].textContent.trim();
-      }
-      
-      const today = new Date();
-      const dayNamesSl = ["Nedelja", "Ponedeljek", "Torek", "Sreda", "Četrtek", "Petek", "Sobota"];
-      const currentDayNameSl = dayNamesSl[today.getDay()];
-      const currentDateFormatted = today.toLocaleDateString('sl-SI', { day: 'numeric', month: 'long' });
-      const openingHours = "08:00-16:00";
-
-      let heading = `Gastro House - ${dayNameFromTab}, ${currentDateFormatted} (${openingHours})`;
-
-      if (panels && panels.length > dayTabIndex) {
-        let activePanel = panels[dayTabIndex];
-        let listEl = activePanel.querySelector('.futr ul');
-        if (listEl) {
-          let liItems = listEl.querySelectorAll("li");
-          let dishes = [];
-          let currentDish = null;
-          liItems.forEach(li => {
-            let text = li.textContent.trim();
-            if (text.length === 0) return;
-
-            if (li.querySelector("strong") || (text.toUpperCase() === text && text.length > 5 && !text.includes(","))) {
-              if (currentDish) dishes.push(currentDish);
-              currentDish = { name: text, sides: [] };
-            } else if (currentDish) {
-              currentDish.sides.push(text);
-            } else {
-              currentDish = { name: text, sides: [] };
-            }
-          });
-          if (currentDish) dishes.push(currentDish);
-
-          let menuHTML = dishes.map(dish => {
-            const emoji = getEmojiForDish(dish.name);
-            return `
-            <div class="dish">
-              <h4><span class="emoji-icon">${emoji}</span> ${dish.name}</h4>
-              ${dish.sides.map(side => `<p class="side-dish">${side}</p>`).join("")}
-            </div>`;
-          }).join("");
-
-          document.getElementById("menu").innerHTML = renderDayHeading(heading) + menuHTML;
-        } else {
-          document.getElementById("menu").innerHTML = renderDayHeading(heading) + "<p>Meni ni na voljo ali pa je prišlo do napake pri iskanju vsebine (Gastro).</p>";
-        }
-      } else {
-        document.getElementById("menu").innerHTML = renderDayHeading(heading) + "<p>Izbrani zavihek za meni ni na voljo (Gastro).</p>";
-      }
-      document.getElementById("menu").style.display = "block";
-    }
-
-    function loadAndDisplayGastro(dayTabIndex = 0) {
-        showLoader("Nalagam meni za Gastro House...", true);
-        return fetchHTMLWithCache(GASTRO_URL, 'gastroMenu')
-            .then(html => {
-                globalGastroHtml = html;
-                initializeGastroDaysUI(html, dayTabIndex);
-            })
-            .catch(error => {
-                console.error("Napaka pri nalaganju Gastro House menija:", error);
-                document.getElementById("menu").innerHTML = `<p>Napaka pri nalaganju jedilnika za Gastro House.</p>`;
-                clearLoaderInterval();
-                throw error;
-            });
-    }
-    
-    function initializeGastroDaysUI(htmlData, activeTabIndex = 0) {
-        let parser = new DOMParser();
-        let doc = parser.parseFromString(htmlData, "text/html");
-        let navItems = doc.querySelectorAll('.sprocket-tabs-nav li');
-        const daysContainer = document.getElementById("days");
-        daysContainer.innerHTML = "";
-        dayButtons = {};
-
-        if (navItems.length === 0) {
-            console.warn("Ni najdenih navigacijskih zavihkov za Gastro. Prikazujem prvi panel, če obstaja.");
-            displayGastroMenu(htmlData, 0);
-            return;
-        }
-
-        navItems.forEach((item, index) => {
-            let dayName = item.textContent.trim();
-            let button = document.createElement("div");
-            button.classList.add("daysbutton");
-            button.innerText = dayName;
-            button.onclick = () => {
-                document.querySelectorAll("#days .daysbutton.active").forEach(btn => btn.classList.remove("active"));
-                button.classList.add("active");
-                displayGastroMenu(htmlData, index);
-            };
-            daysContainer.appendChild(button);
-            dayButtons[dayName] = button;
-
-            if (index === activeTabIndex) {
-                button.classList.add("active");
-                if(currentRestaurant === "gastro") displayGastroMenu(htmlData, index);
-            }
-        });
-        if (currentRestaurant === "gastro" && !document.querySelector("#days .daysbutton.active") && Object.keys(dayButtons).length > 0) {
-            dayButtons[Object.keys(dayButtons)[0]].click();
-        }
-    }
-
-    // VINKA
-    function displayVinkaMenu(htmlData) {
-      clearLoaderInterval();
-      let parser = new DOMParser();
-      let doc = parser.parseFromString(htmlData, "text/html");
-      let contentDiv = doc.querySelector('div.col-md-9[role="content"]');
-
-      let todayDayIndex = new Date().getDay();
-      let todayKey = (todayDayIndex >= 1 && todayDayIndex <= 5) ? Object.keys(daysSlo)[todayDayIndex - 1] : "ponedeljek";
-      const dayName = daysSlo[todayKey] || "Današnji meni";
-      let heading = `Vinka - ${dayName}, ${getFormattedDateForWeekday(todayKey)} (10:30 - 15:00)`;
-
-      if (contentDiv) {
-        let pElementWithMenu = null;
-        const paragraphs = contentDiv.querySelectorAll("p");
-        for (let p of paragraphs) {
-            const pText = p.innerText.toLowerCase();
-            // Preverimo več ključnih besed, da zanesljiveje najdemo pravi odstavek
-            if (pText.includes("dnevna ponudba") && (pText.includes("naše stalnice") || pText.includes("jed na žlico") || pText.includes("za vegeterijance"))) {
-                pElementWithMenu = p;
-                break;
-            }
-        }
-        
-        if (pElementWithMenu) {
-          let htmlContent = pElementWithMenu.innerHTML;
-          // Ohranjamo originalno logiko za Vinko, ki je delovala za bloke
-          const markerStalnice = "Naše stalnice:";
-          const markerDnevna = "Dnevna ponudba:";
-          const markerVeget = "Za vegeterijance:"; // Originalni zapis
-          const markerZlico = "Jed na žlico:";
-          
-          let indexStalnice = htmlContent.indexOf(markerStalnice);
-          let indexDnevna = htmlContent.indexOf(markerDnevna);
-          let indexVeget = htmlContent.indexOf(markerVeget);
-          let indexZlico = htmlContent.indexOf(markerZlico);
-          
-          let finalMenuHTML = "";
-
-          // Preverimo, ali so vsi markerji prisotni in v pričakovanem vrstnem redu
-          // (Stalnice -> Dnevna -> Veget -> Zlico), kot je bilo v originalni delujoči logiki
-          if (indexStalnice !== -1 && indexDnevna !== -1 && indexVeget !== -1 && indexZlico !== -1 &&
-              indexStalnice < indexDnevna && indexDnevna < indexVeget && indexVeget < indexZlico) {
-
-            // Dnevna ponudba: med "Dnevna ponudba:" in "Za vegeterijance:"
-            let blockDnevnaContent = htmlContent.substring(indexDnevna + markerDnevna.length, indexVeget).trim();
-            // Naše stalnice: med "Naše stalnice:" in "Dnevna ponudba:"
-            let blockStalniceContent = htmlContent.substring(indexStalnice + markerStalnice.length, indexDnevna).trim();
-            // Za vegeterijance: med "Za vegeterijance:" in "Jed na žlico:"
-            let blockVegetContent = htmlContent.substring(indexVeget + markerVeget.length, indexZlico).trim();
-            // Jed na žlico: od "Jed na žlico:" do konca
-            let blockZlicoContent = htmlContent.substring(indexZlico + markerZlico.length).trim();
-
-            // Odstranimo morebitne HTML oznake iz vsebine blokov in ohranimo prelome vrstic
-            const cleanAndFormat = (text) => text.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, '').trim();
-
-            finalMenuHTML = `
-              <div class="dish"><h4><span class="emoji-icon">${getEmojiForDish(markerDnevna)}</span> ${markerDnevna.toUpperCase()}</h4><p>${cleanAndFormat(blockDnevnaContent)}</p></div>
-              <div class="dish"><h4><span class="emoji-icon">${getEmojiForDish(markerStalnice)}</span> ${markerStalnice.toUpperCase()}</h4><p>${cleanAndFormat(blockStalniceContent)}</p></div>
-              <div class="dish"><h4><span class="emoji-icon">🌿</span> ${markerVeget.toUpperCase()}</h4><p>${cleanAndFormat(blockVegetContent)}</p></div>
-              <div class="dish"><h4><span class="emoji-icon">🥣</span> ${markerZlico.toUpperCase()}</h4><p>${cleanAndFormat(blockZlicoContent)}</p></div>
-            `;
-          } else {
-            console.warn("Markerji za Vinko niso v pričakovanem vrstnem redu ali pa manjkajo. Prikazujem celoten blok.");
-            // Fallback: prikaži celoten odstavek, če markerji niso pravilni, zamenjaj <br> za berljivost
-            const tempDoc = new DOMParser().parseFromString(htmlContent, "text/html");
-            finalMenuHTML = `<div class="dish"><p>${tempDoc.body.textContent.trim() || htmlContent.replace(/<br\s*\/?>/gi, "\n")}</p></div>`;
-          }
-          document.getElementById("menu").innerHTML = renderDayHeading(heading) + finalMenuHTML;
-        } else {
-          document.getElementById("menu").innerHTML = renderDayHeading(heading) + "<p>Vsebina menija za Vinko ni najdena v pričakovani obliki (manjka ključni odstavek).</p>";
-        }
-      } else {
-        document.getElementById("menu").innerHTML = renderDayHeading(heading) + "<p>Glavni vsebinski del za Vinko ni bil najden na strani.</p>";
-      }
-      document.getElementById("menu").style.display = "block";
-    }
-
-    function loadAndDisplayVinka() {
-        showLoader("Nalagam meni za Vinka...", true);
-        document.getElementById("days").innerHTML = "";
-        dayButtons = {};
-
-        return fetchHTMLWithCache(VINKA_URL, 'vinkaMenu')
-            .then(html => {
-                globalVinkaHtml = html;
-                displayVinkaMenu(html);
-            })
-            .catch(error => {
-                console.error("Napaka pri nalaganju Vinka menija:", error);
-                document.getElementById("menu").innerHTML = `<p>Napaka pri nalaganju jedilnika za Vinka.</p>`;
-                clearLoaderInterval();
-                throw error;
-            });
-    }
-
-    // --- SPLOŠNE FUNKCIJE APLIKACIJE ---
-
-    // OZADINSKO NALAGANJE
-    function loadAllOthersInBackground() {
-      console.log("Začenjam ozadinsko nalaganje ostalih menijev...");
-      if (currentRestaurant !== "femec" && !globalFemecHtml) {
-        fetchHTMLWithCache(FEMEC_URL, 'femecMenu').then(html => { globalFemecHtml = html; console.log("Femec naložen v ozadju."); }).catch(err => console.warn("Ozadje Femec:", err.message));
-      }
-      if (currentRestaurant !== "gastro" && !globalGastroHtml) {
-        fetchHTMLWithCache(GASTRO_URL, 'gastroMenu').then(html => { globalGastroHtml = html; console.log("Gastro naložen v ozadju."); }).catch(err => console.warn("Ozadje Gastro:", err.message));
-      }
-      if (currentRestaurant !== "vinka" && !globalVinkaHtml) {
-        fetchHTMLWithCache(VINKA_URL, 'vinkaMenu').then(html => { globalVinkaHtml = html; console.log("Vinka naložen v ozadju."); }).catch(err => console.warn("Ozadje Vinka:", err.message));
-      }
-    }
-
-    // OSVEŽITEV
-    function refreshAllMenus() {
-      if (isRefreshing) {
-        console.log("Osveževanje je že v teku.");
-        return;
-      }
-      isRefreshing = true;
-      console.log("Osvežujem vse menije...");
-      
-      localStorage.removeItem('femecMenu'); globalFemecHtml = null;
-      localStorage.removeItem('gastroMenu'); globalGastroHtml = null;
-      localStorage.removeItem('vinkaMenu'); globalVinkaHtml = null;
-
-      let primaryLoadPromise;
-
-      if (currentRestaurant === "femec") {
-        const dayToLoad = currentActiveDay || ((new Date().getDay() >= 1 && new Date().getDay() <= 5) ? Object.keys(daysSlo)[new Date().getDay() - 1] : "ponedeljek");
-        primaryLoadPromise = fetchFemecForDay(dayToLoad);
-      } else if (currentRestaurant === "gastro") {
-        primaryLoadPromise = loadAndDisplayGastro();
-      } else if (currentRestaurant === "vinka") {
-        primaryLoadPromise = loadAndDisplayVinka();
-      }
-
-      if (primaryLoadPromise) {
-        primaryLoadPromise
-          .catch(() => {}) 
-          .finally(() => {
-            isRefreshing = false;
-            console.log("Primarno osveževanje končano.");
-          });
-      } else {
-        isRefreshing = false;
-      }
-      loadAllOthersInBackground();
-    }
-
-    // --- INICIALIZACIJA OB ZAGONU STRANI ---
-    document.addEventListener("DOMContentLoaded", function () {
-      const femecBtn = document.getElementById("femec-button");
-      const gastroBtn = document.getElementById("gastro-button");
-      const vinkaBtn = document.getElementById("vinka-button");
-      const refreshBtn = document.getElementById("refresh-button");
-
-      function setActiveRestaurantButton(activeBtn) {
-          [femecBtn, gastroBtn, vinkaBtn].forEach(btn => btn.classList.remove("active"));
-          if (activeBtn) activeBtn.classList.add("active");
-      }
-
-      femecBtn.onclick = () => {
-        if (currentRestaurant === "femec" && document.querySelector("#days .daysbutton.active")) return;
-        currentRestaurant = "femec";
-        setActiveRestaurantButton(femecBtn);
-        initializeFemecDaysUI();
-
-        const today = new Date().getDay();
-        const defaultDayKey = (today >= 1 && today <= 5) ? Object.keys(daysSlo)[today - 1] : "ponedeljek";
-        currentActiveDay = defaultDayKey;
-        
-        if (dayButtons[defaultDayKey]) {
-            dayButtons[defaultDayKey].click();
-        } else if (Object.keys(dayButtons).length > 0) {
-            dayButtons[Object.keys(dayButtons)[0]].click();
-        }
-        loadAllOthersInBackground();
-      };
-
-      gastroBtn.onclick = () => {
-        if (currentRestaurant === "gastro" && document.querySelector("#days .daysbutton.active")) return;
-        currentRestaurant = "gastro";
-        setActiveRestaurantButton(gastroBtn);
-        if (globalGastroHtml) {
-            initializeGastroDaysUI(globalGastroHtml);
-        } else {
-            loadAndDisplayGastro().catch(() => {});
-        }
-        loadAllOthersInBackground();
-      };
-
-      vinkaBtn.onclick = () => {
-        if (currentRestaurant === "vinka" && globalVinkaHtml) return;
-        currentRestaurant = "vinka";
-        setActiveRestaurantButton(vinkaBtn);
-        document.getElementById("days").innerHTML = "";
-        dayButtons = {};
-
-        if (globalVinkaHtml) {
-            displayVinkaMenu(globalVinkaHtml);
-        } else {
-            loadAndDisplayVinka().catch(() => {});
-        }
-        loadAllOthersInBackground();
-      };
-
-      refreshBtn.onclick = refreshAllMenus;
-      
-      femecBtn.click(); // Začetni zagon
+  function parseGastro(html){
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const tabs=qa('.sprocket-tabs-nav li', doc).map(li=>li.textContent.trim());
+    const panels=qa('.sprocket-tabs-panel', doc);
+    const dishesByTabIndex={};
+    panels.forEach((p,idx)=>{
+      const list=p.querySelector('.futr ul');
+      const arr=[]; if(list){ qa('li', list).forEach(li=>{ const text=li.textContent.trim(); if(!text) return;
+        if(li.querySelector('strong') || (text.toUpperCase()===text && text.length>5 && !text.includes(','))){ arr.push({name:text,sides:[]}); }
+        else { if(arr.length===0) arr.push({name:text,sides:[]}); else arr[arr.length-1].sides.push(text); }
+      }); }
+      dishesByTabIndex[idx]=arr;
     });
+    return { tabs, dishesByTabIndex };
+  }
+
+  function parseVinka(html){
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const content=doc.querySelector('div.col-md-9[role="content"]');
+    if(!content) return `<p>Glavni vsebinski del za Vinko ni bil najden na strani.</p>`;
+    let pWithMenu=null; for(const p of qa('p', content)){ const t=p.innerText.toLowerCase(); if(t.includes('dnevna ponudba') && (t.includes('naše stalnice') || t.includes('jed na žlico') || t.includes('za vegeterijance'))) { pWithMenu=p; break; } }
+    if(!pWithMenu){ return `<p>Vsebina menija za Vinko ni najdena v pričakovani obliki.</p>`; }
+    const htmlContent = pWithMenu.innerHTML;
+    const mStal='Naše stalnice:'; const mDnev='Dnevna ponudba:'; const mVeg='Za vegeterijance:'; const mZlic='Jed na žlico:';
+    const iS=htmlContent.indexOf(mStal), iD=htmlContent.indexOf(mDnev), iV=htmlContent.indexOf(mVeg), iZ=htmlContent.indexOf(mZlic);
+    const clean = s=>s.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').trim();
+    if(iS!==-1 && iD!==-1 && iV!==-1 && iZ!==-1 && iS<iD && iD<iV && iV<iZ){
+      const bD=clean(htmlContent.substring(iD+mDnev.length, iV));
+      const bS=clean(htmlContent.substring(iS+mStal.length, iD));
+      const bV=clean(htmlContent.substring(iV+mVeg.length, iZ));
+      const bZ=clean(htmlContent.substring(iZ+mZlic.length));
+      return `
+        <div class="dish"><h4><span class="emoji-icon">${emojiFor(mDnev)}</span> ${mDnev.toUpperCase()}</h4><p>${bD}</p></div>
+        <div class="dish"><h4><span class="emoji-icon">${emojiFor(mStal)}</span> ${mStal.toUpperCase()}</h4><p>${bS}</p></div>
+        <div class="dish"><h4><span class="emoji-icon">🌿</span> ${mVeg.toUpperCase()}</h4><p>${bV}</p></div>
+        <div class="dish"><h4><span class="emoji-icon">🥣</span> ${mZlic.toUpperCase()}</h4><p>${bZ}</p></div>
+      `;
+    }
+    // fallback: whole paragraph text with line breaks preserved
+    const tmp = new DOMParser().parseFromString(htmlContent,'text/html');
+    return `<div class="dish"><p>${(tmp.body.textContent||htmlContent.replace(/<br\s*\/?>/gi,'\n')).trim()}</p></div>`;
+  }
+
+  // ======= Rendering =======
+  function renderFemec(dayKey){
+    clearLoader(); const menu=q('#menu');
+    const dayName=daysSlo[dayKey]||dayKey; const heading=`Femec - ${dayName}, ${getFormattedDateForWeekday(dayKey)} (11:00 - 14:00)`;
+    const list=femecParsed?.[dayKey];
+    if(!list || list.length===0){ menu.innerHTML = renderHeading(heading)+`<p>Meni za ta dan ni na voljo.</p>`; return; }
+    const html=list.map(d=>{
+      if(d.type==='special_header') return `<div class="dish"><h4>${d.name}</h4></div>`;
+      const emoji=emojiFor(d.name);
+      return `<div class="dish"><h4><span class="emoji-icon">${emoji}</span> ${d.name}</h4>${(d.sides||[]).map(s=>`<p class="side-dish">${s}</p>`).join('')}</div>`;
+    }).join('');
+    menu.innerHTML = renderHeading(heading)+html; menu.style.display='block';
+  }
+
+  function renderGastro(tabIndex){
+    clearLoader(); const menu=q('#menu');
+    const today=new Date(); const dateStr=today.toLocaleDateString('sl-SI',{day:'numeric',month:'long'});
+    const opening='08:00-16:00'; const tabName=(gastroParsed?.tabs?.[tabIndex])||'Današnji meni';
+    const heading=`Gastro House - ${tabName}, ${dateStr} (${opening})`;
+    const items=gastroParsed?.dishesByTabIndex?.[tabIndex]||[];
+    if(items.length===0){ menu.innerHTML=renderHeading(heading)+`<p>Meni ni na voljo.</p>`; return; }
+    const html=items.map(d=>`<div class="dish"><h4><span class="emoji-icon">${emojiFor(d.name)}</span> ${d.name}</h4>${d.sides.map(s=>`<p class="side-dish">${s}</p>`).join('')}</div>`).join('');
+    menu.innerHTML=renderHeading(heading)+html; menu.style.display='block';
+  }
+
+  function renderGastroDays(){
+    const cont=q('#days'); cont.innerHTML='';
+    (gastroParsed?.tabs||[]).forEach((name, idx)=>{
+      const b=document.createElement('div'); b.className='daysbutton'; b.textContent=name; b.onclick=()=>{ qa('#days .daysbutton').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderGastro(idx); };
+      cont.appendChild(b); if(idx===0) b.classList.add('active');
+    });
+  }
+
+  function renderVinka(){
+    clearLoader(); const menu=q('#menu');
+    const todayIdx=new Date().getDay(); const key=(todayIdx>=1 && todayIdx<=5)? Object.keys(daysSlo)[todayIdx-1] : 'ponedeljek';
+    const heading=`Vinka - ${daysSlo[key]||'Današnji meni'}, ${getFormattedDateForWeekday(key)} (10:30 - 15:00)`;
+    menu.innerHTML = renderHeading(heading) + (vinkaParsed||'<p>Napaka pri nalaganju jedilnika za Vinka.</p>');
+    menu.style.display='block';
+  }
+
+  // ======= Controller =======
+  const femecBtn = q('#femec-button');
+  const gastroBtn = q('#gastro-button');
+  const vinkaBtn = q('#vinka-button');
+  const refreshBtn = q('#refresh-button');
+
+  let dayButtons = {};
+  function buildFemecDays(){
+    const cont=q('#days'); cont.innerHTML=''; dayButtons={};
+    for(const key of Object.keys(daysSlo)){
+      const b=document.createElement('div'); b.className='daysbutton'; b.textContent=daysSlo[key]; b.onclick=()=>{ qa('#days .daysbutton').forEach(x=>x.classList.remove('active')); b.classList.add('active'); currentActiveDay=key; renderFemec(key); };
+      cont.appendChild(b); dayButtons[key]=b;
+    }
+  }
+
+  function setActiveHeader(btn){ [femecBtn,gastroBtn,vinkaBtn].forEach(b=>b.classList.remove('active')); btn?.classList.add('active'); }
+
+  async function showFemec(){
+    currentRestaurant='femec'; setActiveHeader(femecBtn); buildFemecDays();
+    showLoader('Nalagam meni za Femec...', true);
+    // load parsed from session (fast), otherwise fetch and parse
+    femecParsed = getParsedCache('femec');
+    if(!femecParsed){ const {html}= await fetchSWR('femec', FEMEC_URL, { ttl: TTL_MS }); if(html) { femecParsed = parseFemec(html); setParsedCache('femec', femecParsed); } }
+    const today = new Date().getDay(); const defKey = (today>=1 && today<=5) ? Object.keys(daysSlo)[today-1] : 'ponedeljek';
+    currentActiveDay = defKey; if(dayButtons[defKey]) dayButtons[defKey].classList.add('active');
+    renderFemec(defKey);
+    // background preloads
+    idleLoadOthers();
+  }
+
+  async function showGastro(){
+    currentRestaurant='gastro'; setActiveHeader(gastroBtn); q('#days').innerHTML=''; showLoader('Nalagam meni za Gastro House...', true);
+    gastroParsed = getParsedCache('gastro');
+    if(!gastroParsed){ const {html}= await fetchSWR('gastro', GASTRO_URL, { ttl: TTL_MS }); if(html){ gastroParsed = parseGastro(html); setParsedCache('gastro', gastroParsed); } }
+    renderGastroDays(); renderGastro(0);
+    idleLoadOthers();
+  }
+
+  async function showVinka(){
+    currentRestaurant='vinka'; setActiveHeader(vinkaBtn); q('#days').innerHTML=''; showLoader('Nalagam meni za Vinka...', true);
+    vinkaParsed = getParsedCache('vinka');
+    if(!vinkaParsed){ const {html}= await fetchSWR('vinka', VINKA_URL, { ttl: TTL_MS }); if(html){ vinkaParsed = parseVinka(html); setParsedCache('vinka', vinkaParsed); } }
+    renderVinka();
+    idleLoadOthers();
+  }
+
+  function idleLoadOthers(){
+    const run = ()=>{
+      if(currentRestaurant!=='femec' && !femecParsed){ fetchSWR('femec', FEMEC_URL, { ttl: TTL_MS }).then(({html})=>{ if(html){ femecParsed=parseFemec(html); setParsedCache('femec', femecParsed); } }); }
+      if(currentRestaurant!=='gastro' && !gastroParsed){ fetchSWR('gastro', GASTRO_URL, { ttl: TTL_MS }).then(({html})=>{ if(html){ gastroParsed=parseGastro(html); setParsedCache('gastro', gastroParsed); } }); }
+      if(currentRestaurant!=='vinka' && !vinkaParsed){ fetchSWR('vinka', VINKA_URL, { ttl: TTL_MS }).then(({html})=>{ if(html){ vinkaParsed=parseVinka(html); setParsedCache('vinka', vinkaParsed); } }); }
+    };
+    if('requestIdleCallback' in window){ requestIdleCallback(run, { timeout: 1200 }); } else { setTimeout(run, 0); }
+  }
+
+  function refreshAll(){
+    // hard refresh: clear both raw + parsed caches, then reload current view
+    ['femec','gastro','vinka'].forEach(k=>{ try{ localStorage.removeItem(makeKey(k)); sessionStorage.removeItem(makeKey('parsed:'+k)); }catch{} });
+    femecParsed=gastroParsed=vinkaParsed=null;
+    if(currentRestaurant==='femec') showFemec(); else if(currentRestaurant==='gastro') showGastro(); else showVinka();
+    // also kick background loads to warm caches again
+    idleLoadOthers();
+  }
+
+  // ======= Init =======
+  femecBtn.onclick = ()=>{ if(currentRestaurant==='femec' && q('#days .daysbutton.active')) return; showFemec(); };
+  gastroBtn.onclick = ()=>{ if(currentRestaurant==='gastro' && q('#days .daysbutton.active')) return; showGastro(); };
+  vinkaBtn.onclick = ()=>{ if(currentRestaurant==='vinka' && vinkaParsed) return; showVinka(); };
+  refreshBtn.onclick = refreshAll;
+
+  // First paint as Femec (fast cached), others preloaded idle
+  showFemec();
   </script>
 </body>
 </html>
