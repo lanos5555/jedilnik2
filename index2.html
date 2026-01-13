@@ -1,414 +1,871 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jedilni list - Femec, Gastro House in Vinka</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Malice – Femec, Vinka, Rotonda</title>
 
-  <!-- Preconnects2 -->
-  <link rel="preconnect" href="https://api.allorigins.win"/>
-  <link rel="preconnect" href="http://www.femec.si"/>
-  <link rel="preconnect" href="https://www.gastrohouse.si"/>
-  <link rel="preconnect" href="https://www.vinka.si"/>
-
-  <!-- CRITICAL CSS (first paint) -->
-  <style id="critical-css">
-    :root { --brand:#5dade2; --ok:#2ecc71; --ink:#2c3e50; }
-    * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background:#f4f7f6; margin:0; padding:20px 10px; color:#333; overflow-x:hidden; }
-    h1 { margin:20px 0 30px; color:var(--ink); font-weight:600; font-size:2rem; }
-    #restaurant-switcher { margin: 20px auto; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; max-width: 680px; }
-    .daysbutton{ display:inline-block; margin:5px; padding:12px 20px; background:var(--brand); color:#fff; cursor:pointer; border:none; border-radius:8px; font-size:1rem; font-weight:500; transition:background .15s ease, transform .15s ease; box-shadow:0 2px 4px rgba(0,0,0,.08) }
-    .daysbutton:hover{ background:#3498db; transform:translateY(-1px) }
-    .daysbutton.active{ background:var(--ok)!important; box-shadow:0 4px 10px rgba(46,204,113,.28) }
-    #refresh-button{ background:#A8E6CF; color:var(--ink) }
-    #refresh-button:hover{ background:#81D4A3 }
-    #days{ margin:20px auto; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; max-width:760px }
-    .menu{ margin:20px auto 0; padding:20px; background:#fff; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,.08); width:92%; max-width:760px; display:none; text-align:left; min-height:200px }
-
-    /* Loader + skeleton */
-    .loader-container{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; margin:10px auto 18px; padding:10px; min-height:120px }
-    .loader-text{ font-size:1rem; color:#555; font-weight:500 }
-    .loader-icon-wrapper{ font-size:2.2rem; display:inline-block; animation:pulseEmoji 1.4s ease-in-out infinite }
-    @keyframes pulseEmoji{ 0%,100%{ transform:scale(1)} 50%{ transform:scale(1.15)} }
-    .skeleton-dish{ background:#e9ecef; background-image:linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.45) 50%, rgba(255,255,255,0) 100%); background-size:200% 100%; border-radius:8px; padding:14px; margin-bottom:12px; height:72px; animation:shimmer 1.5s infinite linear }
-    .skeleton-dish .skeleton-line{ background:#cfd4da; height:14px; margin-bottom:8px; border-radius:4px }
-    .skeleton-dish .skeleton-line.short{ width:60% }
-    @keyframes shimmer{ 0%{ background-position:200% 0 } 100%{ background-position:-200% 0 } }
-  </style>
-
-  <!-- NON-CRITICAL CSS (lazy) -->
   <style>
-    .day-heading{ background:var(--brand); color:#fff; padding:14px; border-radius:8px; margin-bottom:18px; text-align:center }
-    .day-heading h2{ margin:0; font-size:1.2rem; font-weight:600 }
-    .dish{ background:#ecf0f1; border-radius:8px; padding:14px; margin-bottom:12px; box-shadow:0 2px 5px rgba(0,0,0,.05); transition:transform .15s ease, box-shadow .15s ease }
-    .dish:hover{ transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,.1) }
-    .dish h4{ font-size:1.05rem; margin:0 0 6px; display:flex; align-items:center; font-weight:600; color:var(--ink) }
-    .dish h4 span.emoji-icon{ font-size:1.25rem; margin-right:10px; min-width:28px; display:inline-block; text-align:center }
-    .dish p{ margin:4px 0 0; font-size:.95rem; color:#555; line-height:1.55; white-space:pre-line }
-    .side-dish{ padding-left:20px; font-style:italic; color:#777 }
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1a2f;
+      --card:#111f39;
+      --soft:#16284a;
+      --brand:#5dade2;
+      --ok:#2ecc71;
+      --warn:#ffcc66;
+      --ink:#e9eefc;
+      --muted:#b7c3e0;
+      --line:rgba(255,255,255,.10);
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
+      --shadow2: 0 10px 24px rgba(0,0,0,.22);
+      --radius:18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 700px at 20% 0%, rgba(93,173,226,.22), transparent 55%),
+        radial-gradient(900px 600px at 90% 10%, rgba(46,204,113,.16), transparent 55%),
+        radial-gradient(900px 700px at 30% 90%, rgba(255,204,102,.12), transparent 55%),
+        var(--bg);
+      padding:24px 12px;
+      overflow-x:hidden;
+    }
+    .wrap{ max-width:1400px; margin:0 auto; }
+
+    .topbar{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:14px; flex-wrap:wrap; margin-bottom:16px;
+    }
+    .title h1{ margin:0; font-size:1.75rem; letter-spacing:.2px; }
+    .title p{ margin:6px 0 0; color:var(--muted); font-size:.98rem; }
+
+    .globalActions{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 10px;
+      box-shadow: var(--shadow2);
+    }
+    .gbtn{
+      cursor:pointer; border:0; border-radius:999px;
+      padding:10px 14px; font-weight:900;
+      background:linear-gradient(135deg, rgba(93,173,226,1), rgba(46,204,113,.95));
+      color:#071018;
+    }
+    .gstatus{
+      color:var(--muted); font-size:.92rem;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+
+    .grid{
+      display:grid;
+      gap:14px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 980px){
+      .grid{ grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 1280px){
+      .grid{ grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .widget{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+      min-width: 0;
+    }
+    .widget:before{
+      content:"";
+      position:absolute; inset:-2px -2px auto -2px;
+      height:96px;
+      background:radial-gradient(600px 120px at 20% 10%, rgba(93,173,226,.22), transparent 60%),
+                 radial-gradient(400px 100px at 80% 0%, rgba(46,204,113,.18), transparent 55%);
+      pointer-events:none;
+    }
+
+    .whead{
+      position:relative;
+      display:flex; justify-content:space-between; align-items:flex-start;
+      gap:12px; flex-wrap:wrap; margin-bottom:12px;
+    }
+    .wtitle{
+      margin:0; font-size:1.15rem;
+      display:flex; align-items:center; gap:10px;
+    }
+    .pill{
+      font-size:.82rem;
+      color:#071018;
+      font-weight:900;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.85);
+      white-space:nowrap;
+    }
+    .meta{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .btn{
+      cursor:pointer; border:0; border-radius:12px;
+      padding:10px 12px;
+      background:rgba(255,255,255,.08);
+      color:var(--ink);
+      font-weight:900;
+      border:1px solid var(--line);
+      backdrop-filter: blur(6px);
+    }
+    .btn:hover{ background:rgba(255,255,255,.12); }
+    .status{
+      font-size:.9rem; color:var(--muted);
+      padding:7px 10px; border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+    .updated{
+      font-size:.88rem; color:var(--muted);
+      opacity:.95;
+      max-width: 320px;
+    }
+
+    .subgrid{ display:grid; gap:12px; }
+
+    .card{
+      background:rgba(10,18,34,.55);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      box-shadow:var(--shadow2);
+      min-width: 0;
+    }
+    .heading{
+      display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+      background:linear-gradient(135deg, rgba(93,173,226,.35), rgba(46,204,113,.25));
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--ink);
+      border-radius:14px;
+      padding:12px 12px;
+      margin:0 0 12px;
+      font-weight:1000;
+    }
+    .heading small{ color:rgba(233,238,252,.85); font-weight:800; }
+
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px; }
+    .tab{
+      cursor:pointer; border:0; border-radius:999px;
+      padding:8px 12px;
+      background:rgba(255,255,255,.06);
+      color:var(--ink);
+      font-weight:900;
+      border:1px solid var(--line);
+      white-space:nowrap;
+    }
+    .tab.active{
+      background:linear-gradient(135deg, rgba(46,204,113,.9), rgba(93,173,226,.9));
+      color:#061019;
+      border-color:transparent;
+    }
+
+    .dish{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      padding:12px;
+      margin:10px 0;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .dish:hover{ transform: translateY(-1px); background:rgba(255,255,255,.08); }
+    .dish h3{
+      margin:0 0 6px;
+      font-size:1rem;
+      display:flex; gap:10px; align-items:flex-start;
+      color:var(--ink);
+    }
+    .num{
+      width:24px; height:24px;
+      border-radius:8px;
+      background:rgba(255,255,255,.92);
+      color:#061019;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:.85rem; font-weight:1000;
+      flex:0 0 auto;
+    }
+    .dish p{ margin:4px 0 0; color:rgba(233,238,252,.86); white-space:pre-line; line-height:1.5; }
+
+    /* Rotonda že uporablja .price; dodamo še .money za avtomatsko obarvanje zneskov */
+    .price,
+    .money{
+      font-weight:1000;
+      color:var(--warn);
+      margin-left:6px;
+    }
+
+    .muted{ color:var(--muted); margin:0; }
+    .err{
+      background:rgba(255, 80, 80, .14);
+      border:1px solid rgba(255, 120, 120, .35);
+      padding:10px 12px;
+      border-radius:12px;
+      color:#ffd5d5;
+    }
+    .loader{ display:flex; gap:10px; align-items:center; padding:10px 0; color:var(--muted); }
+    .dot{ width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.55); animation:b 1s infinite ease-in-out; }
+    .dot:nth-child(2){ animation-delay:.15s }
+    .dot:nth-child(3){ animation-delay:.3s }
+    @keyframes b{ 0%,100%{ transform:scale(.7); opacity:.5 } 50%{ transform:scale(1); opacity:1 } }
+
+    .note{ font-size:.9rem; color:rgba(183,195,224,.92); margin-top:10px; }
   </style>
 </head>
-<body>
-  <h1>Jedilni list</h1>
 
-  <div id="restaurant-switcher">
-    <div id="femec-button" class="daysbutton active">Femec</div>
-    <div id="gastro-button" class="daysbutton">Gastro House</div>
-    <div id="vinka-button" class="daysbutton">Vinka</div>
-    <div id="refresh-button" class="daysbutton">Osveži</div>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        <h1>Malice na enem mestu</h1>
+        <p>Femec (dnevni + teden), Vinka (dnevna + stalnice) in Rotonda (tedenski meni).</p>
+      </div>
+      <div class="globalActions">
+        <button class="gbtn" id="refreshAll">Osveži vse</button>
+        <span class="gstatus" id="globalStatus">Pripravljeno</span>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- FEMEC -->
+      <section class="widget" id="femecWidget">
+        <div class="whead">
+          <h2 class="wtitle">Femec <span class="pill">Malice: 11:00–14:00</span></h2>
+          <div class="meta">
+            <button class="btn" id="refreshFemec">Osveži</button>
+            <span class="status" id="statusFemec">Nalaganje…</span>
+            <span class="updated" id="updatedFemec" hidden></span>
+          </div>
+        </div>
+
+        <div class="subgrid">
+          <div class="card">
+            <div class="heading" id="femecTodayHeading">
+              <span>Današnji meni</span>
+              <small>Femec</small>
+            </div>
+            <div id="femecTodayBody"></div>
+          </div>
+
+          <div class="card">
+            <div class="heading" id="femecWeekHeading">
+              <span>Tedenski pregled</span>
+              <small>Femec</small>
+            </div>
+            <nav class="tabs" id="femecTabs" aria-label="Femec dnevi"></nav>
+            <div id="femecWeekBody"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VINKA -->
+      <section class="widget" id="vinkaWidget">
+        <div class="whead">
+          <h2 class="wtitle">Vinka <span class="pill">Malice: 10:30–15:00</span></h2>
+          <div class="meta">
+            <button class="btn" id="refreshVinka">Osveži</button>
+            <span class="status" id="statusVinka">Nalaganje…</span>
+            <span class="updated" id="updatedVinka" hidden></span>
+          </div>
+        </div>
+
+        <div class="subgrid">
+          <div class="card">
+            <div class="heading" id="vinkaHeading">
+              <span>Dnevna ponudba + stalnice</span>
+              <small>Vinka</small>
+            </div>
+            <div id="vinkaBody"></div>
+            <div class="note">Vrstni red: <b>Dnevna ponudba</b> → <b>Redna ponudba (stalnice)</b>.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROTONDA -->
+      <section class="widget" id="rotondaWidget">
+        <div class="whead">
+          <h2 class="wtitle">Rotonda – Bistro Chika <span class="pill">Delovni čas: (ni podatka)</span></h2>
+          <div class="meta">
+            <button class="btn" id="refreshRotonda">Osveži</button>
+            <span class="status" id="statusRotonda">Nalaganje…</span>
+            <span class="updated" id="updatedRotonda" hidden></span>
+          </div>
+        </div>
+
+        <div class="subgrid">
+          <div class="card">
+            <div class="heading" id="rotondaTodayHeading">
+              <span>Današnji meni</span>
+              <small>Rotonda</small>
+            </div>
+            <div id="rotondaTodayBody"></div>
+          </div>
+
+          <div class="card">
+            <div class="heading" id="rotondaWeekHeading">
+              <span>Tedenski pregled</span>
+              <small>Rotonda</small>
+            </div>
+            <nav class="tabs" id="rotondaTabs" aria-label="Rotonda dnevi"></nav>
+            <div id="rotondaWeekBody"></div>
+            <div class="note">Rotonda pogosto združi dneve (npr. PON/TOR, ČET/PET).</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
   </div>
 
-  <div id="days"></div>
-  <div id="menu" class="menu"></div>
+<script>
+(() => {
+  // ==============================
+  // URLs
+  // ==============================
+  const FEMEC_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/femec";
+  const VINKA_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/vinka";
+  const ROTONDA_PROXY_URL = "https://femec-proxy.lanos5555.workers.dev/api/rotonda";
 
-  <script defer>
-  // ====== PERFORMANCE FOCUS: instant cached render + SWR revalidate, parsed-data cache, timeouts, and lighter DOM work ======
-  const PROXY = "https://api.allorigins.win/raw?url=";
-  const FEMEC_URL = "http://www.femec.si/";
-  const GASTRO_URL = "https://www.gastrohouse.si/index.php/tedenska-ponudba";
-  const VINKA_URL = "https://www.vinka.si/malice-in-kosila.html";
+  // ==============================
+  // Settings
+  // ==============================
+  const FETCH_TIMEOUT_MS = 9000;
+  const RETRIES = 1;
+  //const VINKA_TIMEOUT_MS = 10000;
+  //const VINKA_RETRIES = 2;
+  const VINKA_TIMEOUT_MS = 9000; // enako kot ostali
+  const VINKA_RETRIES = 0;       // brez ponavljanja (ne bo več več requestov)
 
-  const TTL_MS = 15 * 60 * 1000; // 15 min logical freshness
-  const FETCH_TIMEOUT_MS = 6500;  // abort slow requests
-  const RETRIES = 1;              // one retry after timeout
+  // ==============================
+  // Days
+  // ==============================
+  const DAYS = [
+    { key:"ponedeljek", label:"Ponedeljek" },
+    { key:"torek",      label:"Torek" },
+    { key:"sreda",      label:"Sreda" },
+    { key:"cetrtek",    label:"Četrtek" },
+    { key:"petek",      label:"Petek" },
+  ];
 
-  const daysSlo = { ponedeljek:"Ponedeljek", torek:"Torek", sreda:"Sreda", cetrtek:"Četrtek", petek:"Petek" };
-  let currentRestaurant = "femec";
-  let currentActiveDay = null;
+  const DAY_EN_TO_SI = {
+    MONDAY: "ponedeljek",
+    TUESDAY: "torek",
+    WEDNESDAY: "sreda",
+    THURSDAY: "cetrtek",
+    FRIDAY: "petek"
+  };
 
-  // in-memory parsed caches to avoid repeated DOM parsing
-  let femecParsed = null; // { dayKey -> [{name, sides, type}] }
-  let gastroParsed = null; // { tabs: [name], dishesByTabIndex: {i: [{name, sides}]} }
-  let vinkaParsed = null; // HTML string already formatted
+  // ==============================
+  // Helpers
+  // ==============================
+  const $ = (id) => document.getElementById(id);
+  function now(){ return Date.now(); }
 
-  // Loader state
-  let loaderInterval = null, currentLoaderIconIndex = 0;
-  const loaderIcons = ["🍕","🍔","🍣","🍜","🍝","🥗","🍦","🌮","🍩","🍰","🍿","🥪","🍤","🍖","🍗"]; 
-
-  // ============ Utils ============
-  const q = (sel, root=document) => root.querySelector(sel);
-  const qa = (sel, root=document) => [...root.querySelectorAll(sel)];
-
-  function makeKey(key){ return `menus:${key}` }
-  function now(){ return Date.now() }
-
-  function getCache(key){
-    try{ const s = localStorage.getItem(makeKey(key)); if(!s) return null; const v = JSON.parse(s); return v; }catch{ return null }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
   }
-  function setCache(key, value){
-    try{ localStorage.setItem(makeKey(key), JSON.stringify(value)) }catch{}
-  }
-  function setParsedCache(key, value){
-    try{ sessionStorage.setItem(makeKey("parsed:"+key), JSON.stringify(value)) }catch{}
-  }
-  function getParsedCache(key){
-    try{ const s = sessionStorage.getItem(makeKey("parsed:"+key)); return s? JSON.parse(s): null }catch{ return null }
+
+  // ✅ Obari vse zneske v tekstu v enako barvo kot Rotonda
+  function highlightMoney(text){
+    const t = escapeHtml(text || "");
+    const moneyRe =
+      /(\b\d{1,4}(?:[.,]\d{2})?\s?(?:€|eur|EUR)\b|\b(?:€)\s?\d{1,4}(?:[.,]\d{2})?\b)/g;
+    return t.replace(moneyRe, '<span class="money">$1</span>');
   }
 
-  function withTimeout(promise, ms){
+  function setLoading(el, msg){
+    el.innerHTML = `<div class="loader">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span>${escapeHtml(msg || "Nalaganje…")}</span>
+    </div>`;
+  }
+  function setError(el, msg){
+    el.innerHTML = `<div class="err">${escapeHtml(msg)}</div>`;
+  }
+  function setUpdated(el, ts){
+    const d = new Date(ts);
+    el.textContent = "Posodobljeno: " + d.toLocaleString("sl-SI", { dateStyle:"medium", timeStyle:"short" });
+    el.hidden = false;
+  }
+
+  function getDefaultDayKey(){
+    const d = new Date();
+    const wd = d.getDay(); // 0..6
+    if (wd >= 1 && wd <= 5) return DAYS[wd-1].key;
+    return "ponedeljek";
+  }
+
+  function formatDateForDayKey(dayKey){
+    const idxMap = { ponedeljek:1, torek:2, sreda:3, cetrtek:4, petek:5 };
+    const idx = idxMap[dayKey] || 1;
+    const d = new Date();
+    let wd = d.getDay(); if (wd === 0) wd = 7;
+    const monday = new Date(d); monday.setDate(d.getDate() - (wd-1));
+    const target = new Date(monday); target.setDate(monday.getDate() + (idx-1));
+    return target.toLocaleDateString("sl-SI", { day:"numeric", month:"long" });
+  }
+
+  async function fetchTextWithTimeout(url, timeoutMs){
     const ctrl = new AbortController();
-    const t = setTimeout(()=>ctrl.abort(), ms);
-    return Promise.race([
-      fetch(promise, { signal: ctrl.signal }),
-      new Promise((_,rej)=>ctrl.signal.addEventListener('abort', ()=>rej(new Error('timeout'))))
-    ]).finally(()=>clearTimeout(t));
-  }
-
-  function proxied(url, bust=false){
-    const u = new URL(url);
-    if(bust){ u.searchParams.set('_', String(Date.now())); }
-    return PROXY + encodeURIComponent(u.toString());
-  }
-
-  // Stale-While-Revalidate fetch: show cached instantly; revalidate in background and update if content changed.
-  async function fetchSWR(urlKey, url, {ttl=TTL_MS, bustOnRevalidate=false}={}){
-    const cached = getCache(urlKey);
-    let html = cached?.html || null;
-    let isFresh = cached && (now() - cached.timestamp < ttl);
-
-    // 1) immediate return of cached content to render instantly
-    if(html){
-      // trigger background revalidate only if stale
-      if(!isFresh) revalidate();
-      return { html, fromCache: true };
-    }
-    // 2) no cache – do network fetch fast path
+    const t = setTimeout(() => ctrl.abort(), timeoutMs ?? FETCH_TIMEOUT_MS);
     try{
-      const resp = await fetch(proxied(url, false), { cache: 'no-store' });
-      if(!resp.ok) throw new Error('network');
-      html = await resp.text();
-      setCache(urlKey, { html, timestamp: now() });
-      // background revalidate shortly (to beat proxy stale cases) but don't block paint
-      setTimeout(()=>revalidate(), 0);
-      return { html, fromCache: false };
-    }catch(e){
-      // last resort – return what we have (null) and let caller handle
-      return { html: null, fromCache: false };
+      const resp = await fetch(url, { cache:"no-store", signal: ctrl.signal, headers:{ "Accept":"text/html,*/*" } });
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      return await resp.text();
+    } finally { clearTimeout(t); }
+  }
+
+  async function fetchTextWithRetry(url, { retries = RETRIES, timeoutMs = FETCH_TIMEOUT_MS } = {}){
+    let last;
+    for (let i=0; i<=retries; i++){
+      try { return await fetchTextWithTimeout(url, timeoutMs); }
+      catch(e){ last = e; await new Promise(r => setTimeout(r, 350*(i+1))); }
+    }
+    throw last;
+  }
+
+  // ==============================
+  // FEMEC
+  // ==============================
+  const femec = (() => {
+    const elStatus = $("statusFemec");
+    const elUpdated = $("updatedFemec");
+    const elRefresh = $("refreshFemec");
+    const elTabs = $("femecTabs");
+    const elTodayH = $("femecTodayHeading");
+    const elWeekH = $("femecWeekHeading");
+    const elTodayB = $("femecTodayBody");
+    const elWeekB = $("femecWeekBody");
+
+    const todayKey = getDefaultDayKey();
+    let selectedKey = todayKey;
+    let parsed = null;
+
+    function parseFemecMenu(html){
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const root = doc.querySelector("#wholemenu") || doc;
+      const out = {};
+      for (const d of DAYS){
+        const sec = root.querySelector(`#${d.key}`) || doc.getElementById(d.key);
+        if (!sec) { out[d.key] = []; continue; }
+
+        const lines = Array.from(sec.querySelectorAll(".menuline"));
+        out[d.key] = lines.map(line => {
+          const num = (line.querySelector(".menunumber")?.textContent || "").trim();
+          const ps = Array.from(line.querySelectorAll(".menucontent p"))
+            .map(p => p.textContent.replace(/\u00a0/g," ").trim())
+            .filter(Boolean);
+          if (!ps.length) return null;
+          const name = ps[0].replace(/\s+/g," ").trim();
+          const sides = ps.slice(1);
+          return { num, name, sides };
+        }).filter(Boolean);
+      }
+      return out;
     }
 
-    async function revalidate(){
-      let attempt = 0; let ok=false;
-      while(attempt<=RETRIES && !ok){
-        try{
-          const resp = await fetch(proxied(url, bustOnRevalidate || attempt>0), { cache:'no-store' });
-          if(!resp.ok) throw new Error('network');
-          const fresh = await resp.text();
-          if(!cached || fresh !== cached.html){
-            setCache(urlKey, { html: fresh, timestamp: now() });
-            onRevalidated(urlKey, fresh); // live update if viewing this restaurant
-          }else{
-            setCache(urlKey, { html: cached.html, timestamp: now() }); // refresh timestamp
-          }
-          ok=true;
-        }catch{ attempt++; }
+    function renderDishList(el, list){
+      if (!list || !list.length){ el.innerHTML = `<p class="muted">Meni za ta dan ni na voljo.</p>`; return; }
+      el.innerHTML = list.map(d => `
+        <div class="dish">
+          <h3><span class="num">${escapeHtml(d.num || "")}</span> ${highlightMoney(d.name || "")}</h3>
+          ${Array.isArray(d.sides) && d.sides.length ? `<p>${highlightMoney(d.sides.join("\n"))}</p>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function buildTabs(){
+      elTabs.innerHTML = "";
+      for (const d of DAYS){
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "tab" + (d.key === selectedKey ? " active" : "");
+        b.textContent = d.label;
+        b.onclick = () => {
+          selectedKey = d.key;
+          Array.from(elTabs.querySelectorAll(".tab")).forEach(x => x.classList.remove("active"));
+          b.classList.add("active");
+          renderWeek();
+        };
+        elTabs.appendChild(b);
       }
     }
-  }
 
-  // Live update after revalidate if user is on that view
-  function onRevalidated(key, freshHtml){
-    if(currentRestaurant==='femec' && key==='femec'){
-      femecParsed = parseFemec(freshHtml); setParsedCache('femec', femecParsed);
-      if(currentActiveDay) renderFemec(currentActiveDay);
-    }else if(currentRestaurant==='gastro' && key==='gastro'){
-      gastroParsed = parseGastro(freshHtml); setParsedCache('gastro', gastroParsed);
-      renderGastro(0);
-    }else if(currentRestaurant==='vinka' && key==='vinka'){
-      vinkaParsed = parseVinka(freshHtml); setParsedCache('vinka', vinkaParsed);
-      renderVinka();
+    function renderToday(){
+      const label = DAYS.find(x => x.key === todayKey)?.label || todayKey;
+      elTodayH.innerHTML = `<span>Današnji meni</span><small>${label}, ${formatDateForDayKey(todayKey)}</small>`;
+      renderDishList(elTodayB, parsed?.[todayKey] || []);
     }
-  }
 
-  // ======= UI helpers =======
-  function showLoader(message="Nalaganje jedilnika...", showSkeleton=false){
-    clearInterval(loaderInterval); const menuDiv = q('#menu');
-    let skeleton=""; if(showSkeleton){ for(let i=0;i<3;i++){ skeleton += `<div class="skeleton-dish"><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>`; } }
-    menuDiv.innerHTML = `<div class="loader-container"><span class="loader-text">${message}</span><div class="loader-icon-wrapper"><span id="loader-icon-animated">${loaderIcons[currentLoaderIconIndex]}</span></div></div>${skeleton}`;
-    menuDiv.style.display='block';
-    const icon = q('#loader-icon-animated');
-    if(icon){ loaderInterval = setInterval(()=>{ currentLoaderIconIndex=(currentLoaderIconIndex+1)%loaderIcons.length; icon.textContent=loaderIcons[currentLoaderIconIndex]; }, 900); }
-  }
+    function renderWeek(){
+      const label = DAYS.find(x => x.key === selectedKey)?.label || selectedKey;
+      elWeekH.innerHTML = `<span>Tedenski pregled</span><small>${label}, ${formatDateForDayKey(selectedKey)}</small>`;
+      renderDishList(elWeekB, parsed?.[selectedKey] || []);
+    }
 
-  function renderHeading(txt){ return `<div class="day-heading"><h2>${txt}</h2></div>` }
-  function clearLoader(){ if(loaderInterval){ clearInterval(loaderInterval); loaderInterval=null; } }
+    async function load(force=false){
+      setLoading(elTodayB, force ? "Osvežujem Femec…" : "Nalagam Femec…");
+      setLoading(elWeekB,  force ? "Osvežujem Femec…" : "Nalagam Femec…");
+      elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
-  function getFormattedDateForWeekday(dayKey){
-    if(!dayKey) return ""; const map={ ponedeljek:1, torek:2, sreda:3, cetrtek:4, petek:5 };
-    const idx = map[dayKey]; if(idx===undefined) return "";
-    const d = new Date(); let wd=d.getDay(); if(wd===0) wd=7; const monday=new Date(d); monday.setDate(d.getDate()-(wd-1));
-    const target=new Date(monday); target.setDate(monday.getDate()+(idx-1));
-    let s = target.toLocaleDateString('sl-SI', { day:'numeric', month:'long' });
-    return s.replace(/(\d+\. )([a-zčšžđ])/,(m,p1,p2)=>p1+p2.toUpperCase());
-  }
-
-  function emojiFor(dish){
-    const nameLower = dish.toLowerCase();
-    const map=[
-      {k:"tortilija",e:"🌯"},{k:"tortilja",e:"🌯"},
-      {k:"lignji",e:"🦑"},{k:"lignje",e:"🦑"},
-      {k:"pizza",e:"🍕"},{k:"pica",e:"🍕"},
-      {k:"burger",e:"🍔"},{k:"sendvič",e:"🥪"},
-      {k:"lazanja",e:"🍝"},{k:"špageti",e:"🍝"},{k:"makaroni",e:"🍝"},{k:"tortelini",e:"🍝"},{k:"testenine",e:"🍝"},
-      {k:"njoki",e:"🥔"},
-      {k:"rižota",e:"🍚"},{k:"riž",e:"🍚"},
-      {k:"solatni krožnik",e:"🥗"},{k:"solatni bar",e:"🥗"},{k:"solata",e:"🥗"},{k:"solato",e:"🥗"},
-      {k:"piščan",e:"🍗"},{k:"puran",e:"🍗"},
-      {k:"dunajski",e:"🥩"},{k:"biftek",e:"🥩"},
-      {k:"gove",e:"🐄"},
-      {k:"svinjs",e:"🐖"},{k:"pečenka",e:"🍖"},{k:"zrezek",e:"🥩"},{k:"kotlet",e:"🥩"},{k:"krača",e:"🍖"},
-      {k:"čevap",e:"🥩"},{k:"pleskav",e:"🥩"},{k:"ražnji",e:"🍢"},
-      {k:"golaž",e:"🍲"},{k:"obara",e:"🍲"},{k:"enolonč",e:"🍲"},{k:"pasulj",e:"🍲"},
-      {k:"juha",e:"🥣"},{k:"jetrca",e:"🍳"},
-      {k:"klobasa",e:"🌭"},{k:"hrenovka",e:"🌭"},
-      {k:"jajc",e:"🥚"},{k:"omleta",e:"🍳"},{k:"fritata",e:"🍳"},{k:"ocvrt",e:"🍳"},
-      {k:"sir",e:"🧀"},{k:"mozzarella",e:"🧀"},
-      {k:"pečen",e:"🍖"},{k:"na žaru",e:"🔥"},
-      {k:"morski sadeži",e:"🦞"},{k:"škampi",e:"🦐"},
-      {k:"losos",e:"🐟"},{k:"oslič",e:"🐟"},{k:"postrv",e:"🐟"},{k:"sardel",e:"🐟"},{k:"skuša",e:"🐟"},{k:"brancin",e:"🐟"},{k:"orada",e:"🐟"},{k:"bakalar",e:"🐟"},{k:"riba",e:"🐟"},
-      {k:"krompir",e:"🥔"},{k:"pire",e:"🥔"},
-      {k:"zelenjav",e:"🥕"},{k:"bučke",e:"🥒"},{k:"paprika",e:"🌶️"},{k:"paradižnik",e:"🍅"},
-      {k:"brokoli",e:"🥦"},{k:"cvetača",e:"🥦"},
-      {k:"grah",e:"🫛"},{k:"fižol",e:"🫘"},{k:"leča",e:"🥣"},
-      {k:"sladica",e:"🍰"},{k:"torta",e:"🍰"},{k:"palačinke",e:"🥞"},{k:"zavitek",e:"🥧"},{k:"štrudelj",e:"🥧"},{k:"sadje",e:"🍓"},{k:"jogurt",e:"🍦"},{k:"krema",e:"🍮"}
-    ];
-    for(const it of map){ if(nameLower.includes(it.k)) return it.e; } return "🍴";
-  }
-
-  // ======= Parsing (done once per source, then reused) =======
-  function parseFemec(html){
-    const out={}; const doc=new DOMParser().parseFromString(html,'text/html');
-    for(const key of Object.keys(daysSlo)){
-      const sec = doc.getElementById(key); if(!sec){ continue }
-      const items = qa('.menucontent p', sec); const dishes=[];
-      let current=null; let weekly=false;
-      for(const el of items){ const t=el.textContent.trim(); if(!t) continue;
-        const low=t.toLowerCase();
-        if(low.includes('tedensk ponudba')){ if(current) dishes.push(current); dishes.push({name:'TEDENSKA PONUDBA', type:'special_header', sides:[]}); current=null; weekly=true; continue; }
-        if(low.includes('samopostrežni solatni bar')){ if(current && !weekly){ current.sides.push(t); } else { if(current) dishes.push(current); dishes.push({name:t, type:'normal', sides:[]}); current=null; } continue; }
-        if(current) dishes.push(current); current={name:t, type:'normal', sides:[]};
+      try {
+        const html = await fetchTextWithRetry(FEMEC_PROXY_URL + "?_=" + Date.now(), { retries: 1, timeoutMs: 9000 });
+        parsed = parseFemecMenu(html);
+        elStatus.textContent = "Posodobljeno";
+        setUpdated(elUpdated, now());
+        renderToday(); renderWeek();
+      } catch (e) {
+        setError(elTodayB, "Femec meni ni dosegljiv.");
+        setError(elWeekB,  "Femec meni ni dosegljiv.");
+        elStatus.textContent = "Napaka";
+        console.error(e);
       }
-      if(current) dishes.push(current); out[key]=dishes;
     }
-    return out; // { dayKey: [dish] }
-  }
 
-  function parseGastro(html){
-    const doc=new DOMParser().parseFromString(html,'text/html');
-    const tabs=qa('.sprocket-tabs-nav li', doc).map(li=>li.textContent.trim());
-    const panels=qa('.sprocket-tabs-panel', doc);
-    const dishesByTabIndex={};
-    panels.forEach((p,idx)=>{
-      const list=p.querySelector('.futr ul');
-      const arr=[]; if(list){ qa('li', list).forEach(li=>{ const text=li.textContent.trim(); if(!text) return;
-        if(li.querySelector('strong') || (text.toUpperCase()===text && text.length>5 && !text.includes(','))){ arr.push({name:text,sides:[]}); }
-        else { if(arr.length===0) arr.push({name:text,sides:[]}); else arr[arr.length-1].sides.push(text); }
-      }); }
-      dishesByTabIndex[idx]=arr;
-    });
-    return { tabs, dishesByTabIndex };
-  }
+    elRefresh.addEventListener("click", () => load(true));
+    buildTabs();
+    renderToday(); renderWeek();
+    return { load };
+  })();
 
-  function parseVinka(html){
-    const doc=new DOMParser().parseFromString(html,'text/html');
-    const content=doc.querySelector('div.col-md-9[role="content"]');
-    if(!content) return `<p>Glavni vsebinski del za Vinko ni bil najden na strani.</p>`;
-    let pWithMenu=null; for(const p of qa('p', content)){ const t=p.innerText.toLowerCase(); if(t.includes('dnevna ponudba') && (t.includes('naše stalnice') || t.includes('jed na žlico') || t.includes('za vegeterijance'))) { pWithMenu=p; break; } }
-    if(!pWithMenu){ return `<p>Vsebina menija za Vinko ni najdena v pričakovani obliki.</p>`; }
-    const htmlContent = pWithMenu.innerHTML;
-    const mStal='Naše stalnice:'; const mDnev='Dnevna ponudba:'; const mVeg='Za vegeterijance:'; const mZlic='Jed na žlico:';
-    const iS=htmlContent.indexOf(mStal), iD=htmlContent.indexOf(mDnev), iV=htmlContent.indexOf(mVeg), iZ=htmlContent.indexOf(mZlic);
-    const clean = s=>s.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').trim();
-    if(iS!==-1 && iD!==-1 && iV!==-1 && iZ!==-1 && iS<iD && iD<iV && iV<iZ){
-      const bD=clean(htmlContent.substring(iD+mDnev.length, iV));
-      const bS=clean(htmlContent.substring(iS+mStal.length, iD));
-      const bV=clean(htmlContent.substring(iV+mVeg.length, iZ));
-      const bZ=clean(htmlContent.substring(iZ+mZlic.length));
+  // ==============================
+  // VINKA (proxy) - numbering + money highlighting
+  // ==============================
+  const vinka = (() => {
+    const elStatus = $("statusVinka");
+    const elUpdated = $("updatedVinka");
+    const elRefresh = $("refreshVinka");
+    const elHeading = $("vinkaHeading");
+    const elBody = $("vinkaBody");
+
+    let parsedHtml = null;
+
+    function cleanHtmlToText(htmlSnippet){
+      return htmlSnippet
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\u00a0/g, " ")
+        .trim();
+    }
+
+    function splitToNumberedDishes(text){
+      const lines = (text || "").split("\n").map(s => s.trim()).filter(Boolean);
+      return lines.map((line, idx) => `
+        <div class="dish">
+          <h3><span class="num">${idx+1}</span> ${highlightMoney(line)}</h3>
+        </div>
+      `).join("");
+    }
+
+    function parseVinka(html){
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const content = doc.querySelector('div.col-md-9[role="content"]');
+      if (!content) return { ok:false, daily:"", regular:"", msg:"Glavni vsebinski del ni bil najden." };
+
+      let pWithMenu = null;
+      for (const p of Array.from(content.querySelectorAll("p"))) {
+        const t = (p.innerText || "").toLowerCase();
+        if (t.includes("dnevna ponudba") && (t.includes("naše stalnice") || t.includes("jed na žlico") || t.includes("za vegeterijance") || t.includes("za vegetarijance"))) {
+          pWithMenu = p; break;
+        }
+      }
+      if (!pWithMenu) return { ok:false, daily:"", regular:"", msg:"Vsebina menija ni v pričakovani obliki." };
+
+      const htmlContent = pWithMenu.innerHTML;
+
+      const mStal = "Naše stalnice:";
+      const mDnev = "Dnevna ponudba:";
+      const mVeg1 = "Za vegeterijance:";
+      const mVeg2 = "Za vegetarijance:";
+      const mZlic = "Jed na žlico:";
+
+      const iS = htmlContent.indexOf(mStal);
+      const iD = htmlContent.indexOf(mDnev);
+      const iV1 = htmlContent.indexOf(mVeg1);
+      const iV2 = htmlContent.indexOf(mVeg2);
+      const iV = (iV1 !== -1) ? iV1 : iV2;
+      const iZ = htmlContent.indexOf(mZlic);
+
+      if (iS === -1 || iD === -1) {
+        const fallback = cleanHtmlToText(htmlContent);
+        return { ok:true, daily:fallback, regular:"", msg:"" };
+      }
+
+      const dailyEnd = (iV !== -1) ? iV : ((iZ !== -1) ? iZ : htmlContent.length);
+      const daily = cleanHtmlToText(htmlContent.substring(iD + mDnev.length, dailyEnd));
+      const regular = cleanHtmlToText(htmlContent.substring(iS + mStal.length, iD));
+      return { ok:true, daily, regular, msg:"" };
+    }
+
+    function formatSection(title, text){
+      if (!text) return "";
       return `
-        <div class="dish"><h4><span class="emoji-icon">${emojiFor(mDnev)}</span> ${mDnev.toUpperCase()}</h4><p>${bD}</p></div>
-        <div class="dish"><h4><span class="emoji-icon">${emojiFor(mStal)}</span> ${mStal.toUpperCase()}</h4><p>${bS}</p></div>
-        <div class="dish"><h4><span class="emoji-icon">🌿</span> ${mVeg.toUpperCase()}</h4><p>${bV}</p></div>
-        <div class="dish"><h4><span class="emoji-icon">🥣</span> ${mZlic.toUpperCase()}</h4><p>${bZ}</p></div>
+        <div class="dish" style="background:rgba(255,255,255,.07);">
+          <h3><span class="num">★</span> ${escapeHtml(title)}</h3>
+        </div>
+        ${splitToNumberedDishes(text)}
       `;
     }
-    // fallback: whole paragraph text with line breaks preserved
-    const tmp = new DOMParser().parseFromString(htmlContent,'text/html');
-    return `<div class="dish"><p>${(tmp.body.textContent||htmlContent.replace(/<br\s*\/?>/gi,'\n')).trim()}</p></div>`;
-  }
 
-  // ======= Rendering =======
-  function renderFemec(dayKey){
-    clearLoader(); const menu=q('#menu');
-    const dayName=daysSlo[dayKey]||dayKey; const heading=`Femec - ${dayName}, ${getFormattedDateForWeekday(dayKey)} (11:00 - 14:00)`;
-    const list=femecParsed?.[dayKey];
-    if(!list || list.length===0){ menu.innerHTML = renderHeading(heading)+`<p>Meni za ta dan ni na voljo.</p>`; return; }
-    const html=list.map(d=>{
-      if(d.type==='special_header') return `<div class="dish"><h4>${d.name}</h4></div>`;
-      const emoji=emojiFor(d.name);
-      return `<div class="dish"><h4><span class="emoji-icon">${emoji}</span> ${d.name}</h4>${(d.sides||[]).map(s=>`<p class="side-dish">${s}</p>`).join('')}</div>`;
-    }).join('');
-    menu.innerHTML = renderHeading(heading)+html; menu.style.display='block';
-  }
-
-  function renderGastro(tabIndex){
-    clearLoader(); const menu=q('#menu');
-    const today=new Date(); const dateStr=today.toLocaleDateString('sl-SI',{day:'numeric',month:'long'});
-    const opening='08:00-16:00'; const tabName=(gastroParsed?.tabs?.[tabIndex])||'Današnji meni';
-    const heading=`Gastro House - ${tabName}, ${dateStr} (${opening})`;
-    const items=gastroParsed?.dishesByTabIndex?.[tabIndex]||[];
-    if(items.length===0){ menu.innerHTML=renderHeading(heading)+`<p>Meni ni na voljo.</p>`; return; }
-    const html=items.map(d=>`<div class="dish"><h4><span class="emoji-icon">${emojiFor(d.name)}</span> ${d.name}</h4>${d.sides.map(s=>`<p class="side-dish">${s}</p>`).join('')}</div>`).join('');
-    menu.innerHTML=renderHeading(heading)+html; menu.style.display='block';
-  }
-
-  function renderGastroDays(){
-    const cont=q('#days'); cont.innerHTML='';
-    (gastroParsed?.tabs||[]).forEach((name, idx)=>{
-      const b=document.createElement('div'); b.className='daysbutton'; b.textContent=name; b.onclick=()=>{ qa('#days .daysbutton').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderGastro(idx); };
-      cont.appendChild(b); if(idx===0) b.classList.add('active');
-    });
-  }
-
-  function renderVinka(){
-    clearLoader(); const menu=q('#menu');
-    const todayIdx=new Date().getDay(); const key=(todayIdx>=1 && todayIdx<=5)? Object.keys(daysSlo)[todayIdx-1] : 'ponedeljek';
-    const heading=`Vinka - ${daysSlo[key]||'Današnji meni'}, ${getFormattedDateForWeekday(key)} (10:30 - 15:00)`;
-    menu.innerHTML = renderHeading(heading) + (vinkaParsed||'<p>Napaka pri nalaganju jedilnika za Vinka.</p>');
-    menu.style.display='block';
-  }
-
-  // ======= Controller =======
-  const femecBtn = q('#femec-button');
-  const gastroBtn = q('#gastro-button');
-  const vinkaBtn = q('#vinka-button');
-  const refreshBtn = q('#refresh-button');
-
-  let dayButtons = {};
-  function buildFemecDays(){
-    const cont=q('#days'); cont.innerHTML=''; dayButtons={};
-    for(const key of Object.keys(daysSlo)){
-      const b=document.createElement('div'); b.className='daysbutton'; b.textContent=daysSlo[key]; b.onclick=()=>{ qa('#days .daysbutton').forEach(x=>x.classList.remove('active')); b.classList.add('active'); currentActiveDay=key; renderFemec(key); };
-      cont.appendChild(b); dayButtons[key]=b;
+    function render(){
+      const key = getDefaultDayKey();
+      elHeading.innerHTML = `<span>Dnevna ponudba + stalnice</span><small>${formatDateForDayKey(key)}</small>`;
+      elBody.innerHTML = parsedHtml || `<p class="muted">Ni podatkov.</p>`;
     }
-  }
 
-  function setActiveHeader(btn){ [femecBtn,gastroBtn,vinkaBtn].forEach(b=>b.classList.remove('active')); btn?.classList.add('active'); }
+    async function load(force=false){
+      setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
+      elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
-  async function showFemec(){
-    currentRestaurant='femec'; setActiveHeader(femecBtn); buildFemecDays();
-    showLoader('Nalagam meni za Femec...', true);
-    // load parsed from session (fast), otherwise fetch and parse
-    femecParsed = getParsedCache('femec');
-    if(!femecParsed){ const {html}= await fetchSWR('femec', FEMEC_URL, { ttl: TTL_MS }); if(html) { femecParsed = parseFemec(html); setParsedCache('femec', femecParsed); } }
-    const today = new Date().getDay(); const defKey = (today>=1 && today<=5) ? Object.keys(daysSlo)[today-1] : 'ponedeljek';
-    currentActiveDay = defKey; if(dayButtons[defKey]) dayButtons[defKey].classList.add('active');
-    renderFemec(defKey);
-    // background preloads
-    idleLoadOthers();
-  }
+      const url = VINKA_PROXY_URL + "?_=" + Date.now();
 
-  async function showGastro(){
-    currentRestaurant='gastro'; setActiveHeader(gastroBtn); q('#days').innerHTML=''; showLoader('Nalagam meni za Gastro House...', true);
-    gastroParsed = getParsedCache('gastro');
-    if(!gastroParsed){ const {html}= await fetchSWR('gastro', GASTRO_URL, { ttl: TTL_MS }); if(html){ gastroParsed = parseGastro(html); setParsedCache('gastro', gastroParsed); } }
-    renderGastroDays(); renderGastro(0);
-    idleLoadOthers();
-  }
+      try {
+        const html = await fetchTextWithRetry(url, { retries: VINKA_RETRIES, timeoutMs: VINKA_TIMEOUT_MS });
+        const p = parseVinka(html);
 
-  async function showVinka(){
-    currentRestaurant='vinka'; setActiveHeader(vinkaBtn); q('#days').innerHTML=''; showLoader('Nalagam meni za Vinka...', true);
-    vinkaParsed = getParsedCache('vinka');
-    if(!vinkaParsed){ const {html}= await fetchSWR('vinka', VINKA_URL, { ttl: TTL_MS }); if(html){ vinkaParsed = parseVinka(html); setParsedCache('vinka', vinkaParsed); } }
-    renderVinka();
-    idleLoadOthers();
-  }
+        parsedHtml = p.ok
+          ? (formatSection("Dnevna ponudba", p.daily) + formatSection("Redna ponudba (stalnice)", p.regular))
+          : `<div class="err">${escapeHtml(p.msg || "Napaka pri branju menija.")}</div>`;
 
-  function idleLoadOthers(){
-    const run = ()=>{
-      if(currentRestaurant!=='femec' && !femecParsed){ fetchSWR('femec', FEMEC_URL, { ttl: TTL_MS }).then(({html})=>{ if(html){ femecParsed=parseFemec(html); setParsedCache('femec', femecParsed); } }); }
-      if(currentRestaurant!=='gastro' && !gastroParsed){ fetchSWR('gastro', GASTRO_URL, { ttl: TTL_MS }).then(({html})=>{ if(html){ gastroParsed=parseGastro(html); setParsedCache('gastro', gastroParsed); } }); }
-      if(currentRestaurant!=='vinka' && !vinkaParsed){ fetchSWR('vinka', VINKA_URL, { ttl: TTL_MS }).then(({html})=>{ if(html){ vinkaParsed=parseVinka(html); setParsedCache('vinka', vinkaParsed); } }); }
-    };
-    if('requestIdleCallback' in window){ requestIdleCallback(run, { timeout: 1200 }); } else { setTimeout(run, 0); }
-  }
+        elStatus.textContent = "Posodobljeno";
+        setUpdated(elUpdated, now());
+        render();
+      } catch (e) {
+        setError(elBody, "Vinka meni ni dosegljiv (napaka pri nalaganju).");
+        elStatus.textContent = "Napaka";
+        console.error(e);
+      }
+    }
 
-  function refreshAll(){
-    // hard refresh: clear both raw + parsed caches, then reload current view
-    ['femec','gastro','vinka'].forEach(k=>{ try{ localStorage.removeItem(makeKey(k)); sessionStorage.removeItem(makeKey('parsed:'+k)); }catch{} });
-    femecParsed=gastroParsed=vinkaParsed=null;
-    if(currentRestaurant==='femec') showFemec(); else if(currentRestaurant==='gastro') showGastro(); else showVinka();
-    // also kick background loads to warm caches again
-    idleLoadOthers();
-  }
+    elRefresh.addEventListener("click", () => load(true));
+    return { load };
+  })();
 
-  // ======= Init =======
-  femecBtn.onclick = ()=>{ if(currentRestaurant==='femec' && q('#days .daysbutton.active')) return; showFemec(); };
-  gastroBtn.onclick = ()=>{ if(currentRestaurant==='gastro' && q('#days .daysbutton.active')) return; showGastro(); };
-  vinkaBtn.onclick = ()=>{ if(currentRestaurant==='vinka' && vinkaParsed) return; showVinka(); };
-  refreshBtn.onclick = refreshAll;
+  // ==============================
+  // ROTONDA (proxy) - already uses .price; add money highlighting in details too
+  // ==============================
+  const rotonda = (() => {
+    const elStatus = $("statusRotonda");
+    const elUpdated = $("updatedRotonda");
+    const elRefresh = $("refreshRotonda");
+    const elTabs = $("rotondaTabs");
+    const elTodayH = $("rotondaTodayHeading");
+    const elWeekH = $("rotondaWeekHeading");
+    const elTodayB = $("rotondaTodayBody");
+    const elWeekB = $("rotondaWeekBody");
 
-  // First paint as Femec (fast cached), others preloaded idle
-  showFemec();
-  </script>
+    const todayKey = getDefaultDayKey();
+    let selectedKey = todayKey;
+
+    let weekRange = "";
+    let parsedByDay = null;
+
+    function normalizeLines(text){
+      const fixed = (text || "")
+        .replace(/\u00a0/g, " ")
+        .replace(/Weekly menu\s*(\d)/gi, "Weekly menu\n$1")
+        .replace(/(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY)\s*(\/)\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY)/gi, "$1 / $3");
+      return fixed
+        .split("\n")
+        .map(s => s.replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+    }
+
+    function canonicalDayLine(line){
+      return (line || "").replace(/[^A-Za-z/ ]/g, "").replace(/\s+/g, " ").trim().toUpperCase();
+    }
+    function isDayHeadingLine(line){
+      const s = canonicalDayLine(line);
+      return /^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY)(\s*\/\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY))*$/.test(s);
+    }
+    function dayHeadingToKeys(line){
+      const s = canonicalDayLine(line);
+      const parts = s.split("/").map(x => x.trim()).filter(Boolean);
+      return parts.map(p => DAY_EN_TO_SI[p]).filter(Boolean);
+    }
+    function looksLikePrice(s){ return /^€\s*\d/.test(s) || /^€\d/.test(s); }
+    function looksLikeWeekRange(s){ return /^\d{1,2}\s*-\s*\d{1,2}\s+[A-Za-z]/.test(s); }
+    function isJunkTitle(s){
+      const t = (s || "").trim();
+      if (!t) return true;
+      if (t === "/" || t === "-" || t === "—") return true;
+      if (!/[A-Za-zÀ-ž]/.test(t)) return true;
+      const low = t.toLowerCase();
+      if (low.startsWith("with ")) return true;
+      if (low.startsWith("optional")) return true;
+      if (low === "side salad" || low === "with side salad") return true;
+      return false;
+    }
+
+    function parseRotonda(html){
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const fullText = doc.body ? (doc.body.innerText || doc.body.textContent || "") : (doc.documentElement?.textContent || "");
+      const lines = normalizeLines(fullText);
+
+      const startIdx = lines.findIndex(l => l.toLowerCase() === "weekly menu");
+      const endIdx = lines.findIndex(l => l.toLowerCase() === "subscribe");
+      const slice = (startIdx !== -1)
+        ? lines.slice(startIdx + 1, endIdx !== -1 ? endIdx : lines.length)
+        : lines;
+
+      let range = "";
+      if (slice.length && looksLikeWeekRange(slice[0])) range = slice[0];
+
+      const out = { ponedeljek:[], torek:[], sreda:[], cetrtek:[], petek:[] };
+      let activeDays = [];
+      let i = (range ? 1 : 0);
+
+      while (i < slice.length){
+        const line = slice[i];
+
+        if (isDayHeadingLine(line)) { activeDays = dayHeadingToKeys(line); i++; continue; }
+        if (!activeDays.length) { i++; continue; }
+
+        if (looksLikePrice(line)) {
+          let price = line.trim();
+          i++;
+
+          while (i < slice.length && looksLikePrice(slice[i])) {
+            const p2 = slice[i].trim();
+            if (p2 !== price && !price.includes(p2)) price = price + " / " + p2;
+            i++;
+          }
+
+          let title = "";
+          while (i < slice.length) {
+            const cand = slice[i];
+            if (isDayHeadingLine(cand) || looksLikePrice(cand)) break;
+            if (isJunkTitle(cand)) { i++; continue; }
+            title = cand.trim();
+            i++;
+            break;
+          }
+
+          const details = [];
+          while (i < slice.length) {
+            const nxt = slice[i];
+            if (isDayHeadingLine(nxt) || looksLikePrice(nxt)) break;
+            const t = nxt.trim();
+            if (t && t !== "/" && t !== "-" && t !== "—") details.push(t);
+            i++;
+          }
+
+          if (!title || isJunkTitle(title)) continue;
+
+          const dish = { title, price, details };
+          for (const dk of activeDays) out[dk].push(dish);
+          continue;
+        }
+        i++;
+      }
+
+      return { range, out };
+    }
+
+    function buildTabs(){
+      elTabs.innerHTML = "";
+      for (const d of DAYS){
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "tab" + (d.key === selectedKey ? " active" : "");
+        b.textContent = d.label;
+        b.onclick = () => {
+          selectedKey = d.key;
+          Array.from(elTabs.querySelectorAll(".tab")).forEach(x => x.classList.remove("active"));
+          b.classList.add("active");
+          renderWeek();
+        };
+        elTabs.appendChild(b);
+      }
+    }
+
+    function renderDishList(el, list){
+      if (!list || !list.length){ el.innerHTML = `<p class="muted">Meni za ta dan ni na voljo.</p>`; return; }
+      el.innerHTML = list.map((d, idx) => `
+        <div class="dish">
+          <h3>
+            <span class="num">${idx+1}</span>
+            <span>${highlightMoney(d.title)}</span>
+            ${d.price ? `<span class="price">(${highlightMoney(d.price)})</span>` : ""}
+          </h3>
+          ${Array.isArray(d.details) && d.details.length ? `<p>${highlightMoney(d.details.join("\n"))}</p>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function renderToday(){
+      const label = DAYS.find(x => x.key === todayKey)?.label || todayKey;
+      const rangeTxt = weekRange ? ` • ${weekRange}` : "";
+      elTodayH.innerHTML = `<span>Današnji meni</span><small>${label}, ${formatDateForDayKey(todayKey)}${rangeTxt}</small>`;
+      renderDishList(elTodayB, parsedByDay?.[todayKey] || []);
+    }
+
+    function renderWeek(){
+      const label = DAYS.find(x => x.key === selectedKey)?.label || selectedKey;
+      const rangeTxt = weekRange ? ` • ${weekRange}` : "";
+      elWeekH.innerHTML = `<span>Tedenski pregled</span><small>${label}, ${formatDateForDayKey(selectedKey)}${rangeTxt}</small>`;
+      renderDishList(elWeekB, parsedByDay?.[selectedKey] || []);
+    }
+
+    async function load(force=false){
+      setLoading(elTodayB, force ? "Osvežujem Rotonda…" : "Nalagam Rotonda…");
+      setLoading(elWeekB,  force ? "Osvežujem Rotonda…" : "Nalagam Rotonda…");
+      elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+
+      try{
+        const html = await fetchTextWithRetry(ROTONDA_PROXY_URL + "?_=" + Date.now(), { retries: 2, timeoutMs: 10000 });
+        const p = parseRotonda(html);
+        weekRange = p.range || "";
+        parsedByDay = p.out || null;
+
+        elStatus.textContent = "Posodobljeno";
+        setUpdated(elUpdated, now());
+        renderToday(); renderWeek();
+      } catch(e){
+        setError(elTodayB, "Rotonda meni ni dosegljiv.");
+        setError(elWeekB,  "Rotonda meni ni dosegljiv.");
+        elStatus.textContent = "Napaka";
+        console.error(e);
+      }
+    }
+
+    elRefresh.addEventListener("click", () => load(true));
+    buildTabs();
+    renderToday(); renderWeek();
+    return { load };
+  })();
+
+  // ==============================
+  // Global refresh
+  // ==============================
+  $("refreshAll").addEventListener("click", () => {
+    $("globalStatus").textContent = "Osvežujem…";
+    femec.load(true);
+    vinka.load(true);
+    rotonda.load(true);
+    setTimeout(() => { $("globalStatus").textContent = "Pripravljeno"; }, 900);
+  });
+
+  // init
+  femec.load(false);
+  vinka.load(false);
+  rotonda.load(false);
+})();
+</script>
 </body>
 </html>
