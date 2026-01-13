@@ -664,27 +664,55 @@
       elBody.innerHTML = parsedHtml || `<p class="muted">Ni podatkov.</p>`;
     }
 
-    const load = makeSingleFlight(async (force=false) => {
-      setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
-      elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+    // vinka modul:
+async function load(force=false){
+  setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
+  elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
-      try {
-        const html = await fetchTextWithRetry(VINKA_PROXY_URL, { retries: VINKA_RETRIES, timeoutMs: VINKA_TIMEOUT_MS });
-        const p = parseVinka(html);
+  const url = VINKA_PROXY_URL + "?_=" + Date.now();
 
-        parsedHtml = p.ok
-          ? (formatSection("Dnevna ponudba", p.daily) + formatSection("Redna ponudba (stalnice)", p.regular))
-          : `<div class="err">${escapeHtml(p.msg || "Napaka pri branju menija.")}</div>`;
+  const tryOnce = async () => {
+    const html = await fetchTextWithRetry(url, { retries: 0, timeoutMs: VINKA_TIMEOUT_MS });
+    const p = parseVinka(html);
+    if (!p.ok) throw new Error(p.msg || "Parse fail");
 
-        elStatus.textContent = "Posodobljeno";
-        setUpdated(elUpdated, now());
-        render();
-      } catch (e) {
-        setError(elBody, "Vinka meni ni dosegljiv (napaka pri nalaganju).");
-        elStatus.textContent = "Napaka";
-        console.error(e);
-      }
-    });
+    const rendered =
+      formatSection("Dnevna ponudba", p.daily) +
+      formatSection("Redna ponudba (stalnice)", p.regular);
+
+    localStorage.setItem("vinka:lastGood", rendered);
+    localStorage.setItem("vinka:lastGoodTs", String(Date.now()));
+
+    parsedHtml = rendered;
+    elStatus.textContent = "Posodobljeno";
+    setUpdated(elUpdated, now());
+    render();
+  };
+
+  const waits = [0, 800, 2000]; // backoff
+  for (let i = 0; i < waits.length; i++) {
+    try {
+      if (waits[i]) await new Promise(r => setTimeout(r, waits[i]));
+      await tryOnce();
+      return;
+    } catch (e) {
+      // poskusi naslednjič
+    }
+  }
+
+  const cached = localStorage.getItem("vinka:lastGood");
+  const ts = Number(localStorage.getItem("vinka:lastGoodTs") || 0);
+  if (cached) {
+    parsedHtml = cached;
+    elStatus.textContent = "Zadnji uspešen meni";
+    setUpdated(elUpdated, ts || now());
+    render();
+    return;
+  }
+
+  setError(elBody, "Vinka meni ni dosegljiv (napaka pri nalaganju).");
+  elStatus.textContent = "Napaka";
+}
 
     elRefresh.addEventListener("click", () => {
       withCooldown(elRefresh, CLICK_COOLDOWN_MS);
