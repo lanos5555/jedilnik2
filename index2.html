@@ -7,65 +7,275 @@
 
   <style>
     :root{
-      --bg:#0b1220;
-      --panel:#0f1a2f;
-      --card:#111f39;
-      --soft:#16284a;
-      --brand:#5dade2;
-      --ok:#2ecc71;
-      --warn:#ffcc66;
-      --ink:#e9eefc;
-      --muted:#b7c3e0;
-      --line:rgba(255,255,255,.10);
-      --shadow: 0 18px 40px rgba(0,0,0,.35);
-      --shadow2: 0 10px 24px rgba(0,0,0,.22);
-      --radius:18px;
+      --bg0:#0b1020;
+      --bg1:#0d1630;
+      --line: rgba(255,255,255,.10);
+      --ink:#eef3ff;
+      --muted: rgba(238,243,255,.72);
+
+      --brand:#7c5cff;
+      --brand2:#2ee5b2;
+      --accent:#ffb020;
+      --danger:#ff5c7a;
+
+      --shadow: 0 22px 50px rgba(0,0,0,.35);
+      --shadow2: 0 10px 22px rgba(0,0,0,.22);
+      --radius: 20px;
+      --radius2: 14px;
+
+      --tap: 44px;
     }
+
     *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
       color:var(--ink);
       background:
-        radial-gradient(1200px 700px at 20% 0%, rgba(93,173,226,.22), transparent 55%),
-        radial-gradient(900px 600px at 90% 10%, rgba(46,204,113,.16), transparent 55%),
-        radial-gradient(900px 700px at 30% 90%, rgba(255,204,102,.12), transparent 55%),
-        var(--bg);
-      padding:24px 12px;
+        radial-gradient(1200px 900px at 18% 0%, rgba(124,92,255,.24), transparent 60%),
+        radial-gradient(1000px 700px at 90% 12%, rgba(46,229,178,.18), transparent 60%),
+        radial-gradient(900px 700px at 30% 92%, rgba(255,176,32,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg0));
       overflow-x:hidden;
     }
-    .wrap{ max-width:1400px; margin:0 auto; }
 
+    .wrap{ max-width: 1220px; margin: 0 auto; padding: 18px 12px 34px; }
+
+    /* ---------- Top bar ---------- */
     .topbar{
-      display:flex; align-items:flex-start; justify-content:space-between;
-      gap:14px; flex-wrap:wrap; margin-bottom:16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(11,16,32,.82), rgba(11,16,32,.52));
+      border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    .title h1{ margin:0; font-size:1.75rem; letter-spacing:.2px; }
-    .title p{ margin:6px 0 0; color:var(--muted); font-size:.98rem; }
+    .topbarInner{
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 14px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
 
-    .globalActions{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-      background:rgba(255,255,255,.04);
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:8px 10px;
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 0;
+    }
+    .logo{
+      width:44px; height:44px;
+      border-radius:14px;
+      background: linear-gradient(135deg, var(--brand), rgba(46,229,178,.92));
       box-shadow: var(--shadow2);
+      display:flex; align-items:center; justify-content:center;
+      flex:0 0 auto;
+      position:relative;
+      overflow:hidden;
     }
-    .gbtn{
-      cursor:pointer; border:0; border-radius:999px;
-      padding:10px 14px; font-weight:900;
-      background:linear-gradient(135deg, rgba(93,173,226,1), rgba(46,204,113,.95));
-      color:#071018;
+    .logo:before{
+      content:"";
+      position:absolute; inset:-20px;
+      background: radial-gradient(50% 50% at 30% 30%, rgba(255,255,255,.35), transparent 55%);
+      transform: rotate(10deg);
     }
-    .gbtn:disabled{ opacity:.55; cursor:not-allowed; }
-    .gstatus{
-      color:var(--muted); font-size:.92rem;
-      padding:6px 10px; border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
+    .logo span{
+      font-weight: 1000;
+      letter-spacing:.5px;
+      color:#061019;
+      position:relative;
+    }
+    .titleBox{ min-width:0; }
+    .titleBox h1{
+      margin:0;
+      font-size:1.15rem;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .titleBox p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:.92rem;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      font-size:.9rem;
+      max-width: 100%;
+    }
+    .pill b{
+      color: rgba(238,243,255,.92);
+      font-weight: 900;
+    }
+
+    .btn{
+      cursor:pointer;
+      border:0;
+      border-radius:999px;
+      height: var(--tap);
+      padding: 0 14px;
+      font-weight: 950;
+      color: #061019;
+      background: linear-gradient(135deg, rgba(124,92,255,1), rgba(46,229,178,.95));
+      box-shadow: var(--shadow2);
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+    }
+    .btn.secondary{
+      background: rgba(255,255,255,.08);
+      color: var(--ink);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: none;
+    }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+    .btn:hover{ filter:brightness(1.03); }
+    .btn.secondary:hover{ background: rgba(255,255,255,.10); }
+
+    /* ---------- Hero (search + day chips) ---------- */
+    .hero{
+      margin-top: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: calc(var(--radius) + 2px);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      flex-wrap:wrap;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero:before{
+      content:"";
+      position:absolute;
+      inset:-2px -2px auto -2px;
+      height: 110px;
+      background:
+        radial-gradient(700px 160px at 20% 30%, rgba(124,92,255,.26), transparent 60%),
+        radial-gradient(650px 140px at 80% 20%, rgba(46,229,178,.18), transparent 60%);
+      pointer-events:none;
+    }
+
+    .heroLeft{
+      position:relative;
+      flex: 1 1 520px;
+      min-width: 260px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .searchWrap{
+      flex: 1 1 520px;
+      min-width: 240px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(10px);
+    }
+    .searchIcon{
+      width: 34px; height: 34px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.10);
+      display:flex; align-items:center; justify-content:center;
+      font-size: 16px;
+      flex: 0 0 auto;
+    }
+    .searchWrap input{
+      width: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 900;
+      font-size: 1rem;
+      letter-spacing: .1px;
+    }
+    .searchWrap input::placeholder{
+      color: rgba(238,243,255,.55);
+      font-weight: 800;
+    }
+    .clearBtn{
+      cursor:pointer;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(238,243,255,.9);
+      border-radius: 999px;
+      height: 36px;
+      padding: 0 10px;
+      font-weight: 950;
+      display:none;
+      flex: 0 0 auto;
+    }
+    .clearBtn.show{ display:inline-flex; align-items:center; }
+
+    .heroRight{
+      position:relative;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+      flex: 0 0 auto;
+      flex-wrap:wrap;
+    }
+
+    .chips{
+      display:flex; gap:8px; flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .chip{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: var(--ink);
+      border-radius:999px;
+      padding: 8px 12px;
+      font-weight: 900;
+      font-size: .92rem;
+      user-select:none;
+    }
+    .chip.active{
+      background: linear-gradient(135deg, rgba(124,92,255,.92), rgba(46,229,178,.92));
+      color:#061019;
+      border-color: transparent;
+    }
+
+    /* ---------- Layout ---------- */
     .grid{
+      margin-top: 14px;
       display:grid;
       gap:14px;
       grid-template-columns: 1fr;
@@ -77,294 +287,383 @@
       .grid{ grid-template-columns: 1fr 1fr 1fr; }
     }
 
-    .widget{
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:16px;
-      box-shadow:var(--shadow);
-      position:relative;
+    /* ---------- Restaurant card ---------- */
+    .res{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+      box-shadow: var(--shadow);
       overflow:hidden;
-      min-width: 0;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
     }
-    .widget:before{
-      content:"";
-      position:absolute; inset:-2px -2px auto -2px;
-      height:96px;
-      background:radial-gradient(600px 120px at 20% 10%, rgba(93,173,226,.22), transparent 60%),
-                 radial-gradient(400px 100px at 80% 0%, rgba(46,204,113,.18), transparent 55%);
-      pointer-events:none;
-    }
-
-    .whead{
+    .resHead{
+      padding: 14px 14px 12px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
       position:relative;
-      display:flex; justify-content:space-between; align-items:flex-start;
-      gap:12px; flex-wrap:wrap; margin-bottom:12px;
+      flex-wrap:wrap;
     }
-    .wtitle{
-      margin:0; font-size:1.15rem;
-      display:flex; align-items:center; gap:10px;
+    .resHead:before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:4px;
+      background: linear-gradient(90deg, rgba(124,92,255,.9), rgba(46,229,178,.85), rgba(255,176,32,.70));
     }
-    .pill{
-      font-size:.82rem;
-      color:#071018;
-      font-weight:900;
-      padding:6px 10px;
+    .resName{
+      margin:0;
+      font-size: 1.15rem;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
       border-radius:999px;
-      background:rgba(255,255,255,.85);
+      background: rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+      font-size: .86rem;
       white-space:nowrap;
     }
+
     .meta{
-      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:8px;
+      min-width: 260px;
+      flex: 1 1 260px;
     }
-    .btn{
-      cursor:pointer; border:0; border-radius:12px;
-      padding:10px 12px;
-      background:rgba(255,255,255,.08);
-      color:var(--ink);
-      font-weight:900;
-      border:1px solid var(--line);
-      backdrop-filter: blur(6px);
+    .metaRow{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      width: 100%;
     }
-    .btn:hover{ background:rgba(255,255,255,.12); }
-    .btn:disabled{ opacity:.55; cursor:not-allowed; }
     .status{
-      font-size:.9rem; color:var(--muted);
-      padding:7px 10px; border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.03);
+      font-size:.92rem;
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      white-space:nowrap;
+      min-width: 130px;
+      text-align:center;
     }
     .updated{
-      font-size:.88rem; color:var(--muted);
-      opacity:.95;
-      max-width: 320px;
+      font-size:.88rem;
+      color: rgba(238,243,255,.72);
+      width: 100%;
+      text-align:right;
+      white-space:normal;
+      overflow:visible;
     }
 
-    .subgrid{ display:grid; gap:12px; }
-
-    .card{
-      background:rgba(10,18,34,.55);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px;
-      box-shadow:var(--shadow2);
-      min-width: 0;
+    .resBody{
+      padding: 12px 14px 14px;
+      display:grid;
+      gap:12px;
     }
-    .heading{
-      display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
-      background:linear-gradient(135deg, rgba(93,173,226,.35), rgba(46,204,113,.25));
-      border:1px solid rgba(255,255,255,.12);
-      color:var(--ink);
-      border-radius:14px;
-      padding:12px 12px;
-      margin:0 0 12px;
-      font-weight:1000;
-    }
-    .heading small{ color:rgba(233,238,252,.85); font-weight:800; }
 
-    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:0 0 10px; }
-    .tab{
-      cursor:pointer; border:0; border-radius:999px;
-      padding:8px 12px;
-      background:rgba(255,255,255,.06);
-      color:var(--ink);
-      font-weight:900;
-      border:1px solid var(--line);
+    .panel{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.05);
+      padding: 12px;
+      min-width:0;
+    }
+    .panelTitle{
+      margin: 0 0 10px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .panelTitle b{
+      font-size: 1rem;
+      letter-spacing:.2px;
+    }
+
+    /* bolj viden dan/desno */
+    .dayTag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.20);
+      background:
+        radial-gradient(220px 80px at 30% 30%, rgba(255,255,255,.14), transparent 55%),
+        linear-gradient(135deg, rgba(124,92,255,.30), rgba(46,229,178,.18));
+      color: rgba(238,243,255,.95);
+      font-weight: 1000;
+      letter-spacing: .2px;
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
       white-space:nowrap;
     }
-    .tab.active{
-      background:linear-gradient(135deg, rgba(46,204,113,.9), rgba(93,173,226,.9));
-      color:#061019;
-      border-color:transparent;
+    .dayTag small{
+      color: rgba(238,243,255,.78);
+      font-weight: 900;
     }
 
     .dish{
-      background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.10);
-      border-radius:14px;
-      padding:12px;
-      margin:10px 0;
+      background: rgba(255,255,255,.06);
+      border-radius: 14px;
+      padding: 12px;
+      margin: 10px 0;
       transition: transform .12s ease, background .12s ease;
     }
-    .dish:hover{ transform: translateY(-1px); background:rgba(255,255,255,.08); }
+    .dish:hover{ transform: translateY(-1px); background: rgba(255,255,255,.08); }
+
     .dish h3{
       margin:0 0 6px;
-      font-size:1rem;
-      display:flex; gap:10px; align-items:flex-start;
-      color:var(--ink);
+      font-size: 1rem;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      line-height: 1.25;
     }
     .num{
-      width:24px; height:24px;
-      border-radius:8px;
-      background:rgba(255,255,255,.92);
+      width: 26px; height: 26px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.90);
       color:#061019;
-      display:inline-flex; align-items:center; justify-content:center;
-      font-size:.85rem; font-weight:1000;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 1000;
       flex:0 0 auto;
+      font-size:.86rem;
     }
-    .dish p{ margin:4px 0 0; color:rgba(233,238,252,.86); white-space:pre-line; line-height:1.5; }
-
-    .price,
-    .money{
-      font-weight:1000;
-      color:var(--warn);
-      margin-left:6px;
+    .dish p{
+      margin: 4px 0 0;
+      color: rgba(238,243,255,.78);
+      white-space: pre-line;
+      line-height: 1.5;
     }
 
-    .muted{ color:var(--muted); margin:0; }
+    .money, .price{
+      font-weight: 1000;
+      color: var(--accent);
+      margin-left: 6px;
+    }
+
+    /* highlight search term */
+    .hit{
+      display:inline-block;
+      padding: 0 .18em;
+      border-radius: .35em;
+      background: rgba(255,176,32,.22);
+      border: 1px solid rgba(255,176,32,.35);
+      color: rgba(255,240,210,.98);
+      box-shadow: 0 6px 14px rgba(0,0,0,.18);
+    }
+
+    .muted{ color: var(--muted); margin:0; }
     .err{
-      background:rgba(255, 80, 80, .14);
-      border:1px solid rgba(255, 120, 120, .35);
-      padding:10px 12px;
-      border-radius:12px;
-      color:#ffd5d5;
+      background: rgba(255,92,122,.12);
+      border:1px solid rgba(255,92,122,.28);
+      padding: 10px 12px;
+      border-radius: 14px;
+      color: rgba(255,220,228,.95);
     }
-    .loader{ display:flex; gap:10px; align-items:center; padding:10px 0; color:var(--muted); }
-    .dot{ width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.55); animation:b 1s infinite ease-in-out; }
+
+    .loader{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding: 10px 0;
+      color: var(--muted);
+    }
+    .dot{
+      width:10px; height:10px;
+      border-radius:50%;
+      background: rgba(255,255,255,.55);
+      animation: b 1s infinite ease-in-out;
+    }
     .dot:nth-child(2){ animation-delay:.15s }
     .dot:nth-child(3){ animation-delay:.3s }
     @keyframes b{ 0%,100%{ transform:scale(.7); opacity:.5 } 50%{ transform:scale(1); opacity:1 } }
 
-    .note{ font-size:.9rem; color:rgba(183,195,224,.92); margin-top:10px; }
+    /* ---------- Tiny toast ---------- */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.14);
+      color: rgba(238,243,255,.92);
+      padding: 10px 12px;
+      border-radius: 999px;
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(12px);
+      font-weight: 900;
+      display:none;
+      max-width: calc(100vw - 24px);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .toast.show{ display:block; animation: pop .18s ease-out; }
+    @keyframes pop{
+      from{ transform: translateX(-50%) translateY(6px); opacity:.0 }
+      to{ transform: translateX(-50%) translateY(0); opacity:1 }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="title">
-        <h1>Malice na enem mestu</h1>
-        <p>Femec (dnevni + teden), Vinka (dnevna + stalnice) in Rotonda (tedenski meni).</p>
+  <div class="topbar">
+    <div class="topbarInner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"><span>🍽️</span></div>
+        <div class="titleBox">
+          <h1>Malice na enem mestu</h1>
+          <p>Femec · Vinka · Rotonda — hitro, pregledno, simpatično</p>
+        </div>
       </div>
-      <div class="globalActions">
-        <button class="gbtn" id="refreshAll">Osveži vse</button>
-        <span class="gstatus" id="globalStatus">Pripravljeno</span>
+
+      <div class="actions">
+        <span class="pill" id="todayPill">Dan: <b>—</b></span>
+        <button class="btn" id="refreshAll" type="button">Osveži vse</button>
+        <button class="btn secondary" id="scrollTop" type="button">Na vrh</button>
+        <span class="pill" id="globalStatus">Pripravljeno</span>
       </div>
     </div>
+  </div>
 
-    <div class="grid">
+  <div class="wrap">
+    <section class="hero" aria-label="Iskanje in izbira dneva">
+      <div class="heroLeft">
+        <div class="searchWrap" role="search" aria-label="Iskalnik jedi">
+          <div class="searchIcon" aria-hidden="true">🔎</div>
+          <input id="searchBox" type="search" placeholder="Išči jed (npr. golaž, burger, solata) …" autocomplete="off" />
+          <button class="clearBtn" id="clearSearch" type="button" aria-label="Počisti iskanje">✕</button>
+        </div>
+      </div>
 
-      <!-- FEMEC -->
-      <section class="widget" id="femecWidget">
-        <div class="whead">
-          <h2 class="wtitle">Femec <span class="pill">Malice: 11:00–14:00</span></h2>
+      <div class="heroRight">
+        <div class="chips" id="dayChips" aria-label="Izbira dneva"></div>
+      </div>
+    </section>
+
+    <main class="grid" role="main">
+      <section class="res" id="femecWidget" aria-label="Femec">
+        <div class="resHead">
+          <div>
+            <h2 class="resName">Femec <span class="badge">Malice: 11:00–14:00</span></h2>
+          </div>
           <div class="meta">
-            <button class="btn" id="refreshFemec">Osveži</button>
-            <span class="status" id="statusFemec">Nalaganje…</span>
+            <div class="metaRow">
+              <button class="btn secondary" id="refreshFemec" type="button">Osveži</button>
+              <span class="status" id="statusFemec">Nalaganje…</span>
+            </div>
             <span class="updated" id="updatedFemec" hidden></span>
           </div>
         </div>
 
-        <div class="subgrid">
-          <div class="card">
-            <div class="heading" id="femecTodayHeading">
-              <span>Današnji meni</span>
-              <small>Femec</small>
+        <div class="resBody">
+          <div class="panel">
+            <div class="panelTitle">
+              <b>Meni</b>
+              <span class="dayTag" id="femecDayTag">—</span>
             </div>
-            <div id="femecTodayBody"></div>
-          </div>
-
-          <div class="card">
-            <div class="heading" id="femecWeekHeading">
-              <span>Tedenski pregled</span>
-              <small>Femec</small>
-            </div>
-            <nav class="tabs" id="femecTabs" aria-label="Femec dnevi"></nav>
-            <div id="femecWeekBody"></div>
+            <div id="femecBody"></div>
           </div>
         </div>
       </section>
 
-      <!-- VINKA -->
-      <section class="widget" id="vinkaWidget">
-        <div class="whead">
-          <h2 class="wtitle">Vinka <span class="pill">Malice: 10:30–15:00</span></h2>
+      <section class="res" id="vinkaWidget" aria-label="Vinka">
+        <div class="resHead">
+          <div>
+            <h2 class="resName">Vinka <span class="badge">Malice: 10:30–15:00</span></h2>
+          </div>
           <div class="meta">
-            <button class="btn" id="refreshVinka">Osveži</button>
-            <span class="status" id="statusVinka">Nalaganje…</span>
+            <div class="metaRow">
+              <button class="btn secondary" id="refreshVinka" type="button">Osveži</button>
+              <span class="status" id="statusVinka">Nalaganje…</span>
+            </div>
             <span class="updated" id="updatedVinka" hidden></span>
           </div>
         </div>
 
-        <div class="subgrid">
-          <div class="card">
-            <div class="heading" id="vinkaHeading">
-              <span>Dnevna ponudba + stalnice</span>
-              <small>Vinka</small>
+        <div class="resBody">
+          <div class="panel">
+            <div class="panelTitle">
+              <b>Meni</b>
+              <span class="dayTag" id="vinkaDayTag">—</span>
             </div>
             <div id="vinkaBody"></div>
-            <div class="note">Vrstni red: <b>Dnevna ponudba</b> → <b>Redna ponudba (stalnice)</b>.</div>
           </div>
         </div>
       </section>
 
-      <!-- ROTONDA -->
-      <section class="widget" id="rotondaWidget">
-        <div class="whead">
-          <h2 class="wtitle">Rotonda – Bistro Chika <span class="pill">Delovni čas: (ni podatka)</span></h2>
+      <section class="res" id="rotondaWidget" aria-label="Rotonda – Bistro Chika">
+        <div class="resHead">
+          <div>
+            <h2 class="resName">Rotonda – Bistro Chika <span class="badge">Tedenski meni</span></h2>
+          </div>
           <div class="meta">
-            <button class="btn" id="refreshRotonda">Osveži</button>
-            <span class="status" id="statusRotonda">Nalaganje…</span>
+            <div class="metaRow">
+              <button class="btn secondary" id="refreshRotonda" type="button">Osveži</button>
+              <span class="status" id="statusRotonda">Nalaganje…</span>
+            </div>
             <span class="updated" id="updatedRotonda" hidden></span>
           </div>
         </div>
 
-        <div class="subgrid">
-          <div class="card">
-            <div class="heading" id="rotondaTodayHeading">
-              <span>Današnji meni</span>
-              <small>Rotonda</small>
+        <div class="resBody">
+          <div class="panel">
+            <div class="panelTitle">
+              <b>Meni</b>
+              <span class="dayTag" id="rotondaDayTag">—</span>
             </div>
-            <div id="rotondaTodayBody"></div>
-          </div>
-
-          <div class="card">
-            <div class="heading" id="rotondaWeekHeading">
-              <span>Tedenski pregled</span>
-              <small>Rotonda</small>
-            </div>
-            <nav class="tabs" id="rotondaTabs" aria-label="Rotonda dnevi"></nav>
-            <div id="rotondaWeekBody"></div>
-            <div class="note">Rotonda pogosto združi dneve (npr. PON/TOR, ČET/PET).</div>
+            <div id="rotondaBody"></div>
           </div>
         </div>
       </section>
-
-    </div>
+    </main>
   </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (() => {
-  // ==============================
-  // URLs (brez cache-busterjev; browser lahko spoštuje Cache-Control iz workerja)
-  // ==============================
   const FEMEC_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/femec";
   const VINKA_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/vinka";
   const ROTONDA_PROXY_URL = "https://femec-proxy.lanos5555.workers.dev/api/rotonda";
 
-  // ==============================
-  // Settings (optimizirano: manj retryjev, manj “canceled”, manj requestov)
-  // ==============================
   const FETCH_TIMEOUT_MS = 8500;
 
-  // Femec: 1 retry max (torej največ 2 poskusa)
   const FEMEC_TIMEOUT_MS = 8500;
   const FEMEC_RETRIES = 1;
 
-  // Vinka: brez retryjev (proxy fallback bo poskrbel, če direct pade)
   const VINKA_TIMEOUT_MS = 8500;
-  const VINKA_RETRIES = 0;
 
-  // Rotonda: zmanjšano (prej 2 retryja in 10s)
   const ROTONDA_TIMEOUT_MS = 8500;
   const ROTONDA_RETRIES = 1;
 
-  // UI zaščita pred “spamom”
-  const CLICK_COOLDOWN_MS = 3500; // koliko časa zaklene gumbe po kliku
+  const CLICK_COOLDOWN_MS = 3500;
 
-  // ==============================
-  // Days
-  // ==============================
   const DAYS = [
     { key:"ponedeljek", label:"Ponedeljek" },
     { key:"torek",      label:"Torek" },
@@ -381,9 +680,9 @@
     FRIDAY: "petek"
   };
 
-  // ==============================
-  // Helpers
-  // ==============================
+  let globalDayKey = getDefaultDayKey();
+  let globalQuery = "";
+
   const $ = (id) => document.getElementById(id);
   const now = () => Date.now();
 
@@ -391,12 +690,39 @@
     return String(s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
   }
 
-  // ✅ Obari vse zneske v tekstu v enako barvo kot Rotonda
   function highlightMoney(text){
     const t = escapeHtml(text || "");
     const moneyRe =
       /(\b\d{1,4}(?:[.,]\d{2})?\s?(?:€|eur|EUR)\b|\b(?:€)\s?\d{1,4}(?:[.,]\d{2})?\b)/g;
     return t.replace(moneyRe, '<span class="money">$1</span>');
+  }
+
+  // Highlight search query inside already-escaped text (safe)
+  function highlightQueryEscaped(escapedText, query){
+    const q = (query || "").trim();
+    if (!q) return escapedText;
+
+    // allow multi words: highlight each token length>=2
+    const tokens = q.split(/\s+/).map(t => t.trim()).filter(t => t.length >= 2);
+    if (!tokens.length) return escapedText;
+
+    let out = escapedText;
+    for (const tok of tokens){
+      const re = new RegExp(escapeRegExp(tok), "gi");
+      out = out.replace(re, (m) => `<span class="hit">${m}</span>`);
+    }
+    return out;
+  }
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+  // Combine: escape -> money highlight -> query highlight
+  function decorateText(text){
+    const escaped = escapeHtml(text || "");
+    const money = highlightMoney(text || ""); // already escapes inside
+    // highlightMoney returns HTML; ensure query highlight runs on that HTML but not breaking tags:
+    // We'll apply highlight only to text nodes by doing a conservative replace on plain escaped parts.
+    // Practical approach: run highlight on the money HTML string; tokens won't match inside tags anyway.
+    return highlightQueryEscaped(money, globalQuery);
   }
 
   function setLoading(el, msg){
@@ -416,7 +742,7 @@
 
   function getDefaultDayKey(){
     const d = new Date();
-    const wd = d.getDay(); // 0..6
+    const wd = d.getDay();
     if (wd >= 1 && wd <= 5) return DAYS[wd-1].key;
     return "ponedeljek";
   }
@@ -431,12 +757,28 @@
     return target.toLocaleDateString("sl-SI", { day:"numeric", month:"long" });
   }
 
-  // ---------- Network helpers (optimizirano) ----------
+  function withCooldown(buttons, ms){
+    const list = Array.isArray(buttons) ? buttons : [buttons];
+    list.forEach(b => { if (b) b.disabled = true; });
+    setTimeout(() => list.forEach(b => { if (b) b.disabled = false; }), ms);
+  }
+
+  function makeSingleFlight(loader){
+    let inflight = null;
+    return async (...args) => {
+      if (inflight) return inflight;
+      inflight = (async () => {
+        try { return await loader(...args); }
+        finally { inflight = null; }
+      })();
+      return inflight;
+    };
+  }
+
   async function fetchTextWithTimeout(url, timeoutMs){
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs ?? FETCH_TIMEOUT_MS);
     try{
-      // cache: default => browser lahko upošteva Cache-Control (max-age) iz workerja
       const resp = await fetch(url, { signal: ctrl.signal, headers:{ "Accept":"text/html,*/*" } });
       if (!resp.ok) throw new Error("HTTP " + resp.status);
       return await resp.text();
@@ -452,23 +794,110 @@
     throw last;
   }
 
-  function withCooldown(buttons, ms){
-    const list = Array.isArray(buttons) ? buttons : [buttons];
-    list.forEach(b => { if (b) b.disabled = true; });
-    setTimeout(() => list.forEach(b => { if (b) b.disabled = false; }), ms);
+  function norm(s){ return String(s || "").toLowerCase().trim(); }
+  function includesQuery(text, q){
+    if (!q) return true;
+    return norm(text).includes(norm(q));
   }
 
-  // prepreči paralelne load-e istega widgeta
-  function makeSingleFlight(loader){
-    let inflight = null;
-    return async (...args) => {
-      if (inflight) return inflight;
-      inflight = (async () => {
-        try { return await loader(...args); }
-        finally { inflight = null; }
-      })();
-      return inflight;
-    };
+  // ---------- Toast ----------
+  const toastEl = $("toast");
+  let toastTimer = null;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2000);
+  }
+
+  // ---------- Top status + scroll top ----------
+  const todayPill = $("todayPill");
+  function updateDayPill(){
+    const label = DAYS.find(x => x.key === globalDayKey)?.label || globalDayKey;
+    todayPill.innerHTML = `Dan: <b>${escapeHtml(label)} · ${escapeHtml(formatDateForDayKey(globalDayKey))}</b>`;
+  }
+  $("scrollTop").addEventListener("click", () => window.scrollTo({ top:0, behavior:"smooth" }));
+
+  // ---------- Day tags in panels ----------
+  function setDayTags(){
+    const label = DAYS.find(x => x.key === globalDayKey)?.label || globalDayKey;
+    const date = formatDateForDayKey(globalDayKey);
+    const tagHtml = `${escapeHtml(label)} <small>· ${escapeHtml(date)}</small>`;
+    $("femecDayTag").innerHTML = tagHtml;
+    $("vinkaDayTag").innerHTML = tagHtml;
+    $("rotondaDayTag").innerHTML = tagHtml;
+  }
+
+  // ---------- Day chips ----------
+  const dayChips = $("dayChips");
+  function renderDayChips(){
+    dayChips.innerHTML = "";
+    for (const d of DAYS){
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip" + (d.key === globalDayKey ? " active" : "");
+      b.textContent = d.label;
+      b.onclick = () => {
+        globalDayKey = d.key;
+        Array.from(dayChips.querySelectorAll(".chip")).forEach(x => x.classList.remove("active"));
+        b.classList.add("active");
+        updateDayPill();
+        setDayTags();
+        femec.render();
+        vinka.render();
+        rotonda.render();
+        toast("Izbran dan: " + d.label);
+      };
+      dayChips.appendChild(b);
+    }
+  }
+
+  // ---------- Search ----------
+  const searchBox = $("searchBox");
+  const clearSearch = $("clearSearch");
+  function applySearch(q){
+    globalQuery = (q || "").trim();
+    clearSearch.classList.toggle("show", !!globalQuery);
+    femec.render();
+    vinka.render();
+    rotonda.render();
+  }
+  searchBox.addEventListener("input", (e) => applySearch(e.target.value || ""));
+  clearSearch.addEventListener("click", () => {
+    searchBox.value = "";
+    applySearch("");
+    searchBox.focus();
+  });
+
+  // ==============================
+  // Render helper
+  // ==============================
+  function renderDishList(el, list, { titleKey="name", detailsKey="sides", showIndex=true, priceKey=null } = {}){
+    if (!list || !list.length){
+      el.innerHTML = globalQuery
+        ? `<p class="muted">Ni zadetkov za iskanje.</p>`
+        : `<p class="muted">Meni še ni na voljo.</p>`;
+      return;
+    }
+
+    el.innerHTML = list.map((d, idx) => {
+      const title = d[titleKey] || "";
+      const details = d[detailsKey] || [];
+      const price = priceKey ? (d[priceKey] || "") : "";
+      const num = showIndex ? (idx+1) : (d.num || "");
+
+      const detailText = Array.isArray(details) ? details.join("\n") : String(details || "");
+      return `
+        <div class="dish">
+          <h3>
+            <span class="num">${escapeHtml(String(num))}</span>
+            <span>${decorateText(title)}</span>
+            ${price ? `<span class="price">(${decorateText(price)})</span>` : ""}
+          </h3>
+          ${detailText ? `<p>${decorateText(detailText)}</p>` : ""}
+        </div>
+      `;
+    }).join("");
   }
 
   // ==============================
@@ -478,14 +907,8 @@
     const elStatus = $("statusFemec");
     const elUpdated = $("updatedFemec");
     const elRefresh = $("refreshFemec");
-    const elTabs = $("femecTabs");
-    const elTodayH = $("femecTodayHeading");
-    const elWeekH = $("femecWeekHeading");
-    const elTodayB = $("femecTodayBody");
-    const elWeekB = $("femecWeekBody");
+    const elBody = $("femecBody");
 
-    const todayKey = getDefaultDayKey();
-    let selectedKey = todayKey;
     let parsed = null;
 
     function parseFemecMenu(html){
@@ -511,48 +934,25 @@
       return out;
     }
 
-    function renderDishList(el, list){
-      if (!list || !list.length){ el.innerHTML = `<p class="muted">Meni za ta dan ni na voljo.</p>`; return; }
-      el.innerHTML = list.map(d => `
-        <div class="dish">
-          <h3><span class="num">${escapeHtml(d.num || "")}</span> ${highlightMoney(d.name || "")}</h3>
-          ${Array.isArray(d.sides) && d.sides.length ? `<p>${highlightMoney(d.sides.join("\n"))}</p>` : ""}
-        </div>
-      `).join("");
+    function filterForQuery(list){
+      if (!globalQuery) return list;
+      return (list || []).filter(d => {
+        const blob = [
+          d.num, d.name,
+          Array.isArray(d.sides) ? d.sides.join(" ") : d.sides
+        ].join(" ");
+        return includesQuery(blob, globalQuery);
+      });
     }
 
-    function buildTabs(){
-      elTabs.innerHTML = "";
-      for (const d of DAYS){
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "tab" + (d.key === selectedKey ? " active" : "");
-        b.textContent = d.label;
-        b.onclick = () => {
-          selectedKey = d.key;
-          Array.from(elTabs.querySelectorAll(".tab")).forEach(x => x.classList.remove("active"));
-          b.classList.add("active");
-          renderWeek();
-        };
-        elTabs.appendChild(b);
-      }
-    }
-
-    function renderToday(){
-      const label = DAYS.find(x => x.key === todayKey)?.label || todayKey;
-      elTodayH.innerHTML = `<span>Današnji meni</span><small>${label}, ${formatDateForDayKey(todayKey)}</small>`;
-      renderDishList(elTodayB, parsed?.[todayKey] || []);
-    }
-
-    function renderWeek(){
-      const label = DAYS.find(x => x.key === selectedKey)?.label || selectedKey;
-      elWeekH.innerHTML = `<span>Tedenski pregled</span><small>${label}, ${formatDateForDayKey(selectedKey)}</small>`;
-      renderDishList(elWeekB, parsed?.[selectedKey] || []);
+    function render(){
+      const listRaw = parsed?.[globalDayKey] || [];
+      const list = filterForQuery(listRaw);
+      renderDishList(elBody, list.map(x => ({ name: x.name, sides: x.sides })), { titleKey:"name", detailsKey:"sides", showIndex:true });
     }
 
     const load = makeSingleFlight(async (force=false) => {
-      setLoading(elTodayB, force ? "Osvežujem Femec…" : "Nalagam Femec…");
-      setLoading(elWeekB,  force ? "Osvežujem Femec…" : "Nalagam Femec…");
+      setLoading(elBody, force ? "Osvežujem Femec…" : "Nalagam Femec…");
       elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
       try {
@@ -560,10 +960,9 @@
         parsed = parseFemecMenu(html);
         elStatus.textContent = "Posodobljeno";
         setUpdated(elUpdated, now());
-        renderToday(); renderWeek();
+        render();
       } catch (e) {
-        setError(elTodayB, "Femec meni ni dosegljiv.");
-        setError(elWeekB,  "Femec meni ni dosegljiv.");
+        setError(elBody, "Femec meni ni dosegljiv.");
         elStatus.textContent = "Napaka";
         console.error(e);
       }
@@ -572,24 +971,23 @@
     elRefresh.addEventListener("click", () => {
       withCooldown(elRefresh, CLICK_COOLDOWN_MS);
       load(true);
+      toast("Osvežujem: Femec");
     });
 
-    buildTabs();
-    renderToday(); renderWeek();
-    return { load, refreshBtn: elRefresh };
+    return { load, render, refreshBtn: elRefresh };
   })();
 
   // ==============================
-  // VINKA
+  // VINKA: samo današnji meni (ali cache za preteklost); prihodnost -> “Meni še ni na voljo.”
   // ==============================
   const vinka = (() => {
     const elStatus = $("statusVinka");
     const elUpdated = $("updatedVinka");
     const elRefresh = $("refreshVinka");
-    const elHeading = $("vinkaHeading");
     const elBody = $("vinkaBody");
 
-    let parsedHtml = null;
+    let vinkaData = null;
+    let lastGoodTs = 0;
 
     function cleanHtmlToText(htmlSnippet){
       return htmlSnippet
@@ -599,19 +997,10 @@
         .trim();
     }
 
-    function splitToNumberedDishes(text){
-      const lines = (text || "").split("\n").map(s => s.trim()).filter(Boolean);
-      return lines.map((line, idx) => `
-        <div class="dish">
-          <h3><span class="num">${idx+1}</span> ${highlightMoney(line)}</h3>
-        </div>
-      `).join("");
-    }
-
     function parseVinka(html){
       const doc = new DOMParser().parseFromString(html, "text/html");
       const content = doc.querySelector('div.col-md-9[role="content"]');
-      if (!content) return { ok:false, daily:"", regular:"", msg:"Glavni vsebinski del ni bil najden." };
+      if (!content) return { ok:false, dailyLines:[], regularLines:[], msg:"Glavni vsebinski del ni bil najden." };
 
       let pWithMenu = null;
       for (const p of Array.from(content.querySelectorAll("p"))) {
@@ -620,7 +1009,7 @@
           pWithMenu = p; break;
         }
       }
-      if (!pWithMenu) return { ok:false, daily:"", regular:"", msg:"Vsebina menija ni v pričakovani obliki." };
+      if (!pWithMenu) return { ok:false, dailyLines:[], regularLines:[], msg:"Vsebina menija ni v pričakovani obliki." };
 
       const htmlContent = pWithMenu.innerHTML;
 
@@ -637,89 +1026,189 @@
       const iV = (iV1 !== -1) ? iV1 : iV2;
       const iZ = htmlContent.indexOf(mZlic);
 
+      let dailyText = "";
+      let regularText = "";
+
       if (iS === -1 || iD === -1) {
-        const fallback = cleanHtmlToText(htmlContent);
-        return { ok:true, daily:fallback, regular:"", msg:"" };
+        dailyText = cleanHtmlToText(htmlContent);
+        regularText = "";
+      } else {
+        const dailyEnd = (iV !== -1) ? iV : ((iZ !== -1) ? iZ : htmlContent.length);
+        dailyText = cleanHtmlToText(htmlContent.substring(iD + mDnev.length, dailyEnd));
+        regularText = cleanHtmlToText(htmlContent.substring(iS + mStal.length, iD));
       }
 
-      const dailyEnd = (iV !== -1) ? iV : ((iZ !== -1) ? iZ : htmlContent.length);
-      const daily = cleanHtmlToText(htmlContent.substring(iD + mDnev.length, dailyEnd));
-      const regular = cleanHtmlToText(htmlContent.substring(iS + mStal.length, iD));
-      return { ok:true, daily, regular, msg:"" };
+      const dailyLines = dailyText ? dailyText.split("\n").map(s => s.trim()).filter(Boolean) : [];
+      const regularLines = regularText ? regularText.split("\n").map(s => s.trim()).filter(Boolean) : [];
+      return { ok:true, dailyLines, regularLines, msg:"" };
     }
 
-    function formatSection(title, text){
-      if (!text) return "";
-      return `
-        <div class="dish" style="background:rgba(255,255,255,.07);">
-          <h3><span class="num">★</span> ${escapeHtml(title)}</h3>
-        </div>
-        ${splitToNumberedDishes(text)}
-      `;
+    function startOfDay(ts){
+      const d = new Date(ts);
+      d.setHours(0,0,0,0);
+      return d.getTime();
+    }
+
+    // Selected day belongs to this week (Mon–Fri) -> compute date and compare
+    function isFutureSelectedDay(){
+      const idxMap = { ponedeljek:1, torek:2, sreda:3, cetrtek:4, petek:5 };
+      const idx = idxMap[globalDayKey] || 1;
+
+      const d = new Date();
+      let wd = d.getDay(); if (wd === 0) wd = 7;
+      const monday = new Date(d); monday.setDate(d.getDate() - (wd-1));
+      const target = new Date(monday); target.setDate(monday.getDate() + (idx-1));
+
+      return startOfDay(target.getTime()) > startOfDay(Date.now());
+    }
+
+    function isTodaySelectedDay(){
+      const idxMap = { ponedeljek:1, torek:2, sreda:3, cetrtek:4, petek:5 };
+      const idx = idxMap[globalDayKey] || 1;
+
+      const d = new Date();
+      let wd = d.getDay(); if (wd === 0) wd = 7;
+      const monday = new Date(d); monday.setDate(d.getDate() - (wd-1));
+      const target = new Date(monday); target.setDate(monday.getDate() + (idx-1));
+
+      return startOfDay(target.getTime()) === startOfDay(Date.now());
+    }
+
+    function filterLines(lines){
+      if (!globalQuery) return lines || [];
+      return (lines || []).filter(line => includesQuery(line, globalQuery));
     }
 
     function render(){
-      const key = getDefaultDayKey();
-      elHeading.innerHTML = `<span>Dnevna ponudba + stalnice</span><small>${formatDateForDayKey(key)}</small>`;
-      elBody.innerHTML = parsedHtml || `<p class="muted">Ni podatkov.</p>`;
+      // Future selected day => no menu
+      if (isFutureSelectedDay()){
+        elBody.innerHTML = `<p class="muted">Meni še ni na voljo.</p>`;
+        return;
+      }
+
+      // For past days: allow cached view; for today: show live/cached data
+      if (!vinkaData){
+        elBody.innerHTML = `<p class="muted">Meni še ni na voljo.</p>`;
+        return;
+      }
+
+      // If selected day is past, keep cached (ok). If today, show.
+      // (Vinka has only current day; we use cache for “prejšnji dan” view.)
+
+      const daily = filterLines(vinkaData.dailyLines);
+      const regular = filterLines(vinkaData.regularLines);
+
+      const blocks = [];
+
+      if (daily.length){
+        blocks.push(`
+          <div class="dish" style="background:rgba(255,255,255,.07);">
+            <h3><span class="num">★</span> ${escapeHtml("Dnevna ponudba")}</h3>
+          </div>
+          ${daily.map((line, idx) => `
+            <div class="dish">
+              <h3><span class="num">${idx+1}</span> ${decorateText(line)}</h3>
+            </div>
+          `).join("")}
+        `);
+      }
+
+      if (regular.length){
+        blocks.push(`
+          <div class="dish" style="background:rgba(255,255,255,.07);">
+            <h3><span class="num">★</span> ${escapeHtml("Redna ponudba (stalnice)")}</h3>
+          </div>
+          ${regular.map((line, idx) => `
+            <div class="dish">
+              <h3><span class="num">${idx+1}</span> ${decorateText(line)}</h3>
+            </div>
+          `).join("")}
+        `);
+      }
+
+      if (!blocks.length){
+        elBody.innerHTML = globalQuery
+          ? `<p class="muted">Ni zadetkov za iskanje.</p>`
+          : `<p class="muted">Meni še ni na voljo.</p>`;
+        return;
+      }
+
+      elBody.innerHTML = blocks.join("");
     }
 
-    // vinka modul:
-async function load(force=false){
-  setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
-  elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+    const load = makeSingleFlight(async (force=false) => {
+      // Only attempt fetch if today is selected or we are doing global refresh.
+      // If user selects future day, we won't fetch anyway (render handles it),
+      // but fetch is harmless; still keep behavior simple.
+      setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
+      elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
-  const url = VINKA_PROXY_URL + "?_=" + Date.now();
+      const url = VINKA_PROXY_URL + "?_=" + Date.now();
 
-  const tryOnce = async () => {
-    const html = await fetchTextWithRetry(url, { retries: 0, timeoutMs: VINKA_TIMEOUT_MS });
-    const p = parseVinka(html);
-    if (!p.ok) throw new Error(p.msg || "Parse fail");
+      const tryOnce = async () => {
+        const html = await fetchTextWithRetry(url, { retries: 0, timeoutMs: VINKA_TIMEOUT_MS });
+        const p = parseVinka(html);
+        if (!p.ok) throw new Error(p.msg || "Parse fail");
 
-    const rendered =
-      formatSection("Dnevna ponudba", p.daily) +
-      formatSection("Redna ponudba (stalnice)", p.regular);
+        vinkaData = { dailyLines: p.dailyLines, regularLines: p.regularLines };
+        lastGoodTs = Date.now();
 
-    localStorage.setItem("vinka:lastGood", rendered);
-    localStorage.setItem("vinka:lastGoodTs", String(Date.now()));
+        localStorage.setItem("vinka:data", JSON.stringify(vinkaData));
+        localStorage.setItem("vinka:lastGoodTs", String(lastGoodTs));
 
-    parsedHtml = rendered;
-    elStatus.textContent = "Posodobljeno";
-    setUpdated(elUpdated, now());
-    render();
-  };
+        elStatus.textContent = "Posodobljeno";
+        setUpdated(elUpdated, lastGoodTs);
+        render();
+      };
 
-  const waits = [0, 800, 2000]; // backoff
-  for (let i = 0; i < waits.length; i++) {
-    try {
-      if (waits[i]) await new Promise(r => setTimeout(r, waits[i]));
-      await tryOnce();
-      return;
-    } catch (e) {
-      // poskusi naslednjič
-    }
-  }
+      const waits = [0, 800, 2000];
+      for (let i = 0; i < waits.length; i++) {
+        try {
+          if (waits[i]) await new Promise(r => setTimeout(r, waits[i]));
+          await tryOnce();
+          return;
+        } catch (e) {}
+      }
 
-  const cached = localStorage.getItem("vinka:lastGood");
-  const ts = Number(localStorage.getItem("vinka:lastGoodTs") || 0);
-  if (cached) {
-    parsedHtml = cached;
-    elStatus.textContent = "Zadnji uspešen meni";
-    setUpdated(elUpdated, ts || now());
-    render();
-    return;
-  }
+      const cached = localStorage.getItem("vinka:data");
+      const ts = Number(localStorage.getItem("vinka:lastGoodTs") || 0);
+      if (cached) {
+        try{
+          vinkaData = JSON.parse(cached);
+          lastGoodTs = ts || 0;
+          elStatus.textContent = "Zadnji uspešen meni";
+          setUpdated(elUpdated, lastGoodTs || now());
+          render();
+          return;
+        } catch(e){}
+      }
 
-  setError(elBody, "Vinka meni ni dosegljiv (napaka pri nalaganju).");
-  elStatus.textContent = "Napaka";
-}
+      setError(elBody, "Vinka meni ni dosegljiv (napaka pri nalaganju).");
+      elStatus.textContent = "Napaka";
+    });
 
     elRefresh.addEventListener("click", () => {
       withCooldown(elRefresh, CLICK_COOLDOWN_MS);
       load(true);
+      toast("Osvežujem: Vinka");
     });
 
-    return { load, refreshBtn: elRefresh };
+    // init from cache
+    (() => {
+      const cached = localStorage.getItem("vinka:data");
+      const ts = Number(localStorage.getItem("vinka:lastGoodTs") || 0);
+      if (cached) {
+        try{
+          vinkaData = JSON.parse(cached);
+          lastGoodTs = ts || 0;
+          elStatus.textContent = "Zadnji uspešen meni";
+          setUpdated(elUpdated, lastGoodTs || now());
+        } catch(e){}
+      }
+      render();
+    })();
+
+    return { load, render, refreshBtn: elRefresh };
   })();
 
   // ==============================
@@ -729,14 +1218,7 @@ async function load(force=false){
     const elStatus = $("statusRotonda");
     const elUpdated = $("updatedRotonda");
     const elRefresh = $("refreshRotonda");
-    const elTabs = $("rotondaTabs");
-    const elTodayH = $("rotondaTodayHeading");
-    const elWeekH = $("rotondaWeekHeading");
-    const elTodayB = $("rotondaTodayBody");
-    const elWeekB = $("rotondaWeekBody");
-
-    const todayKey = getDefaultDayKey();
-    let selectedKey = todayKey;
+    const elBody = $("rotondaBody");
 
     let weekRange = "";
     let parsedByDay = null;
@@ -843,54 +1325,25 @@ async function load(force=false){
       return { range, out };
     }
 
-    function buildTabs(){
-      elTabs.innerHTML = "";
-      for (const d of DAYS){
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "tab" + (d.key === selectedKey ? " active" : "");
-        b.textContent = d.label;
-        b.onclick = () => {
-          selectedKey = d.key;
-          Array.from(elTabs.querySelectorAll(".tab")).forEach(x => x.classList.remove("active"));
-          b.classList.add("active");
-          renderWeek();
-        };
-        elTabs.appendChild(b);
-      }
+    function filterForQuery(list){
+      if (!globalQuery) return list;
+      return (list || []).filter(d => {
+        const blob = [
+          d.title, d.price,
+          Array.isArray(d.details) ? d.details.join(" ") : d.details
+        ].join(" ");
+        return includesQuery(blob, globalQuery);
+      });
     }
 
-    function renderDishList(el, list){
-      if (!list || !list.length){ el.innerHTML = `<p class="muted">Meni za ta dan ni na voljo.</p>`; return; }
-      el.innerHTML = list.map((d, idx) => `
-        <div class="dish">
-          <h3>
-            <span class="num">${idx+1}</span>
-            <span>${highlightMoney(d.title)}</span>
-            ${d.price ? `<span class="price">(${highlightMoney(d.price)})</span>` : ""}
-          </h3>
-          ${Array.isArray(d.details) && d.details.length ? `<p>${highlightMoney(d.details.join("\n"))}</p>` : ""}
-        </div>
-      `).join("");
-    }
-
-    function renderToday(){
-      const label = DAYS.find(x => x.key === todayKey)?.label || todayKey;
-      const rangeTxt = weekRange ? ` • ${weekRange}` : "";
-      elTodayH.innerHTML = `<span>Današnji meni</span><small>${label}, ${formatDateForDayKey(todayKey)}${rangeTxt}</small>`;
-      renderDishList(elTodayB, parsedByDay?.[todayKey] || []);
-    }
-
-    function renderWeek(){
-      const label = DAYS.find(x => x.key === selectedKey)?.label || selectedKey;
-      const rangeTxt = weekRange ? ` • ${weekRange}` : "";
-      elWeekH.innerHTML = `<span>Tedenski pregled</span><small>${label}, ${formatDateForDayKey(selectedKey)}${rangeTxt}</small>`;
-      renderDishList(elWeekB, parsedByDay?.[selectedKey] || []);
+    function render(){
+      const listRaw = parsedByDay?.[globalDayKey] || [];
+      const list = filterForQuery(listRaw);
+      renderDishList(elBody, list, { titleKey:"title", detailsKey:"details", showIndex:true, priceKey:"price" });
     }
 
     const load = makeSingleFlight(async (force=false) => {
-      setLoading(elTodayB, force ? "Osvežujem Rotonda…" : "Nalagam Rotonda…");
-      setLoading(elWeekB,  force ? "Osvežujem Rotonda…" : "Nalagam Rotonda…");
+      setLoading(elBody, force ? "Osvežujem Rotonda…" : "Nalagam Rotonda…");
       elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
       try{
@@ -901,10 +1354,9 @@ async function load(force=false){
 
         elStatus.textContent = "Posodobljeno";
         setUpdated(elUpdated, now());
-        renderToday(); renderWeek();
+        render();
       } catch(e){
-        setError(elTodayB, "Rotonda meni ni dosegljiv.");
-        setError(elWeekB,  "Rotonda meni ni dosegljiv.");
+        setError(elBody, "Rotonda meni ni dosegljiv.");
         elStatus.textContent = "Napaka";
         console.error(e);
       }
@@ -913,15 +1365,14 @@ async function load(force=false){
     elRefresh.addEventListener("click", () => {
       withCooldown(elRefresh, CLICK_COOLDOWN_MS);
       load(true);
+      toast("Osvežujem: Rotonda");
     });
 
-    buildTabs();
-    renderToday(); renderWeek();
-    return { load, refreshBtn: elRefresh };
+    return { load, render, refreshBtn: elRefresh };
   })();
 
   // ==============================
-  // Global refresh (single-flight + cooldown)
+  // Global refresh
   // ==============================
   const refreshAllBtn = $("refreshAll");
   const globalStatus = $("globalStatus");
@@ -929,6 +1380,7 @@ async function load(force=false){
   refreshAllBtn.addEventListener("click", async () => {
     withCooldown([refreshAllBtn, femec.refreshBtn, vinka.refreshBtn, rotonda.refreshBtn], CLICK_COOLDOWN_MS);
     globalStatus.textContent = "Osvežujem…";
+    toast("Osvežujem vse menije…");
 
     await Promise.allSettled([
       femec.load(true),
@@ -937,12 +1389,23 @@ async function load(force=false){
     ]);
 
     globalStatus.textContent = "Pripravljeno";
+    toast("Končano ✅");
   });
 
-  // init (enkrat, brez “cache-busterjev”)
+  // ==============================
+  // Init
+  // ==============================
+  updateDayPill();
+  setDayTags();
+  renderDayChips();
+
   femec.load(false);
   vinka.load(false);
   rotonda.load(false);
+
+  femec.render();
+  vinka.render();
+  rotonda.render();
 })();
 </script>
 </body>
