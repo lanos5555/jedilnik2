@@ -57,6 +57,7 @@
       background:linear-gradient(135deg, rgba(93,173,226,1), rgba(46,204,113,.95));
       color:#071018;
     }
+    .gbtn:disabled{ opacity:.55; cursor:not-allowed; }
     .gstatus{
       color:var(--muted); font-size:.92rem;
       padding:6px 10px; border-radius:999px;
@@ -126,6 +127,7 @@
       backdrop-filter: blur(6px);
     }
     .btn:hover{ background:rgba(255,255,255,.12); }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
     .status{
       font-size:.9rem; color:var(--muted);
       padding:7px 10px; border-radius:999px;
@@ -202,7 +204,6 @@
     }
     .dish p{ margin:4px 0 0; color:rgba(233,238,252,.86); white-space:pre-line; line-height:1.5; }
 
-    /* Rotonda že uporablja .price; dodamo še .money za avtomatsko obarvanje zneskov */
     .price,
     .money{
       font-weight:1000;
@@ -335,21 +336,31 @@
 <script>
 (() => {
   // ==============================
-  // URLs
+  // URLs (brez cache-busterjev; browser lahko spoštuje Cache-Control iz workerja)
   // ==============================
   const FEMEC_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/femec";
   const VINKA_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/vinka";
   const ROTONDA_PROXY_URL = "https://femec-proxy.lanos5555.workers.dev/api/rotonda";
 
   // ==============================
-  // Settings
+  // Settings (optimizirano: manj retryjev, manj “canceled”, manj requestov)
   // ==============================
-  const FETCH_TIMEOUT_MS = 9000;
-  const RETRIES = 1;
-  //const VINKA_TIMEOUT_MS = 10000;
-  //const VINKA_RETRIES = 2;
-  const VINKA_TIMEOUT_MS = 9000; // enako kot ostali
-  const VINKA_RETRIES = 0;       // brez ponavljanja (ne bo več več requestov)
+  const FETCH_TIMEOUT_MS = 8500;
+
+  // Femec: 1 retry max (torej največ 2 poskusa)
+  const FEMEC_TIMEOUT_MS = 8500;
+  const FEMEC_RETRIES = 1;
+
+  // Vinka: brez retryjev (proxy fallback bo poskrbel, če direct pade)
+  const VINKA_TIMEOUT_MS = 8500;
+  const VINKA_RETRIES = 0;
+
+  // Rotonda: zmanjšano (prej 2 retryja in 10s)
+  const ROTONDA_TIMEOUT_MS = 8500;
+  const ROTONDA_RETRIES = 1;
+
+  // UI zaščita pred “spamom”
+  const CLICK_COOLDOWN_MS = 3500; // koliko časa zaklene gumbe po kliku
 
   // ==============================
   // Days
@@ -374,7 +385,7 @@
   // Helpers
   // ==============================
   const $ = (id) => document.getElementById(id);
-  function now(){ return Date.now(); }
+  const now = () => Date.now();
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
@@ -420,23 +431,44 @@
     return target.toLocaleDateString("sl-SI", { day:"numeric", month:"long" });
   }
 
+  // ---------- Network helpers (optimizirano) ----------
   async function fetchTextWithTimeout(url, timeoutMs){
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs ?? FETCH_TIMEOUT_MS);
     try{
-      const resp = await fetch(url, { cache:"no-store", signal: ctrl.signal, headers:{ "Accept":"text/html,*/*" } });
+      // cache: default => browser lahko upošteva Cache-Control (max-age) iz workerja
+      const resp = await fetch(url, { signal: ctrl.signal, headers:{ "Accept":"text/html,*/*" } });
       if (!resp.ok) throw new Error("HTTP " + resp.status);
       return await resp.text();
     } finally { clearTimeout(t); }
   }
 
-  async function fetchTextWithRetry(url, { retries = RETRIES, timeoutMs = FETCH_TIMEOUT_MS } = {}){
+  async function fetchTextWithRetry(url, { retries = 0, timeoutMs = FETCH_TIMEOUT_MS } = {}){
     let last;
     for (let i=0; i<=retries; i++){
       try { return await fetchTextWithTimeout(url, timeoutMs); }
-      catch(e){ last = e; await new Promise(r => setTimeout(r, 350*(i+1))); }
+      catch(e){ last = e; if (i < retries) await new Promise(r => setTimeout(r, 300*(i+1))); }
     }
     throw last;
+  }
+
+  function withCooldown(buttons, ms){
+    const list = Array.isArray(buttons) ? buttons : [buttons];
+    list.forEach(b => { if (b) b.disabled = true; });
+    setTimeout(() => list.forEach(b => { if (b) b.disabled = false; }), ms);
+  }
+
+  // prepreči paralelne load-e istega widgeta
+  function makeSingleFlight(loader){
+    let inflight = null;
+    return async (...args) => {
+      if (inflight) return inflight;
+      inflight = (async () => {
+        try { return await loader(...args); }
+        finally { inflight = null; }
+      })();
+      return inflight;
+    };
   }
 
   // ==============================
@@ -518,13 +550,13 @@
       renderDishList(elWeekB, parsed?.[selectedKey] || []);
     }
 
-    async function load(force=false){
+    const load = makeSingleFlight(async (force=false) => {
       setLoading(elTodayB, force ? "Osvežujem Femec…" : "Nalagam Femec…");
       setLoading(elWeekB,  force ? "Osvežujem Femec…" : "Nalagam Femec…");
       elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
       try {
-        const html = await fetchTextWithRetry(FEMEC_PROXY_URL + "?_=" + Date.now(), { retries: 1, timeoutMs: 9000 });
+        const html = await fetchTextWithRetry(FEMEC_PROXY_URL, { retries: FEMEC_RETRIES, timeoutMs: FEMEC_TIMEOUT_MS });
         parsed = parseFemecMenu(html);
         elStatus.textContent = "Posodobljeno";
         setUpdated(elUpdated, now());
@@ -535,16 +567,20 @@
         elStatus.textContent = "Napaka";
         console.error(e);
       }
-    }
+    });
 
-    elRefresh.addEventListener("click", () => load(true));
+    elRefresh.addEventListener("click", () => {
+      withCooldown(elRefresh, CLICK_COOLDOWN_MS);
+      load(true);
+    });
+
     buildTabs();
     renderToday(); renderWeek();
-    return { load };
+    return { load, refreshBtn: elRefresh };
   })();
 
   // ==============================
-  // VINKA (proxy) - numbering + money highlighting
+  // VINKA
   // ==============================
   const vinka = (() => {
     const elStatus = $("statusVinka");
@@ -628,14 +664,12 @@
       elBody.innerHTML = parsedHtml || `<p class="muted">Ni podatkov.</p>`;
     }
 
-    async function load(force=false){
+    const load = makeSingleFlight(async (force=false) => {
       setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
       elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
-      const url = VINKA_PROXY_URL + "?_=" + Date.now();
-
       try {
-        const html = await fetchTextWithRetry(url, { retries: VINKA_RETRIES, timeoutMs: VINKA_TIMEOUT_MS });
+        const html = await fetchTextWithRetry(VINKA_PROXY_URL, { retries: VINKA_RETRIES, timeoutMs: VINKA_TIMEOUT_MS });
         const p = parseVinka(html);
 
         parsedHtml = p.ok
@@ -650,14 +684,18 @@
         elStatus.textContent = "Napaka";
         console.error(e);
       }
-    }
+    });
 
-    elRefresh.addEventListener("click", () => load(true));
-    return { load };
+    elRefresh.addEventListener("click", () => {
+      withCooldown(elRefresh, CLICK_COOLDOWN_MS);
+      load(true);
+    });
+
+    return { load, refreshBtn: elRefresh };
   })();
 
   // ==============================
-  // ROTONDA (proxy) - already uses .price; add money highlighting in details too
+  // ROTONDA
   // ==============================
   const rotonda = (() => {
     const elStatus = $("statusRotonda");
@@ -822,13 +860,13 @@
       renderDishList(elWeekB, parsedByDay?.[selectedKey] || []);
     }
 
-    async function load(force=false){
+    const load = makeSingleFlight(async (force=false) => {
       setLoading(elTodayB, force ? "Osvežujem Rotonda…" : "Nalagam Rotonda…");
       setLoading(elWeekB,  force ? "Osvežujem Rotonda…" : "Nalagam Rotonda…");
       elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
       try{
-        const html = await fetchTextWithRetry(ROTONDA_PROXY_URL + "?_=" + Date.now(), { retries: 2, timeoutMs: 10000 });
+        const html = await fetchTextWithRetry(ROTONDA_PROXY_URL, { retries: ROTONDA_RETRIES, timeoutMs: ROTONDA_TIMEOUT_MS });
         const p = parseRotonda(html);
         weekRange = p.range || "";
         parsedByDay = p.out || null;
@@ -842,26 +880,38 @@
         elStatus.textContent = "Napaka";
         console.error(e);
       }
-    }
+    });
 
-    elRefresh.addEventListener("click", () => load(true));
+    elRefresh.addEventListener("click", () => {
+      withCooldown(elRefresh, CLICK_COOLDOWN_MS);
+      load(true);
+    });
+
     buildTabs();
     renderToday(); renderWeek();
-    return { load };
+    return { load, refreshBtn: elRefresh };
   })();
 
   // ==============================
-  // Global refresh
+  // Global refresh (single-flight + cooldown)
   // ==============================
-  $("refreshAll").addEventListener("click", () => {
-    $("globalStatus").textContent = "Osvežujem…";
-    femec.load(true);
-    vinka.load(true);
-    rotonda.load(true);
-    setTimeout(() => { $("globalStatus").textContent = "Pripravljeno"; }, 900);
+  const refreshAllBtn = $("refreshAll");
+  const globalStatus = $("globalStatus");
+
+  refreshAllBtn.addEventListener("click", async () => {
+    withCooldown([refreshAllBtn, femec.refreshBtn, vinka.refreshBtn, rotonda.refreshBtn], CLICK_COOLDOWN_MS);
+    globalStatus.textContent = "Osvežujem…";
+
+    await Promise.allSettled([
+      femec.load(true),
+      vinka.load(true),
+      rotonda.load(true),
+    ]);
+
+    globalStatus.textContent = "Pripravljeno";
   });
 
-  // init
+  // init (enkrat, brez “cache-busterjev”)
   femec.load(false);
   vinka.load(false);
   rotonda.load(false);
