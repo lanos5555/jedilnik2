@@ -3,25 +3,61 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Malice – Femec, Vinka, Rotonda</title>
+  <title>Malice – Femec, Vinka, Rotonda, Mooi 151</title>
 
   <style>
     :root{
-      --bg0:#0b1020;
-      --bg1:#0d1630;
-      --line: rgba(255,255,255,.10);
-      --ink:#eef3ff;
-      --muted: rgba(238,243,255,.72);
+      --primary-bg: #ffffff;
+      --secondary-bg: #f8fafc;
+      --card-bg: #ffffff;
+      --surface-bg: #f1f5f9;
 
-      --brand:#7c5cff;
-      --brand2:#2ee5b2;
-      --accent:#ffb020;
-      --danger:#ff5c7a;
+      --primary-text: #0f172a;
+      --secondary-text: #475569;
+      --tertiary-text: #64748b;
+      --muted-text: #94a3b8;
 
-      --shadow: 0 22px 50px rgba(0,0,0,.35);
-      --shadow2: 0 10px 22px rgba(0,0,0,.22);
-      --radius: 20px;
-      --radius2: 14px;
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --border-dark: #94a3b8;
+
+      --accent-blue: #3b82f6;
+      --accent-blue-light: #eff6ff;
+      --accent-green: #10b981;
+      --accent-green-light: #ecfdf5;
+      --accent-amber: #f59e0b;
+      --accent-amber-light: #fffbeb;
+      --accent-red: #ef4444;
+      --accent-red-light: #fef2f2;
+      --accent-purple: #8b5cf6;
+      --accent-pink: #ec4899;
+
+      --day-monday: var(--accent-purple);
+      --day-tuesday: var(--accent-blue);
+      --day-wednesday: var(--accent-green);
+      --day-thursday: var(--accent-amber);
+      --day-friday: var(--accent-pink);
+
+      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -1px rgba(0,0,0,.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.10), 0 4px 6px -2px rgba(0,0,0,.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,.10), 0 10px 10px -5px rgba(0,0,0,.04);
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-2xl: 20px;
+      --radius-full: 9999px;
+
+      --transition-fast: 150ms ease;
+      --transition-normal: 250ms ease;
+
+      --header-height: 72px;
+      --max-width: 1400px;
+
+      /* ENOTEN STIL CEN (vsi ponudniki) */
+      --price: var(--accent-amber);
 
       --tap: 44px;
     }
@@ -30,35 +66,43 @@
     html,body{ height:100%; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-      color:var(--ink);
-      background:
-        radial-gradient(1200px 900px at 18% 0%, rgba(124,92,255,.24), transparent 60%),
-        radial-gradient(1000px 700px at 90% 12%, rgba(46,229,178,.18), transparent 60%),
-        radial-gradient(900px 700px at 30% 92%, rgba(255,176,32,.12), transparent 60%),
-        linear-gradient(180deg, var(--bg1), var(--bg0));
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--secondary-bg);
+      color: var(--primary-text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       overflow-x:hidden;
     }
+    a{ color: inherit; text-decoration:none; }
 
-    .wrap{ max-width: 1220px; margin: 0 auto; padding: 18px 12px 34px; }
+    .wrap{
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 24px;
+    }
 
-    /* ---------- Top bar ---------- */
     .topbar{
       position: sticky;
       top: 0;
-      z-index: 10;
-      backdrop-filter: blur(14px);
-      background: linear-gradient(180deg, rgba(11,16,32,.82), rgba(11,16,32,.52));
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      z-index: 20;
+      height: var(--header-height);
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+      display:flex;
+      align-items:center;
     }
     .topbarInner{
-      max-width: 1220px;
+      max-width: var(--max-width);
       margin: 0 auto;
-      padding: 14px 12px;
+      width:100%;
+      padding: 0 24px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
+      gap: 20px;
       flex-wrap:wrap;
     }
 
@@ -66,43 +110,39 @@
       display:flex;
       align-items:center;
       gap:12px;
+      flex-shrink:0;
       min-width: 0;
     }
     .logo{
       width:44px; height:44px;
-      border-radius:14px;
-      background: linear-gradient(135deg, var(--brand), rgba(46,229,178,.92));
-      box-shadow: var(--shadow2);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
       display:flex; align-items:center; justify-content:center;
+      box-shadow: var(--shadow-md);
       flex:0 0 auto;
-      position:relative;
-      overflow:hidden;
-    }
-    .logo:before{
-      content:"";
-      position:absolute; inset:-20px;
-      background: radial-gradient(50% 50% at 30% 30%, rgba(255,255,255,.35), transparent 55%);
-      transform: rotate(10deg);
     }
     .logo span{
-      font-weight: 1000;
-      letter-spacing:.5px;
-      color:#061019;
-      position:relative;
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
     }
+
     .titleBox{ min-width:0; }
     .titleBox h1{
       margin:0;
-      font-size:1.15rem;
-      letter-spacing:.2px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary-text);
+      line-height: 1.2;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
     .titleBox p{
-      margin:4px 0 0;
-      color:var(--muted);
-      font-size:.92rem;
+      margin: 2px 0 0;
+      font-size: 14px;
+      color: var(--tertiary-text);
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -111,227 +151,229 @@
     .actions{
       display:flex;
       align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
+      gap: 12px;
+      flex-wrap: wrap;
       justify-content:flex-end;
     }
 
     .pill{
       display:inline-flex;
       align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color: var(--muted);
-      font-size:.9rem;
-      max-width: 100%;
+      gap:6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-light);
+      background: var(--accent-blue-light);
+      color: var(--accent-blue);
+      font-size: 14px;
+      font-weight: 600;
+      white-space:nowrap;
+      max-width:100%;
     }
-    .pill b{
-      color: rgba(238,243,255,.92);
-      font-weight: 900;
+    .pill b{ font-weight: 800; color: var(--accent-blue); }
+
+    #globalStatus.pill{
+      background: var(--accent-green-light);
+      color: var(--accent-green);
     }
+    #globalStatus.pill b{ color: var(--accent-green); }
 
     .btn{
       cursor:pointer;
-      border:0;
-      border-radius:999px;
+      border: none;
+      border-radius: var(--radius-full);
       height: var(--tap);
-      padding: 0 14px;
-      font-weight: 950;
-      color: #061019;
-      background: linear-gradient(135deg, rgba(124,92,255,1), rgba(46,229,178,.95));
-      box-shadow: var(--shadow2);
+      padding: 0 20px;
+      font-weight: 600;
+      font-size: 14px;
       display:inline-flex;
       align-items:center;
-      gap:10px;
+      justify-content:center;
+      gap: 8px;
+      transition: all var(--transition-fast);
+      white-space:nowrap;
     }
+    .btn{
+      background: var(--accent-blue);
+      color: #fff;
+      box-shadow: var(--shadow-md);
+    }
+    .btn:hover{ background:#2563eb; transform: translateY(-1px); box-shadow: var(--shadow-lg); }
     .btn.secondary{
-      background: rgba(255,255,255,.08);
-      color: var(--ink);
-      border: 1px solid rgba(255,255,255,.12);
+      background: var(--primary-bg);
+      color: var(--secondary-text);
+      border: 1px solid var(--border-medium);
       box-shadow: none;
     }
-    .btn:disabled{ opacity:.55; cursor:not-allowed; }
-    .btn:hover{ filter:brightness(1.03); }
-    .btn.secondary:hover{ background: rgba(255,255,255,.10); }
+    .btn.secondary:hover{ background: var(--surface-bg); border-color: var(--border-dark); transform:none; box-shadow:none; }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; transform:none !important; }
 
-    /* ---------- Hero (search + day chips) ---------- */
     .hero{
-      margin-top: 14px;
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: calc(var(--radius) + 2px);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
-      box-shadow: var(--shadow);
-      padding: 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 14px;
-      flex-wrap:wrap;
-      position:relative;
-      overflow:hidden;
+      margin-bottom: 32px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      display:block;
     }
-    .hero:before{
-      content:"";
-      position:absolute;
-      inset:-2px -2px auto -2px;
-      height: 110px;
-      background:
-        radial-gradient(700px 160px at 20% 30%, rgba(124,92,255,.26), transparent 60%),
-        radial-gradient(650px 140px at 80% 20%, rgba(46,229,178,.18), transparent 60%);
-      pointer-events:none;
-    }
-
-    .heroLeft{
-      position:relative;
-      flex: 1 1 520px;
-      min-width: 260px;
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
+    .heroRight{ margin-top: 14px; display:block; }
 
     .searchWrap{
-      flex: 1 1 520px;
-      min-width: 240px;
       display:flex;
       align-items:center;
-      gap:10px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      backdrop-filter: blur(10px);
+      gap: 10px;
+      padding: 0;
+      border:0;
+      background: transparent;
+      flex-wrap: nowrap;
+      position: relative;
     }
     .searchIcon{
-      width: 34px; height: 34px;
-      border-radius: 12px;
-      background: rgba(255,255,255,.10);
-      display:flex; align-items:center; justify-content:center;
-      font-size: 16px;
-      flex: 0 0 auto;
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--tertiary-text);
+      font-size: 18px;
+      pointer-events:none;
     }
     .searchWrap input{
       width: 100%;
-      border: 0;
+      padding: 16px 48px 16px 48px;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      background: var(--primary-bg);
+      color: var(--primary-text);
+      font-size: 16px;
+      font-weight: 500;
+      transition: all var(--transition-normal);
+      box-shadow: var(--shadow-sm);
       outline: none;
-      background: transparent;
-      color: var(--ink);
-      font-weight: 900;
-      font-size: 1rem;
-      letter-spacing: .1px;
+    }
+    .searchWrap input:focus{
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.10);
     }
     .searchWrap input::placeholder{
-      color: rgba(238,243,255,.55);
-      font-weight: 800;
+      color: var(--muted-text);
+      font-weight: 400;
     }
-    .clearBtn{
-      cursor:pointer;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: rgba(238,243,255,.9);
-      border-radius: 999px;
-      height: 36px;
-      padding: 0 10px;
-      font-weight: 950;
-      display:none;
-      flex: 0 0 auto;
-    }
-    .clearBtn.show{ display:inline-flex; align-items:center; }
 
-    .heroRight{
-      position:relative;
-      display:flex;
-      gap:10px;
+    .clearBtn{
+      position:absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: transparent;
+      color: var(--tertiary-text);
+      font-size: 18px;
+      display:none;
       align-items:center;
-      justify-content:flex-end;
-      flex: 0 0 auto;
-      flex-wrap:wrap;
+      justify-content:center;
+      padding:0;
     }
+    .clearBtn:hover{ background: var(--surface-bg); color: var(--secondary-text); }
+    .clearBtn.show{ display:flex; }
 
     .chips{
-      display:flex; gap:8px; flex-wrap:wrap;
-      justify-content:flex-end;
+      display:flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
     }
+    .chips::-webkit-scrollbar{ height: 6px; }
+    .chips::-webkit-scrollbar-track{ background: var(--surface-bg); border-radius: var(--radius-full); }
+    .chips::-webkit-scrollbar-thumb{ background: var(--border-medium); border-radius: var(--radius-full); }
+
     .chip{
       cursor:pointer;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color: var(--ink);
-      border-radius:999px;
-      padding: 8px 12px;
-      font-weight: 900;
-      font-size: .92rem;
+      border: 1px solid var(--border-medium);
+      background: var(--primary-bg);
+      color: var(--secondary-text);
+      border-radius: var(--radius-full);
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 14px;
       user-select:none;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
     }
+    .chip:hover{ border-color: var(--accent-blue); color: var(--accent-blue); }
     .chip.active{
-      background: linear-gradient(135deg, rgba(124,92,255,.92), rgba(46,229,178,.92));
-      color:#061019;
-      border-color: transparent;
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: var(--accent-blue);
     }
+    .chip.active:nth-child(1){ background: var(--day-monday); border-color: var(--day-monday); }
+    .chip.active:nth-child(2){ background: var(--day-tuesday); border-color: var(--day-tuesday); }
+    .chip.active:nth-child(3){ background: var(--day-wednesday); border-color: var(--day-wednesday); }
+    .chip.active:nth-child(4){ background: var(--day-thursday); border-color: var(--day-thursday); }
+    .chip.active:nth-child(5){ background: var(--day-friday); border-color: var(--day-friday); }
 
-    /* ---------- Layout ---------- */
     .grid{
-      margin-top: 14px;
       display:grid;
-      gap:14px;
-      grid-template-columns: 1fr;
+      gap: 24px;
+      grid-template-columns: repeat(1, minmax(0,1fr));
     }
-    @media (min-width: 980px){
-      .grid{ grid-template-columns: 1fr 1fr; }
+    @media (min-width: 768px){
+      .grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
-    @media (min-width: 1280px){
-      .grid{ grid-template-columns: 1fr 1fr 1fr; }
+    @media (min-width: 1200px){
+      .grid{ grid-template-columns: repeat(4, minmax(0,1fr)); }
     }
 
-    /* ---------- Restaurant card ---------- */
     .res{
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
-      box-shadow: var(--shadow);
+      background: var(--card-bg);
+      border-radius: var(--radius-2xl);
+      border: 1px solid var(--border-light);
       overflow:hidden;
-      min-width:0;
+      box-shadow: var(--shadow-md);
+      transition: all var(--transition-normal);
       display:flex;
       flex-direction:column;
+      min-width:0;
     }
+    .res:hover{ box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+
     .resHead{
-      padding: 14px 14px 12px;
+      padding: 20px;
+      border-bottom: 1px solid var(--border-light);
       display:flex;
-      align-items:flex-start;
       justify-content:space-between;
-      gap: 12px;
-      position:relative;
-      flex-wrap:wrap;
+      align-items:flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
     }
-    .resHead:before{
-      content:"";
-      position:absolute;
-      inset:0 0 auto 0;
-      height:4px;
-      background: linear-gradient(90deg, rgba(124,92,255,.9), rgba(46,229,178,.85), rgba(255,176,32,.70));
-    }
+
     .resName{
       margin:0;
-      font-size: 1.15rem;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary-text);
       display:flex;
       align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
+      gap: 8px;
+      flex-wrap: wrap;
+      line-height: 1.2;
     }
+    .resName a:hover{ color: #2563eb; }
+
     .badge{
       display:inline-flex;
       align-items:center;
-      gap:8px;
-      padding: 6px 10px;
-      border-radius:999px;
-      background: rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.12);
-      color: var(--muted);
-      font-size: .86rem;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      background: var(--accent-blue-light);
+      color: var(--accent-blue);
+      border: 1px solid var(--border-light);
+      font-size: 12px;
+      font-weight: 600;
       white-space:nowrap;
     }
 
@@ -339,192 +381,348 @@
       display:flex;
       flex-direction:column;
       align-items:flex-end;
-      gap:8px;
-      min-width: 260px;
-      flex: 1 1 260px;
+      gap: 12px;
+      min-width: 0;
+      flex: 0 0 auto;
     }
     .metaRow{
       display:flex;
-      gap:8px;
+      gap: 8px;
       align-items:center;
       flex-wrap:wrap;
       justify-content:flex-end;
       width: 100%;
     }
     .status{
-      font-size:.92rem;
-      color: var(--muted);
-      padding: 8px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
+      display:inline-flex;
+      align-items:center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface-bg);
+      color: var(--secondary-text);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border-light);
       white-space:nowrap;
-      min-width: 130px;
-      text-align:center;
+      min-width: 0;
+      text-align: center;
     }
     .updated{
-      font-size:.88rem;
-      color: rgba(238,243,255,.72);
-      width: 100%;
+      font-size: 12px;
+      color: var(--tertiary-text);
       text-align:right;
-      white-space:normal;
-      overflow:visible;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 340px;
     }
 
     .resBody{
-      padding: 12px 14px 14px;
-      display:grid;
-      gap:12px;
+      padding: 20px;
+      display:flex;
+      flex-direction:column;
+      gap: 20px;
     }
 
-    .panel{
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: var(--radius2);
-      background: rgba(255,255,255,.05);
-      padding: 12px;
-      min-width:0;
-    }
+    .panel{ padding: 0; border:0; background:transparent; }
+
     .panelTitle{
-      margin: 0 0 10px;
+      margin: 0 0 16px;
       display:flex;
-      align-items:flex-end;
+      align-items:center;
       justify-content:space-between;
-      gap:12px;
+      gap: 12px;
       flex-wrap:wrap;
     }
     .panelTitle b{
-      font-size: 1rem;
-      letter-spacing:.2px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-text);
     }
 
-    /* bolj viden dan/desno */
     .dayTag{
       display:inline-flex;
       align-items:center;
-      gap:8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.20);
-      background:
-        radial-gradient(220px 80px at 30% 30%, rgba(255,255,255,.14), transparent 55%),
-        linear-gradient(135deg, rgba(124,92,255,.30), rgba(46,229,178,.18));
-      color: rgba(238,243,255,.95);
-      font-weight: 1000;
-      letter-spacing: .2px;
-      box-shadow: 0 12px 26px rgba(0,0,0,.22);
-      white-space:nowrap;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface-bg);
+      color: var(--secondary-text);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border-light);
     }
     .dayTag small{
-      color: rgba(238,243,255,.78);
-      font-weight: 900;
+      color: var(--tertiary-text);
+      font-weight: 500;
+    }
+
+    /* NASLOVI SEKCII (Vinka + Femec + Mooi) */
+    .sectionHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: var(--radius-lg);
+      background: var(--accent-blue-light);
+      border: 1px solid var(--border-light);
+      color: var(--accent-blue);
+      font-weight: 800;
+      font-size: 14px;
+      margin: 0 0 12px;
+    }
+    .sectionHeader small{
+      color: var(--accent-blue);
+      font-weight: 700;
+      opacity: .9;
     }
 
     .dish{
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.06);
-      border-radius: 14px;
-      padding: 12px;
-      margin: 10px 0;
-      transition: transform .12s ease, background .12s ease;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: var(--secondary-bg);
+      border: 1px solid var(--border-light);
+      margin: 0 0 12px;
+      transition: all var(--transition-fast);
     }
-    .dish:hover{ transform: translateY(-1px); background: rgba(255,255,255,.08); }
+    .dish:hover{ background: var(--surface-bg); border-color: var(--border-medium); }
 
-    .dish h3{
-      margin:0 0 6px;
-      font-size: 1rem;
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      line-height: 1.25;
+    .dishRow{
+      display:grid;
+      grid-template-columns: 32px 1fr auto;
+      gap: 12px;
+      align-items:start;
     }
+
     .num{
-      width: 26px; height: 26px;
-      border-radius: 10px;
-      background: rgba(255,255,255,.90);
-      color:#061019;
-      display:inline-flex;
+      width: 32px; height: 32px;
+      border-radius: var(--radius-md);
+      background: var(--primary-bg);
+      color: var(--secondary-text);
+      display:flex;
       align-items:center;
       justify-content:center;
-      font-weight: 1000;
-      flex:0 0 auto;
-      font-size:.86rem;
+      font-weight: 700;
+      font-size: 14px;
+      border: 1px solid var(--border-light);
     }
-    .dish p{
+
+    .dishTitle{
+      margin:0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary-text);
+      line-height: 1.4;
+      letter-spacing: 0;
+    }
+    .dishText{
       margin: 4px 0 0;
-      color: rgba(238,243,255,.78);
-      white-space: pre-line;
+      font-size: 14px;
+      color: var(--tertiary-text);
       line-height: 1.5;
+      white-space: pre-line;
     }
 
-    .money, .price{
-      font-weight: 1000;
-      color: var(--accent);
-      margin-left: 6px;
+    /* CENE: povsod oranžne in isti stil */
+    .priceCol{
+      font-weight: 700;
+      color: var(--price);
+      text-align: right;
+      min-width: 80px;
+      font-size: 15px;
+      padding-top: 0;
+      white-space: nowrap;
     }
+    .priceCol .pLine{ display:block; }
 
-    /* highlight search term */
     .hit{
-      display:inline-block;
-      padding: 0 .18em;
-      border-radius: .35em;
-      background: rgba(255,176,32,.22);
-      border: 1px solid rgba(255,176,32,.35);
-      color: rgba(255,240,210,.98);
-      box-shadow: 0 6px 14px rgba(0,0,0,.18);
+      background: rgba(245,158,11,.20);
+      padding: 2px 4px;
+      border-radius: var(--radius-sm);
+      color: var(--accent-amber);
+      font-weight: 600;
     }
 
-    .muted{ color: var(--muted); margin:0; }
+    .muted{ color: var(--tertiary-text); margin:0; }
+
     .err{
-      background: rgba(255,92,122,.12);
-      border:1px solid rgba(255,92,122,.28);
-      padding: 10px 12px;
-      border-radius: 14px;
-      color: rgba(255,220,228,.95);
+      background: var(--accent-red-light);
+      border: 1px solid var(--border-light);
+      padding: 14px 16px;
+      border-radius: var(--radius-lg);
+      color: var(--accent-red);
+      font-weight: 600;
     }
 
     .loader{
       display:flex;
-      gap:10px;
+      gap: 10px;
       align-items:center;
-      padding: 10px 0;
-      color: var(--muted);
+      padding: 12px 0;
+      color: var(--tertiary-text);
+      justify-content:center;
     }
     .dot{
-      width:10px; height:10px;
-      border-radius:50%;
-      background: rgba(255,255,255,.55);
-      animation: b 1s infinite ease-in-out;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      animation: b 1.4s infinite ease-in-out both;
+      opacity: .8;
     }
-    .dot:nth-child(2){ animation-delay:.15s }
-    .dot:nth-child(3){ animation-delay:.3s }
-    @keyframes b{ 0%,100%{ transform:scale(.7); opacity:.5 } 50%{ transform:scale(1); opacity:1 } }
+    .dot:nth-child(1){ animation-delay: -0.32s; }
+    .dot:nth-child(2){ animation-delay: -0.16s; }
+    @keyframes b{
+      0%,80%,100%{ transform: scale(.8); opacity: .5; }
+      40%{ transform: scale(1); opacity: 1; }
+    }
 
-    /* ---------- Tiny toast ---------- */
+    .imgGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (min-width: 640px){
+      .imgGrid{ grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .imgCard{
+      border-radius: var(--radius-lg);
+      overflow:hidden;
+      border: 1px solid var(--border-light);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      position:relative;
+      background: var(--primary-bg);
+    }
+    .imgCard:hover{
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--accent-blue);
+    }
+    .imgCard img{ width:100%; height:auto; display:block; }
+
+    .imgCap{
+      position:absolute;
+      bottom: 12px;
+      left: 12px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(4px);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary-text);
+      border: 1px solid var(--border-light);
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index: 60;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 24px;
+      background: rgba(0,0,0,.85);
+      backdrop-filter: blur(8px);
+    }
+    .modal.show{ display:flex; animation: fadeIn 150ms ease-out; }
+
+    .modalPanel{
+      max-width: 1000px;
+      width:100%;
+      max-height: 90vh;
+      border-radius: var(--radius-2xl);
+      border: 1px solid rgba(255,255,255,.10);
+      background: var(--primary-bg);
+      box-shadow: var(--shadow-xl);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      animation: slideUp 200ms ease-out;
+    }
+    .modalTop{
+      padding: 20px;
+      border-bottom: 1px solid var(--border-light);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .modalTop b{
+      font-weight: 700;
+      color: var(--primary-text);
+      font-size: 18px;
+    }
+    .modalClose{
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: transparent;
+      color: var(--tertiary-text);
+      font-size: 20px;
+      cursor:pointer;
+      transition: all var(--transition-fast);
+    }
+    .modalClose:hover{ background: var(--surface-bg); color: var(--primary-text); }
+
+    .modalImgWrap{
+      overflow:auto;
+      background: var(--primary-bg);
+      flex: 1 1 auto;
+    }
+    .modalImgWrap img{ display:block; width:100%; height:auto; }
+
+    @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+    @keyframes slideUp{ from{ opacity:0; transform: translateY(20px);} to{opacity:1; transform: translateY(0);} }
+
     .toast{
       position: fixed;
+      bottom: 24px;
       left: 50%;
-      bottom: 16px;
-      transform: translateX(-50%);
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.14);
-      color: rgba(238,243,255,.92);
-      padding: 10px 12px;
-      border-radius: 999px;
-      box-shadow: var(--shadow2);
-      backdrop-filter: blur(12px);
-      font-weight: 900;
-      display:none;
-      max-width: calc(100vw - 24px);
+      transform: translateX(-50%) translateY(20px);
+      background: var(--primary-text);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: var(--radius-lg);
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: var(--shadow-xl);
+      z-index: 70;
+      opacity: 0;
+      pointer-events:none;
+      transition: all var(--transition-normal);
+      max-width: 90%;
+      text-align:center;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
+      display:block;
     }
-    .toast.show{ display:block; animation: pop .18s ease-out; }
-    @keyframes pop{
-      from{ transform: translateX(-50%) translateY(6px); opacity:.0 }
-      to{ transform: translateX(-50%) translateY(0); opacity:1 }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events:none;
     }
 
+    @media (max-width: 768px){
+      .topbarInner{ padding: 0 16px; }
+      .wrap{ padding: 16px; }
+      #todayPill{ display:none; }
+      .resHead{ flex-direction: column; align-items:flex-start; }
+      .meta{ align-items:flex-start; width:100%; }
+      .metaRow{ justify-content:flex-start; }
+      .updated{ text-align:left; max-width: 100%; }
+    }
+    @media (max-width: 480px){
+      .dishRow{ grid-template-columns: 1fr; gap: 8px; }
+      .priceCol{ text-align:left; }
+      .num{ display:inline-flex; }
+    }
     @media (prefers-reduced-motion: reduce){
       *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
     }
@@ -538,7 +736,7 @@
         <div class="logo" aria-hidden="true"><span>🍽️</span></div>
         <div class="titleBox">
           <h1>Malice na enem mestu</h1>
-          <p>Femec · Vinka · Rotonda — hitro, pregledno, simpatično</p>
+          <p>Femec · Vinka · Rotonda · Mooi 151 — hitro, pregledno</p>
         </div>
       </div>
 
@@ -567,10 +765,14 @@
     </section>
 
     <main class="grid" role="main">
+      <!-- FEMEC -->
       <section class="res" id="femecWidget" aria-label="Femec">
         <div class="resHead">
           <div>
-            <h2 class="resName">Femec <span class="badge">Malice: 11:00–14:00</span></h2>
+            <h2 class="resName">
+              <a href="https://www.femec.si/" target="_blank" rel="noopener">Femec</a>
+              <span class="badge">Malice: 11:00–14:00</span>
+            </h2>
           </div>
           <div class="meta">
             <div class="metaRow">
@@ -592,10 +794,14 @@
         </div>
       </section>
 
+      <!-- VINKA -->
       <section class="res" id="vinkaWidget" aria-label="Vinka">
         <div class="resHead">
           <div>
-            <h2 class="resName">Vinka <span class="badge">Malice: 10:30–15:00</span></h2>
+            <h2 class="resName">
+              <a href="https://www.vinka.si/malice-in-kosila.html" target="_blank" rel="noopener">Vinka</a>
+              <span class="badge">Malice: 10:30–15:00</span>
+            </h2>
           </div>
           <div class="meta">
             <div class="metaRow">
@@ -617,10 +823,14 @@
         </div>
       </section>
 
+      <!-- ROTONDA -->
       <section class="res" id="rotondaWidget" aria-label="Rotonda – Bistro Chika">
         <div class="resHead">
           <div>
-            <h2 class="resName">Rotonda – Bistro Chika <span class="badge">Tedenski meni</span></h2>
+            <h2 class="resName">
+              <a href="https://www.rotonda.si/bistro" target="_blank" rel="noopener">Rotonda – Bistro Chika</a>
+              <span class="badge">Tedenski meni</span>
+            </h2>
           </div>
           <div class="meta">
             <div class="metaRow">
@@ -641,10 +851,79 @@
           </div>
         </div>
       </section>
+
+      <!-- MOOI 151 -->
+      <section class="res" id="mooiWidget" aria-label="Mooi 151">
+        <div class="resHead">
+          <div>
+            <h2 class="resName">
+              <a href="https://www.mooi151.com/" target="_blank" rel="noopener">Mooi 151</a>
+              <span class="badge">Malice: 10:00–16:00</span>
+            </h2>
+          </div>
+          <div class="meta">
+            <div class="metaRow">
+              <span class="status" id="statusMooi">Pripravljeno</span>
+            </div>
+            <span class="updated" id="updatedMooi">Klikni sliko za povečavo</span>
+          </div>
+        </div>
+
+        <div class="resBody">
+          <div class="panel">
+            <div class="panelTitle">
+              <b>Meni</b>
+              <span class="dayTag">Slike <small>· klik za povečavo</small></span>
+            </div>
+
+            <div class="imgGrid">
+              <div class="imgCard" data-modal-title="Mooi 151 – Meni" data-modal-src="https://static.wixstatic.com/media/d5b4b8_16a1f663e5854c9ebd5887dc2e2275b1~mv2.png/v1/fill/w_980,h_1226,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/teden%20febsko%20skupaj%202.png">
+                <img
+                  src="https://static.wixstatic.com/media/d5b4b8_16a1f663e5854c9ebd5887dc2e2275b1~mv2.png/v1/fill/w_490,h_613,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/teden%20febsko%20skupaj%202.png"
+                  alt="Mooi 151 meni"
+                  loading="lazy"
+                />
+                <div class="imgCap">Mooi 151</div>
+              </div>
+
+              <div class="imgCard" data-modal-title="Mooi Thai – Meni" data-modal-src="https://static.wixstatic.com/media/d5b4b8_a9bc699328804631b69ea09b73e8618f~mv2.png/v1/crop/x_4,y_0,w_3367,h_4219/fill/w_980,h_1228,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/2026-01-mooi-Thai-2.png">
+                <img
+                  src="https://static.wixstatic.com/media/d5b4b8_a9bc699328804631b69ea09b73e8618f~mv2.png/v1/crop/x_4,y_0,w_3367,h_4219/fill/w_490,h_614,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/2026-01-mooi-Thai-2.png"
+                  alt="Mooi Thai meni"
+                  loading="lazy"
+                />
+                <div class="imgCap">Mooi Thai</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="sectionHeader">Stalna ponudba s pijačo</div>
+            <div id="mooiPijacaBody"></div>
+
+            <div style="height:10px"></div>
+
+            <div class="sectionHeader">Stalna ponudba brez pijače</div>
+            <div id="mooiBrezBody"></div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modalPanel" role="dialog" aria-modal="true" aria-label="Povečana slika menija">
+      <div class="modalTop">
+        <b id="modalTitle">Meni</b>
+        <button class="modalClose" id="modalClose" type="button">✕</button>
+      </div>
+      <div class="modalImgWrap">
+        <img id="modalImg" alt="Povečana slika menija" />
+      </div>
+    </div>
+  </div>
 
 <script>
 (() => {
@@ -689,23 +968,14 @@
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
   }
-
-  function highlightMoney(text){
-    const t = escapeHtml(text || "");
-    const moneyRe =
-      /(\b\d{1,4}(?:[.,]\d{2})?\s?(?:€|eur|EUR)\b|\b(?:€)\s?\d{1,4}(?:[.,]\d{2})?\b)/g;
-    return t.replace(moneyRe, '<span class="money">$1</span>');
+  function escapeRegExp(s){
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
-
-  // Highlight search query inside already-escaped text (safe)
   function highlightQueryEscaped(escapedText, query){
     const q = (query || "").trim();
     if (!q) return escapedText;
-
-    // allow multi words: highlight each token length>=2
     const tokens = q.split(/\s+/).map(t => t.trim()).filter(t => t.length >= 2);
     if (!tokens.length) return escapedText;
-
     let out = escapedText;
     for (const tok of tokens){
       const re = new RegExp(escapeRegExp(tok), "gi");
@@ -713,16 +983,9 @@
     }
     return out;
   }
-  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-
-  // Combine: escape -> money highlight -> query highlight
   function decorateText(text){
     const escaped = escapeHtml(text || "");
-    const money = highlightMoney(text || ""); // already escapes inside
-    // highlightMoney returns HTML; ensure query highlight runs on that HTML but not breaking tags:
-    // We'll apply highlight only to text nodes by doing a conservative replace on plain escaped parts.
-    // Practical approach: run highlight on the money HTML string; tokens won't match inside tags anyway.
-    return highlightQueryEscaped(money, globalQuery);
+    return highlightQueryEscaped(escaped, globalQuery);
   }
 
   function setLoading(el, msg){
@@ -788,7 +1051,7 @@
   async function fetchTextWithRetry(url, { retries = 0, timeoutMs = FETCH_TIMEOUT_MS } = {}){
     let last;
     for (let i=0; i<=retries; i++){
-      try { return await fetchTextWithTimeout(url, timeoutMs); }
+      try { return await fetchTextWithTimeout(url, timeoutMs ?? FETCH_TIMEOUT_MS); }
       catch(e){ last = e; if (i < retries) await new Promise(r => setTimeout(r, 300*(i+1))); }
     }
     throw last;
@@ -861,6 +1124,7 @@
     femec.render();
     vinka.render();
     rotonda.render();
+    renderMooiFixed();
   }
   searchBox.addEventListener("input", (e) => applySearch(e.target.value || ""));
   clearSearch.addEventListener("click", () => {
@@ -870,9 +1134,22 @@
   });
 
   // ==============================
-  // Render helper
+  // Render helper (dish)
   // ==============================
-  function renderDishList(el, list, { titleKey="name", detailsKey="sides", showIndex=true, priceKey=null } = {}){
+  function splitPriceLines(price){
+    const p = String(price || "").trim();
+    if (!p) return [];
+    const parts = p.split(/\s*\/\s*/).map(x => x.trim()).filter(Boolean);
+    return parts.length ? parts : [p];
+  }
+
+  function renderDishList(el, list, {
+    titleKey="title",
+    detailsKey="details",
+    showIndex=true,
+    priceKey="price",
+    startIndex=1
+  } = {}){
     if (!list || !list.length){
       el.innerHTML = globalQuery
         ? `<p class="muted">Ni zadetkov za iskanje.</p>`
@@ -884,17 +1161,47 @@
       const title = d[titleKey] || "";
       const details = d[detailsKey] || [];
       const price = priceKey ? (d[priceKey] || "") : "";
-      const num = showIndex ? (idx+1) : (d.num || "");
+      const num = showIndex ? (startIndex + idx) : (d.num || "");
 
       const detailText = Array.isArray(details) ? details.join("\n") : String(details || "");
+      const priceLines = splitPriceLines(price);
+
       return `
         <div class="dish">
-          <h3>
+          <div class="dishRow">
             <span class="num">${escapeHtml(String(num))}</span>
-            <span>${decorateText(title)}</span>
-            ${price ? `<span class="price">(${decorateText(price)})</span>` : ""}
-          </h3>
-          ${detailText ? `<p>${decorateText(detailText)}</p>` : ""}
+            <div>
+              <div class="dishTitle">${decorateText(title)}</div>
+              ${detailText ? `<div class="dishText">${decorateText(detailText)}</div>` : ""}
+            </div>
+            <div class="priceCol">
+              ${priceLines.map(pl => `<span class="pLine">${decorateText(pl)}</span>`).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderDishCardsHtml(list, { startIndex=1 } = {}){
+    if (!list || !list.length) return "";
+    return list.map((d, idx) => {
+      const detailText = Array.isArray(d.details) ? d.details.join("\n") : String(d.details || "");
+      const priceLines = splitPriceLines(d.price || "");
+      const num = startIndex + idx;
+
+      return `
+        <div class="dish">
+          <div class="dishRow">
+            <span class="num">${escapeHtml(String(num))}</span>
+            <div>
+              <div class="dishTitle">${decorateText(d.title || "")}</div>
+              ${detailText ? `<div class="dishText">${decorateText(detailText)}</div>` : ""}
+            </div>
+            <div class="priceCol">
+              ${priceLines.map(pl => `<span class="pLine">${decorateText(pl)}</span>`).join("")}
+            </div>
+          </div>
         </div>
       `;
     }).join("");
@@ -911,25 +1218,85 @@
 
     let parsed = null;
 
+    // Robustno: prebere TEDENSKO PONUDBO iz <p> vrstic:
+    // - "TEDENSKA PONUDBA" je lahko v svojem <p>
+    // - posamezna postavka (npr. "1.") je lahko razbita na več <p>
+    // - sklopimo v eno postavko do naslednje številke ali konca
+    function extractWeeklyItemsFromPs(ps){
+      if (!ps || !ps.length) return [];
+      const lines = ps
+        .map(s => String(s || "").replace(/\u00a0/g, " ").trim())
+        .filter(s => s && s !== "&nbsp;");
+
+      const idxStart = lines.findIndex(l => /tedenska\s+ponudba/i.test(l));
+      if (idxStart === -1) return [];
+
+      const after = lines.slice(idxStart + 1).filter(l => !/tedenska\s+ponudba/i.test(l));
+
+      const items = [];
+      let curNum = null;
+      let curParts = [];
+
+      const pushCur = () => {
+        if (!curNum) return;
+        const text = curParts.join(" ").replace(/\s+/g, " ").trim();
+        if (text) items.push({ num: String(curNum), title: text, details: [], price: "" });
+      };
+
+      for (const raw of after){
+        const m = raw.match(/^\s*(\d+)\.\s*(.*)\s*$/);
+        if (m){
+          pushCur();
+          curNum = Number(m[1]);
+          const rest = (m[2] || "").trim();
+          curParts = rest ? [rest] : [];
+        } else {
+          if (curNum != null) curParts.push(raw);
+        }
+      }
+      pushCur();
+
+      return items;
+    }
+
     function parseFemecMenu(html){
       const doc = new DOMParser().parseFromString(html, "text/html");
       const root = doc.querySelector("#wholemenu") || doc;
       const out = {};
+
       for (const d of DAYS){
         const sec = root.querySelector(`#${d.key}`) || doc.getElementById(d.key);
-        if (!sec) { out[d.key] = []; continue; }
+        if (!sec) { out[d.key] = { daily:[], weekly:[] }; continue; }
 
         const lines = Array.from(sec.querySelectorAll(".menuline"));
-        out[d.key] = lines.map(line => {
+
+        const daily = [];
+        let weekly = [];
+
+        for (const line of lines){
           const num = (line.querySelector(".menunumber")?.textContent || "").trim();
+
           const ps = Array.from(line.querySelectorAll(".menucontent p"))
-            .map(p => p.textContent.replace(/\u00a0/g," ").trim())
+            .map(p => (p.textContent || "").replace(/\u00a0/g," ").trim())
             .filter(Boolean);
-          if (!ps.length) return null;
-          const name = ps[0].replace(/\s+/g," ").trim();
-          const sides = ps.slice(1);
-          return { num, name, sides };
-        }).filter(Boolean);
+
+          if (!ps.length) continue;
+
+          // če je to tedenska ponudba blok
+          const wk = extractWeeklyItemsFromPs(ps);
+          if (wk.length){
+            weekly = wk;
+            continue;
+          }
+
+          const name = (ps[0] || "").replace(/\s+/g," ").trim();
+          const sides = ps.slice(1).filter(x => x && x !== "\u00a0");
+          if (!name) continue;
+
+          daily.push({ num, title: name, details: sides, price: "" });
+        }
+
+        out[d.key] = { daily, weekly };
       }
       return out;
     }
@@ -937,18 +1304,49 @@
     function filterForQuery(list){
       if (!globalQuery) return list;
       return (list || []).filter(d => {
-        const blob = [
-          d.num, d.name,
-          Array.isArray(d.sides) ? d.sides.join(" ") : d.sides
-        ].join(" ");
+        const blob = [d.num, d.title, Array.isArray(d.details) ? d.details.join(" ") : d.details].join(" ");
         return includesQuery(blob, globalQuery);
       });
     }
 
     function render(){
-      const listRaw = parsed?.[globalDayKey] || [];
-      const list = filterForQuery(listRaw);
-      renderDishList(elBody, list.map(x => ({ name: x.name, sides: x.sides })), { titleKey:"name", detailsKey:"sides", showIndex:true });
+      const day = parsed?.[globalDayKey] || { daily:[], weekly:[] };
+      const daily = filterForQuery(day.daily || []);
+      const weekly = filterForQuery(day.weekly || []);
+
+      let html = "";
+
+      // 1) Dnevna ponudba (oblaček/sekcija kot pri Vinki)
+      html += `<div class="sectionHeader">Dnevna ponudba</div>`;
+      html += daily.length
+        ? renderDishCardsHtml(daily.map(x => ({ title:x.title, details:x.details, price:"" })), { startIndex: 1 })
+        : (globalQuery ? `<p class="muted">Ni zadetkov za iskanje.</p>` : `<p class="muted">Meni še ni na voljo.</p>`);
+
+      // 2) Tedenska ponudba (nov okvirček po dnevni ponudbi)
+      if (weekly.length){
+        html += `<div class="sectionHeader" style="margin-top:14px">Tedenska ponudba</div>`;
+        // številčenje vzamemo iz originala (1..)
+        html += weekly.map(w => ({
+          title: w.title,
+          details: [],
+          price: "",
+          _num: w.num
+        })).map((d) => {
+          return `
+            <div class="dish">
+              <div class="dishRow">
+                <span class="num">${escapeHtml(String(d._num || ""))}</span>
+                <div>
+                  <div class="dishTitle">${decorateText(d.title || "")}</div>
+                </div>
+                <div class="priceCol"></div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      elBody.innerHTML = html;
     }
 
     const load = makeSingleFlight(async (force=false) => {
@@ -978,7 +1376,7 @@
   })();
 
   // ==============================
-  // VINKA: samo današnji meni (ali cache za preteklost); prihodnost -> “Meni še ni na voljo.”
+  // VINKA
   // ==============================
   const vinka = (() => {
     const elStatus = $("statusVinka");
@@ -1049,7 +1447,6 @@
       return d.getTime();
     }
 
-    // Selected day belongs to this week (Mon–Fri) -> compute date and compare
     function isFutureSelectedDay(){
       const idxMap = { ponedeljek:1, torek:2, sreda:3, cetrtek:4, petek:5 };
       const idx = idxMap[globalDayKey] || 1;
@@ -1062,84 +1459,70 @@
       return startOfDay(target.getTime()) > startOfDay(Date.now());
     }
 
-    function isTodaySelectedDay(){
-      const idxMap = { ponedeljek:1, torek:2, sreda:3, cetrtek:4, petek:5 };
-      const idx = idxMap[globalDayKey] || 1;
-
-      const d = new Date();
-      let wd = d.getDay(); if (wd === 0) wd = 7;
-      const monday = new Date(d); monday.setDate(d.getDate() - (wd-1));
-      const target = new Date(monday); target.setDate(monday.getDate() + (idx-1));
-
-      return startOfDay(target.getTime()) === startOfDay(Date.now());
-    }
-
     function filterLines(lines){
       if (!globalQuery) return lines || [];
       return (lines || []).filter(line => includesQuery(line, globalQuery));
     }
 
+    function splitLineAndPrice(line){
+      const s = String(line || "").trim();
+
+      let m = s.match(/^(.*?)(?:\s+)(\d{1,3}(?:[.,]\d{1,2})?)\s*(?:€|eur)\s*$/i);
+      if (m) return { title: m[1].trim(), price: (m[2].replace(".", ",") + "€") };
+
+      m = s.match(/^(.*?)(?:\s+)?(\d{1,3}(?:[.,]\d{1,2})?)\s*€\s*$/i);
+      if (m) return { title: m[1].trim(), price: (m[2].replace(".", ",") + "€") };
+
+      m = s.match(/^€\s*(\d{1,3}(?:[.,]\d{1,2})?)\s*(.*)$/);
+      if (m) return { title: (m[2] || "").trim() || s, price: (m[1].replace(".", ",") + "€") };
+
+      return { title: s, price: "" };
+    }
+
+    function linesToItems(lines){
+      return (lines || []).map(l => {
+        const sp = splitLineAndPrice(l);
+        return { title: sp.title, details: [], price: sp.price };
+      });
+    }
+
     function render(){
-      // Future selected day => no menu
       if (isFutureSelectedDay()){
         elBody.innerHTML = `<p class="muted">Meni še ni na voljo.</p>`;
         return;
       }
-
-      // For past days: allow cached view; for today: show live/cached data
       if (!vinkaData){
         elBody.innerHTML = `<p class="muted">Meni še ni na voljo.</p>`;
         return;
       }
 
-      // If selected day is past, keep cached (ok). If today, show.
-      // (Vinka has only current day; we use cache for “prejšnji dan” view.)
+      const dailyLines = filterLines(vinkaData.dailyLines);
+      const regularLines = filterLines(vinkaData.regularLines);
 
-      const daily = filterLines(vinkaData.dailyLines);
-      const regular = filterLines(vinkaData.regularLines);
+      const dailyItems = linesToItems(dailyLines);
+      const regularItems = linesToItems(regularLines);
 
-      const blocks = [];
-
-      if (daily.length){
-        blocks.push(`
-          <div class="dish" style="background:rgba(255,255,255,.07);">
-            <h3><span class="num">★</span> ${escapeHtml("Dnevna ponudba")}</h3>
-          </div>
-          ${daily.map((line, idx) => `
-            <div class="dish">
-              <h3><span class="num">${idx+1}</span> ${decorateText(line)}</h3>
-            </div>
-          `).join("")}
-        `);
-      }
-
-      if (regular.length){
-        blocks.push(`
-          <div class="dish" style="background:rgba(255,255,255,.07);">
-            <h3><span class="num">★</span> ${escapeHtml("Redna ponudba (stalnice)")}</h3>
-          </div>
-          ${regular.map((line, idx) => `
-            <div class="dish">
-              <h3><span class="num">${idx+1}</span> ${decorateText(line)}</h3>
-            </div>
-          `).join("")}
-        `);
-      }
-
-      if (!blocks.length){
-        elBody.innerHTML = globalQuery
-          ? `<p class="muted">Ni zadetkov za iskanje.</p>`
-          : `<p class="muted">Meni še ni na voljo.</p>`;
+      if (!dailyItems.length && !regularItems.length){
+        elBody.innerHTML = globalQuery ? `<p class="muted">Ni zadetkov za iskanje.</p>` : `<p class="muted">Meni še ni na voljo.</p>`;
         return;
       }
 
-      elBody.innerHTML = blocks.join("");
+      let html = "";
+
+      if (dailyItems.length){
+        html += `<div class="sectionHeader">Dnevna ponudba</div>`;
+        html += renderDishCardsHtml(dailyItems, { startIndex: 1 });
+      }
+
+      if (regularItems.length){
+        html += `<div class="sectionHeader">Redna ponudba (stalnice)</div>`;
+        html += renderDishCardsHtml(regularItems, { startIndex: 1 });
+      }
+
+      elBody.innerHTML = html;
     }
 
     const load = makeSingleFlight(async (force=false) => {
-      // Only attempt fetch if today is selected or we are doing global refresh.
-      // If user selects future day, we won't fetch anyway (render handles it),
-      // but fetch is harmless; still keep behavior simple.
       setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
       elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
@@ -1193,7 +1576,6 @@
       toast("Osvežujem: Vinka");
     });
 
-    // init from cache
     (() => {
       const cached = localStorage.getItem("vinka:data");
       const ts = Number(localStorage.getItem("vinka:lastGoodTs") || 0);
@@ -1220,7 +1602,6 @@
     const elRefresh = $("refreshRotonda");
     const elBody = $("rotondaBody");
 
-    let weekRange = "";
     let parsedByDay = null;
 
     function normalizeLines(text){
@@ -1271,12 +1652,11 @@
         ? lines.slice(startIdx + 1, endIdx !== -1 ? endIdx : lines.length)
         : lines;
 
-      let range = "";
-      if (slice.length && looksLikeWeekRange(slice[0])) range = slice[0];
+      let i = 0;
+      if (slice.length && looksLikeWeekRange(slice[0])) i = 1;
 
       const out = { ponedeljek:[], torek:[], sreda:[], cetrtek:[], petek:[] };
       let activeDays = [];
-      let i = (range ? 1 : 0);
 
       while (i < slice.length){
         const line = slice[i];
@@ -1322,16 +1702,13 @@
         i++;
       }
 
-      return { range, out };
+      return out;
     }
 
     function filterForQuery(list){
       if (!globalQuery) return list;
       return (list || []).filter(d => {
-        const blob = [
-          d.title, d.price,
-          Array.isArray(d.details) ? d.details.join(" ") : d.details
-        ].join(" ");
+        const blob = [d.title, d.price, Array.isArray(d.details) ? d.details.join(" ") : d.details].join(" ");
         return includesQuery(blob, globalQuery);
       });
     }
@@ -1348,9 +1725,7 @@
 
       try{
         const html = await fetchTextWithRetry(ROTONDA_PROXY_URL, { retries: ROTONDA_RETRIES, timeoutMs: ROTONDA_TIMEOUT_MS });
-        const p = parseRotonda(html);
-        weekRange = p.range || "";
-        parsedByDay = p.out || null;
+        parsedByDay = parseRotonda(html);
 
         elStatus.textContent = "Posodobljeno";
         setUpdated(elUpdated, now());
@@ -1372,6 +1747,76 @@
   })();
 
   // ==============================
+  // MOOI – stalna ponudba (fiksno)
+  // ==============================
+  const MOOI_S_PIJACO = [
+    { title: "Pečen piščančji file", details: ["(pire krompir, baby korenček, naravna omaka)"], price: "10,90€" },
+    { title: "Njoki s telečjimi koščki", details: [], price: "11,90€" },
+    { title: "Pljukanci z ratatouille", details: ["(ratatouille, mlada špinača, stracciatella)"], price: "10,90€" },
+    { title: "Mooi bowla s kuskusom – tofu/piščanec/losos", details: ["(kurkuma, mlada špinača, citrusi, rdeča pesa, Mooi koperčova omaka, edamame)"], price: "10,20€ / 10,90€ / 11,60€" },
+    { title: "Mooi bowla z rižem – tofu/piščanec/losos", details: ["(avokado, mlada špinača, hrustljava čebula, marinirana zelenjava, mooi curry omaka, edamame, rdeča pesa, sezam)"], price: "10,20€ / 10,90€ / 11,60€" }
+  ];
+
+  const MOOI_BREZ_PIJACE = [
+    { title: "Piščančji zrezek po dunajsko s pomfrijem", details: [], price: "9,90€" },
+    { title: "Ocvrti sir s pomfrijem", details: [], price: "9,50€" },
+    { title: "Mooi krožnik", details: ["Metuljčki v gobovi omaki z ocvrtim piščančjim zrezkom"], price: "10,50€" },
+    { title: "Klasični hamburger s pomfrijem", details: ["(solata, paradižnik, hišna omaka, pleskavica)"], price: "9,90€" }
+  ];
+
+  function filterFixed(list){
+    if (!globalQuery) return list;
+    return list.filter(d => {
+      const blob = [d.title, d.price, Array.isArray(d.details) ? d.details.join(" ") : d.details].join(" ");
+      return includesQuery(blob, globalQuery);
+    });
+  }
+
+  function renderMooiFixed(){
+    const pijacaEl = $("mooiPijacaBody");
+    const brezEl = $("mooiBrezBody");
+    renderDishList(pijacaEl, filterFixed(MOOI_S_PIJACO), { titleKey:"title", detailsKey:"details", showIndex:true, priceKey:"price" });
+    renderDishList(brezEl, filterFixed(MOOI_BREZ_PIJACE), { titleKey:"title", detailsKey:"details", showIndex:true, priceKey:"price" });
+  }
+
+  // ==============================
+  // Modal: klik kjerkoli zapre
+  // ==============================
+  const modal = $("modal");
+  const modalImg = $("modalImg");
+  const modalTitle = $("modalTitle");
+  const modalClose = $("modalClose");
+
+  function openModal({ title, src }){
+    modalTitle.textContent = title || "Meni";
+    modalImg.src = src;
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal(){
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden", "true");
+    modalImg.src = "";
+    document.body.style.overflow = "";
+  }
+
+  modalClose.addEventListener("click", closeModal);
+  modal.addEventListener("click", () => closeModal());
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("show")) closeModal();
+  });
+
+  document.querySelectorAll(".imgCard").forEach(card => {
+    card.addEventListener("click", () => {
+      openModal({
+        title: card.getAttribute("data-modal-title") || "Meni",
+        src: card.getAttribute("data-modal-src") || ""
+      });
+    });
+  });
+
+  // ==============================
   // Global refresh
   // ==============================
   const refreshAllBtn = $("refreshAll");
@@ -1389,7 +1834,7 @@
     ]);
 
     globalStatus.textContent = "Pripravljeno";
-    toast("Končano ✅");
+    toast("Končano");
   });
 
   // ==============================
@@ -1406,7 +1851,9 @@
   femec.render();
   vinka.render();
   rotonda.render();
+  renderMooiFixed();
 })();
 </script>
 </body>
 </html>
+```
