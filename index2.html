@@ -877,15 +877,18 @@
             </div>
 
             <div class="imgGrid">
-              <div class="imgCard" data-modal-title="Mooi 151 – Meni" data-modal-src="https://static.wixstatic.com/media/d5b4b8_16a1f663e5854c9ebd5887dc2e2275b1~mv2.png/v1/fill/w_980,h_1226,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/teden%20febsko%20skupaj%202.png">
+              <!-- Mooi 151 (AUTO iz Workerja) -->
+              <div class="imgCard" id="mooi151Card" data-modal-title="Mooi 151 – Meni" data-modal-src="">
                 <img
-                  src="https://static.wixstatic.com/media/d5b4b8_16a1f663e5854c9ebd5887dc2e2275b1~mv2.png/v1/fill/w_490,h_613,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/teden%20febsko%20skupaj%202.png"
+                  id="mooi151Img"
+                  src=""
                   alt="Mooi 151 meni"
                   loading="lazy"
                 />
                 <div class="imgCap">Mooi 151</div>
               </div>
 
+              <!-- Mooi Thai (ostane hardcoded) -->
               <div class="imgCard" data-modal-title="Mooi Thai – Meni" data-modal-src="https://static.wixstatic.com/media/d5b4b8_a9bc699328804631b69ea09b73e8618f~mv2.png/v1/crop/x_4,y_0,w_3367,h_4219/fill/w_980,h_1228,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/2026-01-mooi-Thai-2.png">
                 <img
                   src="https://static.wixstatic.com/media/d5b4b8_a9bc699328804631b69ea09b73e8618f~mv2.png/v1/crop/x_4,y_0,w_3367,h_4219/fill/w_490,h_614,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/2026-01-mooi-Thai-2.png"
@@ -931,6 +934,9 @@
   const VINKA_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/vinka";
   const ROTONDA_PROXY_URL = "https://femec-proxy.lanos5555.workers.dev/api/rotonda";
 
+  // Mooi 151: auto pridobi URL slike iz Workerja
+  const MOOI151_IMAGE_API = "https://mooi151imagemenu.lanos5555.workers.dev/api/mooi151-image";
+
   const FETCH_TIMEOUT_MS = 8500;
 
   const FEMEC_TIMEOUT_MS = 8500;
@@ -964,6 +970,28 @@
 
   const $ = (id) => document.getElementById(id);
   const now = () => Date.now();
+
+  function bust(u){
+    if (!u) return u;
+    return u + (u.includes("?") ? "&" : "?") + "v=" + Date.now();
+  }
+
+  async function loadMooi151Image(){
+    try{
+      const r = await fetch(MOOI151_IMAGE_API, { cache: "no-store" });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.msg || "no ok");
+
+      const img = document.getElementById("mooi151Img");
+      const card = document.getElementById("mooi151Card");
+      if (!img || !card) return;
+
+      img.src = bust(j.thumb);
+      card.setAttribute("data-modal-src", j.full || j.thumb);
+    } catch(e){
+      console.error("Mooi151 image load failed", e);
+    }
+  }
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
@@ -1218,10 +1246,6 @@
 
     let parsed = null;
 
-    // Robustno: prebere TEDENSKO PONUDBO iz <p> vrstic:
-    // - "TEDENSKA PONUDBA" je lahko v svojem <p>
-    // - posamezna postavka (npr. "1.") je lahko razbita na več <p>
-    // - sklopimo v eno postavko do naslednje številke ali konca
     function extractWeeklyItemsFromPs(ps){
       if (!ps || !ps.length) return [];
       const lines = ps
@@ -1282,7 +1306,6 @@
 
           if (!ps.length) continue;
 
-          // če je to tedenska ponudba blok
           const wk = extractWeeklyItemsFromPs(ps);
           if (wk.length){
             weekly = wk;
@@ -1316,16 +1339,13 @@
 
       let html = "";
 
-      // 1) Dnevna ponudba (oblaček/sekcija kot pri Vinki)
       html += `<div class="sectionHeader">Dnevna ponudba</div>`;
       html += daily.length
         ? renderDishCardsHtml(daily.map(x => ({ title:x.title, details:x.details, price:"" })), { startIndex: 1 })
         : (globalQuery ? `<p class="muted">Ni zadetkov za iskanje.</p>` : `<p class="muted">Meni še ni na voljo.</p>`);
 
-      // 2) Tedenska ponudba (nov okvirček po dnevni ponudbi)
       if (weekly.length){
         html += `<div class="sectionHeader" style="margin-top:14px">Tedenska ponudba</div>`;
-        // številčenje vzamemo iz originala (1..)
         html += weekly.map(w => ({
           title: w.title,
           details: [],
@@ -1807,11 +1827,12 @@
     if (e.key === "Escape" && modal.classList.contains("show")) closeModal();
   });
 
+  // Klik na sliko: odpri modal (modal src vedno "bust")
   document.querySelectorAll(".imgCard").forEach(card => {
     card.addEventListener("click", () => {
       openModal({
         title: card.getAttribute("data-modal-title") || "Meni",
-        src: card.getAttribute("data-modal-src") || ""
+        src: bust(card.getAttribute("data-modal-src") || "")
       });
     });
   });
@@ -1833,6 +1854,9 @@
       rotonda.load(true),
     ]);
 
+    // osveži tudi Mooi 151 sliko
+    loadMooi151Image();
+
     globalStatus.textContent = "Pripravljeno";
     toast("Končano");
   });
@@ -1852,8 +1876,10 @@
   vinka.render();
   rotonda.render();
   renderMooiFixed();
+
+  // Mooi 151 slika iz Workerja
+  loadMooi151Image();
 })();
 </script>
 </body>
 </html>
-```
