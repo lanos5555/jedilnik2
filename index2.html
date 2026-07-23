@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sl">
 <head>
   <meta charset="utf-8" />
@@ -933,6 +933,8 @@
   const FEMEC_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/femec";
   const VINKA_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/vinka";
   const ROTONDA_PROXY_URL = "https://femec-proxy.lanos5555.workers.dev/api/rotonda";
+  const VINKA_SOURCE_URL  = "https://www.vinka.si/malice-in-kosila.html";
+  const ALLORIGINS_RAW_URL = "https://api.allorigins.win/raw?url=";
 
   // Mooi 151: auto pridobi URL slike iz Workerja
   const MOOI151_IMAGE_API = "https://mooi151imagemenu.lanos5555.workers.dev/api/mooi151-image";
@@ -943,6 +945,9 @@
   const FEMEC_RETRIES = 1;
 
   const VINKA_TIMEOUT_MS = 8500;
+  const VINKA_RETRIES = 1;
+  const VINKA_CACHE_DATA_KEY = "vinka:v2:data";
+  const VINKA_CACHE_TS_KEY = "vinka:v2:lastGoodTs";
 
   const ROTONDA_TIMEOUT_MS = 8500;
   const ROTONDA_RETRIES = 1;
@@ -1070,7 +1075,11 @@
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs ?? FETCH_TIMEOUT_MS);
     try{
-      const resp = await fetch(url, { signal: ctrl.signal, headers:{ "Accept":"text/html,*/*" } });
+      const resp = await fetch(url, {
+        signal: ctrl.signal,
+        cache: "no-store",
+        headers:{ "Accept":"text/html,*/*" }
+      });
       if (!resp.ok) throw new Error("HTTP " + resp.status);
       return await resp.text();
     } finally { clearTimeout(t); }
@@ -1408,57 +1417,173 @@
     let lastGoodTs = 0;
 
     function cleanHtmlToText(htmlSnippet){
-      return htmlSnippet
+      const withBreaks = String(htmlSnippet || "")
         .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<[^>]+>/g, "")
+        .replace(/<\/(?:p|div|li|h[1-6])>/gi, "\n");
+      const parsed = new DOMParser().parseFromString(withBreaks, "text/html");
+      return (parsed.body?.textContent || "")
         .replace(/\u00a0/g, " ")
+        .replace(/\r/g, "")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
         .trim();
     }
 
     function parseVinka(html){
       const doc = new DOMParser().parseFromString(html, "text/html");
-      const content = doc.querySelector('div.col-md-9[role="content"]');
-      if (!content) return { ok:false, dailyLines:[], regularLines:[], msg:"Glavni vsebinski del ni bil najden." };
+      const content =
+        doc.querySelector('div.col-md-9[role="content"]') ||
+        doc.querySelector("main") ||
+        doc.querySelector('[role="main"]') ||
+        doc.body;
+      if (!content) return { ok:false, dailyLines:[], regularLines:[], sourceDate:"", msg:"Glavni vsebinski del ni bil najden." };
+
+      const sourceDate = Array.from(content.querySelectorAll("h1,h2,h3,h4"))
+        .map(el => (el.textContent || "").replace(/\s+/g, " ").trim())
+        .find(text => /^(ponedeljek|torek|sreda|četrtek|cetrtek|petek)\b/i.test(text)) || "";
 
       let pWithMenu = null;
       for (const p of Array.from(content.querySelectorAll("p"))) {
-        const t = (p.innerText || "").toLowerCase();
+        const t = (p.textContent || "").toLocaleLowerCase("sl-SI");
         if (t.includes("dnevna ponudba") && (t.includes("naše stalnice") || t.includes("jed na žlico") || t.includes("za vegeterijance") || t.includes("za vegetarijance"))) {
           pWithMenu = p; break;
         }
       }
-      if (!pWithMenu) return { ok:false, dailyLines:[], regularLines:[], msg:"Vsebina menija ni v pričakovani obliki." };
+      // Če Vinka razdeli meni med več odstavkov, preglej celoten vsebinski del.
+      const htmlContent = (pWithMenu || content).innerHTML;
+      const menuText = cleanHtmlToText(htmlContent);
+      const menuLower = menuText.toLocaleLowerCase("sl-SI");
 
-      const htmlContent = pWithMenu.innerHTML;
+      function marker(labels){
+        for (const label of labels){
+          const index = menuLower.indexOf(label.toLocaleLowerCase("sl-SI"));
+          if (index !== -1) return { index, length:label.length };
+        }
+        return { index:-1, length:0 };
+      }
 
-      const mStal = "Naše stalnice:";
-      const mDnev = "Dnevna ponudba:";
-      const mVeg1 = "Za vegeterijance:";
-      const mVeg2 = "Za vegetarijance:";
-      const mZlic = "Jed na žlico:";
-
-      const iS = htmlContent.indexOf(mStal);
-      const iD = htmlContent.indexOf(mDnev);
-      const iV1 = htmlContent.indexOf(mVeg1);
-      const iV2 = htmlContent.indexOf(mVeg2);
-      const iV = (iV1 !== -1) ? iV1 : iV2;
-      const iZ = htmlContent.indexOf(mZlic);
+      const mStal = marker(["Naše stalnice:"]);
+      const mDnev = marker(["Dnevna ponudba:"]);
+      const mVeg  = marker(["Za vegeterijance:", "Za vegetarijance:"]);
+      const mZlic = marker(["Jed na žlico:"]);
 
       let dailyText = "";
       let regularText = "";
 
-      if (iS === -1 || iD === -1) {
-        dailyText = cleanHtmlToText(htmlContent);
-        regularText = "";
+      if (mStal.index === -1 || mDnev.index === -1) {
+        return { ok:false, dailyLines:[], regularLines:[], sourceDate, msg:"Vsebina menija ni v pričakovani obliki." };
       } else {
-        const dailyEnd = (iV !== -1) ? iV : ((iZ !== -1) ? iZ : htmlContent.length);
-        dailyText = cleanHtmlToText(htmlContent.substring(iD + mDnev.length, dailyEnd));
-        regularText = cleanHtmlToText(htmlContent.substring(iS + mStal.length, iD));
+        const dailyEnd = (mVeg.index !== -1)
+          ? mVeg.index
+          : ((mZlic.index !== -1) ? mZlic.index : menuText.length);
+        dailyText = menuText.substring(mDnev.index + mDnev.length, dailyEnd).trim();
+        regularText = menuText.substring(mStal.index + mStal.length, mDnev.index).trim();
       }
 
       const dailyLines = dailyText ? dailyText.split("\n").map(s => s.trim()).filter(Boolean) : [];
       const regularLines = regularText ? regularText.split("\n").map(s => s.trim()).filter(Boolean) : [];
-      return { ok:true, dailyLines, regularLines, msg:"" };
+      if (!dailyLines.length && !regularLines.length) {
+        return { ok:false, dailyLines:[], regularLines:[], sourceDate, msg:"Na strani ni bilo mogoče prebrati jedi." };
+      }
+      return { ok:true, dailyLines, regularLines, sourceDate, msg:"" };
+    }
+
+    const SLO_MONTHS = {
+      januar:0, februar:1, marec:2, april:3, maj:4, junij:5,
+      julij:6, avgust:7, september:8, oktober:9, november:10, december:11
+    };
+
+    function sourceDateTimestamp(sourceDate){
+      const match = String(sourceDate || "").toLocaleLowerCase("sl-SI")
+        .match(/(\d{1,2})\.\s*(januar|februar|marec|april|maj|junij|julij|avgust|september|oktober|november|december)/i);
+      if (!match) return 0;
+
+      const current = new Date();
+      let year = current.getFullYear();
+      const month = SLO_MONTHS[match[2]];
+      const day = Number(match[1]);
+      const candidate = new Date(year, month, day);
+
+      // Pravilen prehod med decembrom in januarjem.
+      const diff = candidate.getTime() - current.getTime();
+      if (diff > 180 * 24 * 60 * 60 * 1000) year--;
+      if (diff < -180 * 24 * 60 * 60 * 1000) year++;
+
+      return new Date(year, month, day).getTime();
+    }
+
+    function isTodaySourceDate(sourceDate){
+      const ts = sourceDateTimestamp(sourceDate);
+      return Boolean(ts) && startOfDay(ts) === startOfDay(Date.now());
+    }
+
+    function makeVinkaSources(){
+      const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const source = new URL(VINKA_SOURCE_URL);
+      source.searchParams.set("_cb", token);
+
+      return [
+        {
+          name:"worker",
+          url:`${VINKA_PROXY_URL}?_cb=${encodeURIComponent(token)}`
+        },
+        {
+          name:"official",
+          url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(source.toString())}&_cb=${encodeURIComponent(token)}`
+        }
+      ];
+    }
+
+    async function fetchVinkaCandidate(source){
+      const html = await fetchTextWithRetry(source.url, {
+        retries: VINKA_RETRIES,
+        timeoutMs: VINKA_TIMEOUT_MS
+      });
+      const parsed = parseVinka(html);
+      if (!parsed.ok) throw new Error(`${source.name}: ${parsed.msg || "Parse fail"}`);
+      return {
+        ...parsed,
+        source:source.name,
+        sourceTs:sourceDateTimestamp(parsed.sourceDate)
+      };
+    }
+
+    async function fetchBestVinka(){
+      const sources = makeVinkaSources();
+      const wrapped = sources.map((source, index) =>
+        fetchVinkaCandidate(source)
+          .then(value => ({ index, ok:true, value }))
+          .catch(error => ({ index, ok:false, error }))
+      );
+
+      const pending = wrapped.map((promise, index) => ({ index, promise }));
+      const valid = [];
+
+      while (pending.length){
+        const settled = await Promise.race(
+          pending.map(entry => entry.promise.then(result => ({ pendingIndex:entry.index, result })))
+        );
+        const removeAt = pending.findIndex(entry => entry.index === settled.pendingIndex);
+        if (removeAt !== -1) pending.splice(removeAt, 1);
+
+        if (settled.result.ok){
+          valid.push(settled.result.value);
+          // Današnji meni je dovolj svež; ni treba čakati na počasnejši vir.
+          if (isTodaySourceDate(settled.result.value.sourceDate)) {
+            return settled.result.value;
+          }
+        }
+      }
+
+      if (!valid.length) throw new Error("Noben Vinkin vir ni dosegljiv.");
+
+      // Če noben vir nima današnjega datuma, uporabi najnovejšega.
+      // Pri enakem datumu ima prednost neposredna kopija uradne strani.
+      valid.sort((a, b) =>
+        (b.sourceTs - a.sourceTs) ||
+        ((b.source === "official" ? 1 : 0) - (a.source === "official" ? 1 : 0))
+      );
+      return valid[0];
     }
 
     function startOfDay(ts){
@@ -1546,40 +1671,44 @@
       setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
       elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
-      const url = VINKA_PROXY_URL + "?_=" + Date.now();
+      try {
+        const p = await fetchBestVinka();
+        const incomingTs = p.sourceTs || 0;
+        const currentTs = sourceDateTimestamp(vinkaData?.sourceDate);
 
-      const tryOnce = async () => {
-        const html = await fetchTextWithRetry(url, { retries: 0, timeoutMs: VINKA_TIMEOUT_MS });
-        const p = parseVinka(html);
-        if (!p.ok) throw new Error(p.msg || "Parse fail");
+        // Počasnejši ali zastarel posrednik ne sme prepisati novejšega menija.
+        if (!currentTs || !incomingTs || incomingTs >= currentTs) {
+          vinkaData = {
+            dailyLines:p.dailyLines,
+            regularLines:p.regularLines,
+            sourceDate:p.sourceDate || "",
+            source:p.source
+          };
+          lastGoodTs = Date.now();
 
-        vinkaData = { dailyLines: p.dailyLines, regularLines: p.regularLines };
-        lastGoodTs = Date.now();
+          localStorage.setItem(VINKA_CACHE_DATA_KEY, JSON.stringify(vinkaData));
+          localStorage.setItem(VINKA_CACHE_TS_KEY, String(lastGoodTs));
+        }
 
-        localStorage.setItem("vinka:data", JSON.stringify(vinkaData));
-        localStorage.setItem("vinka:lastGoodTs", String(lastGoodTs));
-
-        elStatus.textContent = "Posodobljeno";
-        setUpdated(elUpdated, lastGoodTs);
+        elStatus.textContent = vinkaData?.sourceDate
+          ? `Meni: ${vinkaData.sourceDate}`
+          : "Posodobljeno";
+        setUpdated(elUpdated, lastGoodTs || now());
         render();
-      };
-
-      const waits = [0, 800, 2000];
-      for (let i = 0; i < waits.length; i++) {
-        try {
-          if (waits[i]) await new Promise(r => setTimeout(r, waits[i]));
-          await tryOnce();
-          return;
-        } catch (e) {}
+        return;
+      } catch (error) {
+        console.error("Vinka refresh failed", error);
       }
 
-      const cached = localStorage.getItem("vinka:data");
-      const ts = Number(localStorage.getItem("vinka:lastGoodTs") || 0);
+      const cached = localStorage.getItem(VINKA_CACHE_DATA_KEY);
+      const ts = Number(localStorage.getItem(VINKA_CACHE_TS_KEY) || 0);
       if (cached) {
         try{
           vinkaData = JSON.parse(cached);
           lastGoodTs = ts || 0;
-          elStatus.textContent = "Zadnji uspešen meni";
+          elStatus.textContent = vinkaData?.sourceDate
+            ? `Zadnji meni: ${vinkaData.sourceDate}`
+            : "Zadnji uspešen meni";
           setUpdated(elUpdated, lastGoodTs || now());
           render();
           return;
@@ -1597,13 +1726,15 @@
     });
 
     (() => {
-      const cached = localStorage.getItem("vinka:data");
-      const ts = Number(localStorage.getItem("vinka:lastGoodTs") || 0);
+      const cached = localStorage.getItem(VINKA_CACHE_DATA_KEY);
+      const ts = Number(localStorage.getItem(VINKA_CACHE_TS_KEY) || 0);
       if (cached) {
         try{
           vinkaData = JSON.parse(cached);
           lastGoodTs = ts || 0;
-          elStatus.textContent = "Zadnji uspešen meni";
+          elStatus.textContent = vinkaData?.sourceDate
+            ? `Zadnji meni: ${vinkaData.sourceDate}`
+            : "Zadnji uspešen meni";
           setUpdated(elUpdated, lastGoodTs || now());
         } catch(e){}
       }
