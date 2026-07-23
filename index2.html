@@ -935,6 +935,7 @@
   const ROTONDA_PROXY_URL = "https://femec-proxy.lanos5555.workers.dev/api/rotonda";
   const VINKA_SOURCE_URL  = "https://www.vinka.si/malice-in-kosila.html";
   const ALLORIGINS_RAW_URL = "https://api.allorigins.win/raw?url=";
+  const JINA_READER_URL = "https://r.jina.ai/";
 
   // Mooi 151: auto pridobi URL slike iz Workerja
   const MOOI151_IMAGE_API = "https://mooi151imagemenu.lanos5555.workers.dev/api/mooi151-image";
@@ -944,8 +945,8 @@
   const FEMEC_TIMEOUT_MS = 8500;
   const FEMEC_RETRIES = 1;
 
-  const VINKA_TIMEOUT_MS = 8500;
-  const VINKA_RETRIES = 1;
+  const VINKA_TIMEOUT_MS = 12000;
+  const VINKA_RETRIES = 0;
   const VINKA_CACHE_DATA_KEY = "vinka:v2:data";
   const VINKA_CACHE_TS_KEY = "vinka:v2:lastGoodTs";
 
@@ -1416,6 +1417,32 @@
     let vinkaData = null;
     let lastGoodTs = 0;
 
+    function readVinkaCache(){
+      const candidates = [
+        {
+          dataKey:VINKA_CACHE_DATA_KEY,
+          tsKey:VINKA_CACHE_TS_KEY
+        },
+        {
+          // Enkratna združljivost s predpomnilnikom iz prvotne kode.
+          dataKey:"vinka:data",
+          tsKey:"vinka:lastGoodTs"
+        }
+      ];
+
+      for (const candidate of candidates){
+        const raw = localStorage.getItem(candidate.dataKey);
+        if (!raw) continue;
+        try{
+          return {
+            data:JSON.parse(raw),
+            ts:Number(localStorage.getItem(candidate.tsKey) || 0)
+          };
+        }catch(e){}
+      }
+      return null;
+    }
+
     function cleanHtmlToText(htmlSnippet){
       const withBreaks = String(htmlSnippet || "")
         .replace(/<br\s*\/?>/gi, "\n")
@@ -1438,9 +1465,15 @@
         doc.body;
       if (!content) return { ok:false, dailyLines:[], regularLines:[], sourceDate:"", msg:"Glavni vsebinski del ni bil najden." };
 
-      const sourceDate = Array.from(content.querySelectorAll("h1,h2,h3,h4"))
+      const headingDate = Array.from(content.querySelectorAll("h1,h2,h3,h4"))
         .map(el => (el.textContent || "").replace(/\s+/g, " ").trim())
         .find(text => /^(ponedeljek|torek|sreda|četrtek|cetrtek|petek)\b/i.test(text)) || "";
+      const contentText = cleanHtmlToText(content.innerHTML);
+      const textDate = contentText
+        .split("\n")
+        .map(line => line.replace(/^#+\s*/, "").trim())
+        .find(text => /^(ponedeljek|torek|sreda|četrtek|cetrtek|petek)\b/i.test(text)) || "";
+      const sourceDate = headingDate || textDate;
 
       let pWithMenu = null;
       for (const p of Array.from(content.querySelectorAll("p"))) {
@@ -1525,11 +1558,21 @@
       return [
         {
           name:"worker",
+          label:"Worker",
+          timeoutMs:5000,
           url:`${VINKA_PROXY_URL}?_cb=${encodeURIComponent(token)}`
         },
         {
           name:"official",
+          label:"AllOrigins",
+          timeoutMs:9000,
           url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(source.toString())}&_cb=${encodeURIComponent(token)}`
+        },
+        {
+          name:"jina",
+          label:"Jina Reader",
+          timeoutMs:15000,
+          url:`${JINA_READER_URL}${source.toString()}`
         }
       ];
     }
@@ -1537,7 +1580,7 @@
     async function fetchVinkaCandidate(source){
       const html = await fetchTextWithRetry(source.url, {
         retries: VINKA_RETRIES,
-        timeoutMs: VINKA_TIMEOUT_MS
+        timeoutMs: source.timeoutMs || VINKA_TIMEOUT_MS
       });
       const parsed = parseVinka(html);
       if (!parsed.ok) throw new Error(`${source.name}: ${parsed.msg || "Parse fail"}`);
@@ -1558,6 +1601,7 @@
 
       const pending = wrapped.map((promise, index) => ({ index, promise }));
       const valid = [];
+      const errors = [];
 
       while (pending.length){
         const settled = await Promise.race(
@@ -1572,10 +1616,19 @@
           if (isTodaySourceDate(settled.result.value.sourceDate)) {
             return settled.result.value;
           }
+        } else {
+          const source = sources[settled.result.index];
+          const error = settled.result.error;
+          const reason = error?.name === "AbortError"
+            ? "časovna omejitev"
+            : (error?.message || "neznana napaka");
+          errors.push(`${source?.label || source?.name || "Vir"}: ${reason}`);
         }
       }
 
-      if (!valid.length) throw new Error("Noben Vinkin vir ni dosegljiv.");
+      if (!valid.length) {
+        throw new Error(errors.length ? errors.join(" | ") : "Noben Vinkin vir ni dosegljiv.");
+      }
 
       // Če noben vir nima današnjega datuma, uporabi najnovejšega.
       // Pri enakem datumu ima prednost neposredna kopija uradne strani.
@@ -1670,6 +1723,7 @@
     const load = makeSingleFlight(async (force=false) => {
       setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
       elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+      let refreshError = "";
 
       try {
         const p = await fetchBestVinka();
@@ -1697,15 +1751,15 @@
         render();
         return;
       } catch (error) {
+        refreshError = error?.message || "Neznana napaka.";
         console.error("Vinka refresh failed", error);
       }
 
-      const cached = localStorage.getItem(VINKA_CACHE_DATA_KEY);
-      const ts = Number(localStorage.getItem(VINKA_CACHE_TS_KEY) || 0);
+      const cached = readVinkaCache();
       if (cached) {
         try{
-          vinkaData = JSON.parse(cached);
-          lastGoodTs = ts || 0;
+          vinkaData = cached.data;
+          lastGoodTs = cached.ts || 0;
           elStatus.textContent = vinkaData?.sourceDate
             ? `Zadnji meni: ${vinkaData.sourceDate}`
             : "Zadnji uspešen meni";
@@ -1715,7 +1769,11 @@
         } catch(e){}
       }
 
-      setError(elBody, "Vinka meni ni dosegljiv (napaka pri nalaganju).");
+      setError(
+        elBody,
+        "Vinka meni ni dosegljiv. " +
+        (refreshError ? `Podrobnosti: ${refreshError}` : "Vsi viri so vrnili napako.")
+      );
       elStatus.textContent = "Napaka";
     });
 
@@ -1726,12 +1784,11 @@
     });
 
     (() => {
-      const cached = localStorage.getItem(VINKA_CACHE_DATA_KEY);
-      const ts = Number(localStorage.getItem(VINKA_CACHE_TS_KEY) || 0);
+      const cached = readVinkaCache();
       if (cached) {
         try{
-          vinkaData = JSON.parse(cached);
-          lastGoodTs = ts || 0;
+          vinkaData = cached.data;
+          lastGoodTs = cached.ts || 0;
           elStatus.textContent = vinkaData?.sourceDate
             ? `Zadnji meni: ${vinkaData.sourceDate}`
             : "Zadnji uspešen meni";
