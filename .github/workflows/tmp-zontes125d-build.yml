@@ -1,0 +1,210 @@
+name: Temporary Zontes Auto 125D APK build
+
+on:
+  push:
+    branches:
+      - tmp-zontes125d-build
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Clone OpenCfMoto
+        run: |
+          git clone --depth 1 https://github.com/zanderp/open-cfmoto.git zontes-src
+          cd zontes-src
+          git rev-parse HEAD > ../UPSTREAM_COMMIT.txt
+
+      - name: Apply Zontes 125D P2P patch
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('zontes-src')
+
+          # Install beside official OpenCfMoto and disable fork telemetry by default.
+          p = root / 'app/build.gradle.kts'
+          s = p.read_text(encoding='utf-8-sig')
+          s = re.sub(r'compileSdk\s*\{\s*version\s*=\s*release\(36\)\s*\{\s*minorApiLevel\s*=\s*1\s*\}\s*\}', 'compileSdk = 36', s)
+          s = s.replace('applicationId = "dev.zanderp.opencfmoto"', 'applicationId = "si.zontes.auto125d"')
+          s = s.replace('versionCode = 77', 'versionCode = 1')
+          s = s.replace('versionName = "2.0.18"', 'versionName = "0.1.0-z125d"')
+          s = s.replace('?: "https://opencfmoto-telemetry.hello-3d9.workers.dev"', '?: ""')
+          p.write_text(s, encoding='utf-8')
+
+          # Rebrand the launcher label while keeping AGPL attribution/About intact.
+          p = root / 'app/src/main/res/values/strings.xml'
+          s = p.read_text(encoding='utf-8-sig')
+          s = s.replace('<string name="app_name">Open CfMoto</string>', '<string name="app_name">Zontes Auto 125D</string>')
+          p.write_text(s, encoding='utf-8')
+
+          # Manual pairing gains a Zontes Wi-Fi Direct mode: enter only the P2P MAC,
+          # leave password empty. It synthesizes the same Carbit action=8 data the
+          # existing BikeWifiP2p path expects and then uses the normal AA/video stack.
+          manual = r'''// SPDX-License-Identifier: AGPL-3.0-or-later
+          package dev.zanderp.opencfmoto
+
+          import android.net.Uri
+          import android.text.InputType
+          import android.view.ViewGroup
+          import android.widget.EditText
+          import android.widget.LinearLayout
+          import android.widget.Toast
+          import androidx.appcompat.app.AlertDialog
+          import androidx.appcompat.app.AppCompatActivity
+          import com.google.android.material.dialog.MaterialAlertDialogBuilder
+          import com.google.android.material.textfield.TextInputEditText
+          import com.google.android.material.textfield.TextInputLayout
+
+          /** Manual pairing extended for Zontes 125D Wi-Fi Direct (P2P) without a QR code. */
+          object ManualWifiPairing {
+
+              fun show(activity: AppCompatActivity, onPaired: (raw: String, qr: QrData) -> Unit) {
+                  val density = activity.resources.displayMetrics.density
+                  fun dp(v: Int) = (v * density).toInt()
+
+                  val pad = dp(20)
+                  val col = LinearLayout(activity).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setPadding(pad, dp(8), pad, 0)
+                  }
+
+                  fun field(hint: String, password: Boolean = false): EditText {
+                      val til = TextInputLayout(activity).apply {
+                          this.hint = hint
+                          layoutParams = LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.MATCH_PARENT,
+                              ViewGroup.LayoutParams.WRAP_CONTENT,
+                          ).apply { topMargin = dp(6) }
+                      }
+                      val et = TextInputEditText(til.context).apply {
+                          inputType = if (password) {
+                              InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                          } else {
+                              InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                          }
+                          isSingleLine = true
+                      }
+                      til.addView(et)
+                      col.addView(til)
+                      return et
+                  }
+
+                  val ssidOrMac = field("Zontes Wi-Fi Direct MAC (or Wi-Fi SSID)")
+                  val pwd = field("Password — leave empty for Zontes P2P", password = true)
+                  val name = field("Bike name (optional)")
+
+                  val dialog = MaterialAlertDialogBuilder(activity)
+                      .setTitle("Add Zontes 125D")
+                      .setMessage(
+                          "For Zontes 125D: enter the Wi-Fi Direct MAC address shown by Android and leave Password empty. " +
+                              "For a normal SoftAP bike, enter SSID + password.",
+                      )
+                      .setView(col)
+                      .setPositiveButton("Add bike", null)
+                      .setNegativeButton("Cancel", null)
+                      .create()
+
+                  dialog.setOnShowListener {
+                      dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                          val first = ssidOrMac.text?.toString().orEmpty().trim()
+                          val pass = pwd.text?.toString().orEmpty()
+                          val displayName = name.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
+
+                          val built = if (pass.isBlank() && normalizeMac(first) != null) {
+                              buildZontesP2p(first, displayName)
+                          } else {
+                              QrData.buildManual(first, pass, displayName)
+                          }
+
+                          if (built == null) {
+                              Toast.makeText(
+                                  activity,
+                                  "Enter a valid 12-digit Zontes P2P MAC, or SSID + password",
+                                  Toast.LENGTH_LONG,
+                              ).show()
+                              return@setOnClickListener
+                          }
+                          dialog.dismiss()
+                          onPaired(built.first, built.second)
+                      }
+                  }
+                  dialog.show()
+              }
+
+              private fun buildZontesP2p(macText: String, displayName: String?): Pair<String, QrData>? {
+                  val mac = normalizeMac(macText) ?: return null
+                  val raw = Uri.Builder()
+                      .scheme("http")
+                      .authority("manual.zontes.local")
+                      .path("/")
+                      .appendQueryParameter("ssid", "ZONTES125D")
+                      // P2P MAC/WPS path does not use this password; non-empty keeps Carbit parser valid.
+                      .appendQueryParameter("pwd", "p2p")
+                      .appendQueryParameter("auth", "wpa2-psk")
+                      .appendQueryParameter("action", "8")
+                      .appendQueryParameter("mac", mac)
+                      .appendQueryParameter("name", displayName ?: "Zontes 125D")
+                      .appendQueryParameter("modelid", "Z125D")
+                      .build()
+                      .toString()
+                  val qr = QrData.parse(raw) ?: return null
+                  return raw to qr
+              }
+
+              private fun normalizeMac(raw: String): String? {
+                  val hex = raw.filter { it.isDigit() || it in 'a'..'f' || it in 'A'..'F' }
+                  if (hex.length != 12) return null
+                  return hex.chunked(2).joinToString(":") { it.lowercase() }
+              }
+          }
+          '''
+          # Strip workflow indentation from the source literal.
+          manual = '\n'.join(line[10:] if line.startswith('          ') else line for line in manual.splitlines()) + '\n'
+          (root / 'app/src/main/java/dev/zanderp/opencfmoto/ManualWifiPairing.kt').write_text(manual, encoding='utf-8')
+          PY
+
+          cd zontes-src
+          git diff -- app/build.gradle.kts app/src/main/res/values/strings.xml app/src/main/java/dev/zanderp/opencfmoto/ManualWifiPairing.kt > ../ZontesAuto125D.patch
+
+      - name: Build APK
+        working-directory: zontes-src
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug -PslimApk=true --no-daemon --stacktrace
+
+      - name: Collect APK and corresponding source
+        run: |
+          mkdir -p out
+          APK=$(find zontes-src/app/build/outputs/apk/debug -name '*.apk' | head -1)
+          test -n "$APK"
+          cp "$APK" out/ZontesAuto125D-0.1.0.apk
+          cp ZontesAuto125D.patch UPSTREAM_COMMIT.txt out/
+          tar --exclude='.git' -czf out/ZontesAuto125D-0.1.0-source.tar.gz -C zontes-src .
+          sha256sum out/ZontesAuto125D-0.1.0.apk > out/SHA256.txt
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZontesAuto125D-build
+          path: out/*
+          if-no-files-found: error
+          retention-days: 7
