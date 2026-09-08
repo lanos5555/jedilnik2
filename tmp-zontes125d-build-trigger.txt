@@ -1,0 +1,1 @@
+Trigger build for Zontes Auto 125D test APK.
