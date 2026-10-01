@@ -2180,6 +2180,25 @@
       return valid[0];
     }
 
+
+    async function fetchBestVinkaWithRetry(){
+      try{
+        return await fetchBestVinka();
+      }catch(firstError){
+        // Vinka občasno začasno blokira avtomatizirane klice.
+        // Ker je aktualnost pomembnejša od hitrosti, naredimo še en čist poskus
+        // z novim cache-busterjem in novimi zahtevami.
+        await new Promise(resolve => setTimeout(resolve, 1800));
+        try{
+          return await fetchBestVinka();
+        }catch(secondError){
+          const first = firstError?.message || "prvi poskus ni uspel";
+          const second = secondError?.message || "drugi poskus ni uspel";
+          throw new Error(first + " | ponovni poskus: " + second);
+        }
+      }
+    }
+
     function startOfDay(ts){
       const d = new Date(ts);
       d.setHours(0,0,0,0);
@@ -2287,7 +2306,7 @@
       let refreshError = "";
 
       try {
-        const p = await fetchBestVinka();
+        const p = await fetchBestVinkaWithRetry();
         const incomingTs = p.sourceTs || 0;
         const currentTs = sourceDateTimestamp(vinkaData?.sourceDate);
 
@@ -2471,17 +2490,23 @@
     }
 
     async function fetchRotondaVerified(){
+      // Najprej naš Worker. Če že ta vrne pravilen aktualni meni,
+      // ni razloga čakati na počasnejše rezervne proxyje.
+      try{
+        const worker = await fetchWorkerHtml(ROTONDA_PROXY_URL, { timeoutMs: ROTONDA_TIMEOUT_MS });
+        const parsed = parseRotonda(worker.html);
+
+        if (rotondaCurrentWeek(worker.html) && rotondaHasItems(parsed)){
+          return parsed;
+        }
+      }catch(e){
+        console.warn("Rotonda Worker ni uspel, preverjam rezervne vire.", e);
+      }
+
       const token = Date.now() + "-" + Math.random().toString(36).slice(2);
       const direct = ROTONDA_SOURCE_URL + "?_cb=" + encodeURIComponent(token);
 
       const sources = [
-        {
-          name:"worker",
-          run: async () => {
-            const r = await fetchWorkerHtml(ROTONDA_PROXY_URL, { timeoutMs: ROTONDA_TIMEOUT_MS });
-            return r.html;
-          }
-        },
         {
           name:"allorigins",
           run: () => fetchTextWithRetry(
@@ -2510,9 +2535,8 @@
           try{
             const raw = await source.run();
             const parsed = parseRotonda(raw);
-            const currentWeek = rotondaCurrentWeek(raw);
 
-            if (!currentWeek || !rotondaHasItems(parsed)){
+            if (!rotondaCurrentWeek(raw) || !rotondaHasItems(parsed)){
               throw new Error("Vir nima potrjenega aktualnega tedna.");
             }
 
