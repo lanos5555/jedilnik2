@@ -1244,6 +1244,53 @@
       cursor:help;
     }
 
+
+    /* =========================================================
+       MICRO POLISH
+       ========================================================= */
+    .globalStatusHidden{
+      display:none !important;
+    }
+
+    .headInfo .updated{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:190px;
+    }
+
+    .headInfo .updated.fromCache{
+      color:#a16207;
+      background:#fffbeb;
+      border:1px solid #fde68a;
+      border-radius:999px;
+      padding:3px 7px;
+    }
+
+    .menuDayRow{
+      margin-top:-2px;
+      margin-bottom:6px;
+      min-height:26px;
+    }
+
+    .menuDayRow .dayTag{
+      padding:5px 9px;
+      font-size:10.5px;
+    }
+
+    .sectionHeader{
+      margin-bottom:9px;
+    }
+
+    @media (max-width:767px){
+      .headInfo .updated{
+        max-width:100%;
+      }
+      .menuDayRow{
+        margin-bottom:6px;
+      }
+    }
+
 </style>
 </head>
 
@@ -1262,7 +1309,7 @@
         <span class="pill" id="todayPill">Dan: <b>—</b></span>
         <button class="btn refreshAllMain" id="refreshAll" type="button">↻&nbsp; Osveži vse menije</button>
         <button class="btn secondary" id="scrollTop" type="button">Na vrh</button>
-        <span class="pill" id="globalStatus">Pripravljeno</span>
+        <span class="pill globalStatusHidden" id="globalStatus">Pripravljeno</span>
       </div>
     </div>
   </div>
@@ -1506,14 +1553,27 @@
   function setUpdated(el, ts, source="", note=""){
     const d = new Date(ts || Date.now());
     const time = d.toLocaleTimeString("sl-SI", { hour:"2-digit", minute:"2-digit" });
-    const parts = [`Preverjeno ${time}`];
+    const parts = [time];
 
-    if (source) parts.push(`Vir: ${sourceLabel(source)}`);
-    if (note) parts.push(note);
+    if (source) parts.push(sourceLabel(source));
+
+    if (note){
+      const compactNote = String(note)
+        .replace(/^meni:\s*/i, "meni ")
+        .replace(/(ponedeljek|torek|sreda|četrtek|cetrtek|petek)[,\s]*/i, "")
+        .replace(/(\d{1,2})\.\s*(januar|februar|marec|april|maj|junij|julij|avgust|september|oktober|november|december)/i, (m,d,mn) => {
+          const map = {januar:1,februar:2,marec:3,april:4,maj:5,junij:6,julij:7,avgust:8,september:9,oktober:10,november:11,december:12};
+          return `${d}. ${map[mn.toLowerCase()] || mn}.`;
+        });
+      parts.push(compactNote);
+    }
 
     el.textContent = parts.join(" · ");
-    el.title = el.textContent;
+    el.title = `Preverjeno ${time}${source ? ` · Vir: ${sourceLabel(source)}` : ""}${note ? ` · ${note}` : ""}`;
     el.hidden = false;
+
+    const isCache = String(source || "").toLowerCase() === "cache";
+    el.classList.toggle("fromCache", isCache);
   }
 
   function getDefaultDayKey(){
