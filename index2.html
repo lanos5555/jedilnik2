@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://femec-proxy.lanos5555.workers.dev" crossorigin>
   <link rel="preconnect" href="https://api.allorigins.win" crossorigin>
   <link rel="preconnect" href="https://r.jina.ai" crossorigin>
-  <link rel="dns-prefetch" href="//api.codetabs.com">
+  <link rel="preconnect" href="https://api.codetabs.com" crossorigin>
 
   <style>
     :root{
@@ -943,6 +943,8 @@
   const ROTONDA_PROXY_URL = "https://femec-proxy.lanos5555.workers.dev/api/rotonda";
   const VINKA_SOURCE_URL  = "https://www.vinka.si/malice-in-kosila.html";
   const ATRIO_SOURCE_URL  = "https://atrio151.si/";
+  const ATRIO_CACHE_DATA_KEY = "atrio:v1:data";
+  const ATRIO_CACHE_TS_KEY = "atrio:v1:ts";
   const ALLORIGINS_RAW_URL = "https://api.allorigins.win/raw?url=";
   const JINA_READER_URL = "https://r.jina.ai/";
   const CODETABS_PROXY_URL = "https://api.codetabs.com/v1/proxy/?quest=";
@@ -2047,6 +2049,33 @@
       regular: []
     };
 
+    function readAtrioCache(){
+      try{
+        const raw = localStorage.getItem(ATRIO_CACHE_DATA_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        const ts = Number(localStorage.getItem(ATRIO_CACHE_TS_KEY) || 0);
+        return { data, ts };
+      }catch(e){
+        return null;
+      }
+    }
+
+    function writeAtrioCache(data){
+      try{
+        localStorage.setItem(ATRIO_CACHE_DATA_KEY, JSON.stringify(data));
+        localStorage.setItem(ATRIO_CACHE_TS_KEY, String(Date.now()));
+      }catch(e){}
+    }
+
+    function atrioCacheLooksCurrent(data){
+      if (!data) return false;
+      const total = (data.breakfast?.length || 0) +
+        (data.regular?.length || 0) +
+        Object.values(data.lunchByDay || {}).reduce((n, arr) => n + (arr?.length || 0), 0);
+      return total > 0;
+    }
+
     function cleanLines(raw){
       const doc = new DOMParser().parseFromString(String(raw || ""), "text/html");
       const text = doc.body ? (doc.body.innerText || doc.body.textContent || "") : String(raw || "");
@@ -2234,47 +2263,47 @@
         Object.values(data.lunchByDay || {}).reduce((n, arr) => n + (arr?.length || 0), 0);
     }
 
-    async function fetchAtrio(){
+    async function fetchAtrio({ onVerifiedUpdate } = {}){
       const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const direct = `${ATRIO_SOURCE_URL}?_cb=${encodeURIComponent(token)}`;
 
       const sources = [
         {
+          name:"jina",
+          authoritative:false,
+          timeoutMs:4500,
+          url:`${JINA_READER_URL}${direct}`
+        },
+        {
           name:"allorigins",
-          priority:3,
-          timeoutMs:6000,
+          authoritative:true,
+          timeoutMs:6500,
           url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(direct)}&_cb=${encodeURIComponent(token)}`
         },
         {
           name:"codetabs",
-          priority:2,
-          timeoutMs:6000,
+          authoritative:true,
+          timeoutMs:6500,
           url:`${CODETABS_PROXY_URL}${encodeURIComponent(direct)}`
-        },
-        {
-          name:"jina",
-          priority:1,
-          timeoutMs:8000,
-          url:`${JINA_READER_URL}${direct}`
         }
       ];
 
-      const jobs = sources.map((source, index) =>
+      const jobs = sources.map(source =>
         fetchTextWithRetry(source.url, { retries:0, timeoutMs:source.timeoutMs })
           .then(raw => {
             const data = parseAtrio(raw);
             const week = atrioSourceWeekTs(raw);
             if (countItems(data) <= 0) throw new Error("Ponudbe ni bilo mogoče prepoznati.");
-            return { ok:true, index, source, data, week };
+            return { ok:true, source, data, week };
           })
-          .catch(error => ({ ok:false, index, source, error }))
+          .catch(error => ({ ok:false, source, error }))
       );
 
+      // Hiter prikaz: prvi veljaven meni aktualnega tedna iz kateregakoli vira.
       const pending = jobs.map((promise, index) => ({ promise, index }));
-      const valid = [];
-      const errors = [];
+      let firstValid = null;
 
-      while (pending.length){
+      while (pending.length && !firstValid){
         const settled = await Promise.race(
           pending.map(entry =>
             entry.promise.then(result => ({ result, pendingIndex:entry.index }))
@@ -2285,30 +2314,39 @@
         if (removeAt !== -1) pending.splice(removeAt, 1);
 
         const result = settled.result;
-        if (result.ok){
-          valid.push(result);
-
-          // Ko dobimo preverjeno ponudbo trenutnega tedna iz live proxyja,
-          // jo lahko varno prikažemo takoj.
-          if (result.week.currentWeek && result.source.name !== "jina"){
-            return result.data;
-          }
-        } else {
-          errors.push(`${result.source?.name || "vir"}: ${result.error?.message || "napaka"}`);
+        if (result.ok && result.week.currentWeek){
+          firstValid = result;
         }
       }
 
+      // V ozadju počakamo še na vse vire. Če live proxy vrne veljaven
+      // aktualni meni, ima ta prednost in lahko tiho osveži prikaz.
+      Promise.all(jobs).then(results => {
+        const authoritative = results
+          .filter(r => r.ok && r.source.authoritative && r.week.currentWeek)
+          .sort((a,b) => (b.week.newest - a.week.newest));
+
+        if (authoritative.length && typeof onVerifiedUpdate === "function"){
+          onVerifiedUpdate(authoritative[0].data);
+        }
+      }).catch(()=>{});
+
+      if (firstValid) return firstValid.data;
+
+      // Če aktualnega tedna ni vrnil nihče hitro, počakaj na zaključene rezultate
+      // in izberi najbolj svež veljaven rezultat.
+      const results = await Promise.all(jobs);
+      const valid = results
+        .filter(r => r.ok)
+        .sort((a,b) =>
+          (Number(b.week.currentWeek) - Number(a.week.currentWeek)) ||
+          (b.week.newest - a.week.newest) ||
+          (Number(b.source.authoritative) - Number(a.source.authoritative))
+        );
+
       if (!valid.length){
-        throw new Error(errors.join(" | ") || "Atrio 151 meni ni dosegljiv.");
+        throw new Error("Atrio 151 meni ni dosegljiv.");
       }
-
-      // Če live proxyja nista uspela, uporabi najbolj svež preverjen rezultat.
-      valid.sort((a, b) =>
-        (Number(b.week.currentWeek) - Number(a.week.currentWeek)) ||
-        (b.week.newest - a.week.newest) ||
-        (b.source.priority - a.source.priority)
-      );
-
       return valid[0].data;
     }
 
@@ -2340,21 +2378,47 @@
     }
 
     const load = makeSingleFlight(async (force=false) => {
-      if (countItems(parsed) > 0){
-        render();
-        elStatus.textContent = "Preverjam nov meni…";
+      // Takojšnji prikaz zadnjega uspešnega Atrio menija.
+      // Nato ga vedno preverimo proti svežim spletnim virom.
+      if (countItems(parsed) <= 0){
+        const cached = readAtrioCache();
+        if (cached?.data && atrioCacheLooksCurrent(cached.data)){
+          parsed = cached.data;
+          render();
+          elStatus.textContent = "Preverjam aktualnost…";
+        } else {
+          setLoading(elBody, force ? "Osvežujem Atrio 151…" : "Nalagam Atrio 151…");
+          elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+        }
       } else {
-        setLoading(elBody, force ? "Osvežujem Atrio 151…" : "Nalagam Atrio 151…");
-        elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+        render();
+        elStatus.textContent = "Preverjam aktualnost…";
       }
+
       try{
-        parsed = await fetchAtrio();
+        const first = await fetchAtrio({
+          onVerifiedUpdate: (verified) => {
+            parsed = verified;
+            writeAtrioCache(parsed);
+            elStatus.textContent = "Posodobljeno";
+            setUpdated(elUpdated, now());
+            render();
+          }
+        });
+
+        parsed = first;
+        writeAtrioCache(parsed);
         elStatus.textContent = "Posodobljeno";
         setUpdated(elUpdated, now());
         render();
       }catch(e){
-        setError(elBody, "Atrio 151 meni ni dosegljiv.");
-        elStatus.textContent = "Napaka";
+        if (countItems(parsed) > 0){
+          // Če imamo že uspešen prikaz, ga pustimo in samo označimo težavo s preverjanjem.
+          elStatus.textContent = "Prikazan zadnji meni";
+        } else {
+          setError(elBody, "Atrio 151 meni ni dosegljiv.");
+          elStatus.textContent = "Napaka";
+        }
         console.error(e);
       }
     });
