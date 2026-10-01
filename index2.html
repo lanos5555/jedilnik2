@@ -1189,6 +1189,52 @@
       }
     }
 
+
+    /* =========================================================
+       FINAL DETAIL POLISH
+       ========================================================= */
+    .menuDayRow{
+      margin-bottom:8px;
+    }
+
+    .sectionHeader{
+      min-height:40px;
+      display:flex;
+      align-items:center;
+      padding-top:7px;
+      padding-bottom:7px;
+    }
+
+    .dish{
+      margin-bottom:9px;
+    }
+
+    .resBody{
+      padding-bottom:20px;
+    }
+
+    .headInfo{
+      border-top:1px solid #f2f4f8;
+      padding-top:9px;
+    }
+
+    .resName a{
+      transition:color var(--transition-fast);
+    }
+
+    .resName a:hover{
+      color:#2563eb;
+    }
+
+    @media (min-width:1200px){
+      .grid{
+        grid-template-columns:repeat(4,minmax(0,1fr));
+      }
+      .res{
+        min-height:100%;
+      }
+    }
+
 </style>
 </head>
 
@@ -2361,6 +2407,11 @@
       if (low.startsWith("with ")) return true;
       if (low.startsWith("optional")) return true;
       if (low === "side salad" || low === "with side salad") return true;
+      if (low.includes("subscribe")) return true;
+      if (low.includes("newsletter")) return true;
+      if (low.includes("sign up")) return true;
+      if (low.includes("email address")) return true;
+      if (low === "thank you!") return true;
       return false;
     }
 
@@ -2486,7 +2537,10 @@
       const lines = normalizeLines(fullText);
 
       const startIdx = lines.findIndex(l => l.toLowerCase() === "weekly menu");
-      const endIdx = lines.findIndex(l => l.toLowerCase() === "subscribe");
+      const endIdx = lines.findIndex(l => {
+        const low = l.toLowerCase();
+        return low.includes("subscribe") || low.includes("newsletter") || low.includes("sign up");
+      });
       const slice = (startIdx !== -1)
         ? lines.slice(startIdx + 1, endIdx !== -1 ? endIdx : lines.length)
         : lines;
@@ -2553,7 +2607,19 @@
     }
 
     function render(){
-      const listRaw = parsedByDay?.[globalDayKey] || [];
+      const listRaw = (parsedByDay?.[globalDayKey] || []).filter(d => {
+        const blob = [d?.title, ...(Array.isArray(d?.details) ? d.details : [])]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return !(
+          blob.includes("subscribe") ||
+          blob.includes("newsletter") ||
+          blob.includes("sign up") ||
+          blob.includes("email address") ||
+          blob.includes("thank you")
+        );
+      });
       const list = filterForQuery(listRaw);
 
       let html = `<div class="sectionHeader">Dnevna ponudba</div>`;
