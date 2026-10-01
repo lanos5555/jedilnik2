@@ -2065,10 +2065,10 @@
     }
 
     function makeVinkaSources(){
+      // Vinka je občutljiva na naključne query parametre na izvornem URL-ju.
+      // Zato mora ciljni URL ostati natančno tak, kot ga uporablja njihov javni meni.
+      // Cache-buster dodamo samo našemu Workerju/proxy zahtevam, ne vinka.si URL-ju.
       const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const source = new URL(VINKA_SOURCE_URL);
-      source.searchParams.set("_cb", token);
-      const freshUrl = source.toString();
 
       return [
         {
@@ -2078,22 +2078,22 @@
           url:`${VINKA_PROXY_URL}?_cb=${encodeURIComponent(token)}`
         },
         {
-          name:"jina",
-          label:"Jina Reader",
-          timeoutMs:20000,
-          url:`${JINA_READER_URL}${VINKA_SOURCE_URL}?_cb=${encodeURIComponent(token)}`
-        },
-        {
           name:"allorigins",
           label:"AllOrigins",
-          timeoutMs:16000,
-          url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(freshUrl)}&_cb=${encodeURIComponent(token)}`
+          timeoutMs:18000,
+          url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(VINKA_SOURCE_URL)}&_cb=${encodeURIComponent(token)}`
         },
         {
           name:"codetabs",
           label:"CodeTabs",
-          timeoutMs:16000,
-          url:`${CODETABS_PROXY_URL}${encodeURIComponent(freshUrl)}`
+          timeoutMs:18000,
+          url:`${CODETABS_PROXY_URL}${encodeURIComponent(VINKA_SOURCE_URL)}`
+        },
+        {
+          name:"jina",
+          label:"Jina Reader",
+          timeoutMs:20000,
+          url:`${JINA_READER_URL}${VINKA_SOURCE_URL}`
         }
       ];
     }
