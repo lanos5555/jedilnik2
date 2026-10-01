@@ -1235,6 +1235,15 @@
       }
     }
 
+
+    /* Vir podatkov / čas preverjanja */
+    .headInfo .updated{
+      font-size:10px;
+      color:#94a3b8;
+      letter-spacing:.005em;
+      cursor:help;
+    }
+
 </style>
 </head>
 
@@ -1476,9 +1485,34 @@
   function setError(el, msg){
     el.innerHTML = `<div class="err">${escapeHtml(msg)}</div>`;
   }
-  function setUpdated(el, ts){
-    const d = new Date(ts);
-    el.textContent = "Posodobljeno: " + d.toLocaleString("sl-SI", { dateStyle:"medium", timeStyle:"short" });
+  function sourceLabel(source){
+    const raw = String(source || "").toLowerCase();
+    const labels = {
+      "worker/direct":"Worker · direct",
+      "worker/allorigins":"Worker · AllOrigins",
+      "worker/codetabs":"Worker · CodeTabs",
+      "worker/jina":"Worker · Jina",
+      "worker/unknown":"Worker",
+      "worker":"Worker",
+      "direct":"Direct",
+      "allorigins":"AllOrigins",
+      "codetabs":"CodeTabs",
+      "jina":"Jina",
+      "cache":"Cache"
+    };
+    return labels[raw] || source || "";
+  }
+
+  function setUpdated(el, ts, source="", note=""){
+    const d = new Date(ts || Date.now());
+    const time = d.toLocaleTimeString("sl-SI", { hour:"2-digit", minute:"2-digit" });
+    const parts = [`Preverjeno ${time}`];
+
+    if (source) parts.push(`Vir: ${sourceLabel(source)}`);
+    if (note) parts.push(note);
+
+    el.textContent = parts.join(" · ");
+    el.title = el.textContent;
     el.hidden = false;
   }
 
@@ -1876,7 +1910,7 @@
         const result = await fetchWorkerHtml(FEMEC_PROXY_URL, { timeoutMs: FEMEC_TIMEOUT_MS });
         parsed = parseFemecMenu(result.html);
         elStatus.textContent = "Posodobljeno";
-        setUpdated(elUpdated, now());
+        setUpdated(elUpdated, now(), `worker/${result.source}`);
         render();
       } catch (e) {
         setError(elBody, "Femec meni ni dosegljiv.");
@@ -2101,11 +2135,14 @@
     async function fetchVinkaCandidate(source){
       let html;
 
+      let resolvedSource = source.name;
+
       if (source.name === "worker"){
         const result = await fetchWorkerHtml(source.url, {
           timeoutMs: source.timeoutMs || VINKA_TIMEOUT_MS
         });
         html = result.html;
+        resolvedSource = `worker/${result.source}`;
       } else {
         html = await fetchTextWithRetry(source.url, {
           retries: VINKA_RETRIES,
@@ -2118,7 +2155,7 @@
 
       return {
         ...parsed,
-        source:source.name,
+        source:resolvedSource,
         sourceTs:sourceDateTimestamp(parsed.sourceDate)
       };
     }
@@ -2171,7 +2208,7 @@
 
       // Če današnjega menija ni vrnil noben vir, vedno izberi vsebinsko
       // najnovejšega, ne pa prvega ali najhitrejšega odgovora.
-      const priority = { worker:4, allorigins:3, codetabs:2, jina:1 };
+      const priority = { "worker/direct":5, "worker/allorigins":4, worker:4, allorigins:3, codetabs:2, jina:1 };
       valid.sort((a, b) =>
         (b.sourceTs - a.sourceTs) ||
         ((priority[b.source] || 0) - (priority[a.source] || 0))
@@ -2327,7 +2364,12 @@
         elStatus.textContent = vinkaData?.sourceDate
           ? (isVinkaFreshForDisplay() ? `Meni: ${vinkaData.sourceDate}` : `Ni aktualnega menija`)
           : "Posodobljeno";
-        setUpdated(elUpdated, lastGoodTs || now());
+        setUpdated(
+          elUpdated,
+          lastGoodTs || now(),
+          vinkaData?.source || p.source,
+          vinkaData?.sourceDate ? `meni: ${vinkaData.sourceDate}` : ""
+        );
         render();
         return;
       } catch (error) {
@@ -2343,7 +2385,12 @@
           elStatus.textContent = vinkaData?.sourceDate
             ? (isVinkaFreshForDisplay() ? `Meni: ${vinkaData.sourceDate}` : `Ni aktualnega menija`)
             : "Zadnji uspešen meni";
-          setUpdated(elUpdated, lastGoodTs || now());
+          setUpdated(
+            elUpdated,
+            lastGoodTs || now(),
+            "cache",
+            vinkaData?.sourceDate ? `meni: ${vinkaData.sourceDate}` : ""
+          );
           render();
           return;
         } catch(e){}
@@ -2372,7 +2419,12 @@
           elStatus.textContent = vinkaData?.sourceDate
             ? `Zadnji meni: ${vinkaData.sourceDate}`
             : "Zadnji uspešen meni";
-          setUpdated(elUpdated, lastGoodTs || now());
+          setUpdated(
+            elUpdated,
+            lastGoodTs || now(),
+            "cache",
+            vinkaData?.sourceDate ? `meni: ${vinkaData.sourceDate}` : ""
+          );
         } catch(e){}
       }
       render();
@@ -2497,7 +2549,7 @@
         const parsed = parseRotonda(worker.html);
 
         if (rotondaCurrentWeek(worker.html) && rotondaHasItems(parsed)){
-          return parsed;
+          return { parsed, source:`worker/${worker.source}` };
         }
       }catch(e){
         console.warn("Rotonda Worker ni uspel, preverjam rezervne vire.", e);
@@ -2552,7 +2604,7 @@
         throw new Error("Aktualnega Rotonda menija trenutno ni mogoče potrditi.");
       }
 
-      return valid.parsed;
+      return { parsed:valid.parsed, source:valid.source };
     }
 
     function parseRotonda(html){
@@ -2670,10 +2722,11 @@
       elStatus.textContent = "Preverjam aktualnost…";
 
       try{
-        parsedByDay = await fetchRotondaVerified();
+        const verified = await fetchRotondaVerified();
+        parsedByDay = verified.parsed;
 
         elStatus.textContent = "Aktualno";
-        setUpdated(elUpdated, now());
+        setUpdated(elUpdated, now(), verified.source);
         render();
       } catch(e){
         parsedByDay = null;
@@ -2929,7 +2982,7 @@
         const week = atrioSourceWeekTs(worker.html);
 
         if (countItems(data) > 0 && week.currentWeek){
-          return data;
+          return { data, source:`worker/${worker.source}` };
         }
 
         throw new Error("Atrio Worker ni vrnil potrjenega menija aktualnega tedna.");
@@ -2989,7 +3042,7 @@
         throw new Error("Aktualnega Atrio menija trenutno ni mogoče potrditi.");
       }
 
-      return valid[0].data;
+      return { data:valid[0].data, source:valid[0].source };
     }
 
     function filtered(list){
@@ -3030,10 +3083,10 @@
 
       try{
         const verified = await fetchAtrio();
-        parsed = verified;
+        parsed = verified.data;
 
         elStatus.textContent = "Aktualno";
-        setUpdated(elUpdated, now());
+        setUpdated(elUpdated, now(), verified.source);
         render();
       }catch(e){
         parsed = {
