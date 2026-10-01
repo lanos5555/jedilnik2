@@ -956,7 +956,7 @@
   const FEMEC_TIMEOUT_MS = 8500;
   const FEMEC_RETRIES = 1;
 
-  const VINKA_TIMEOUT_MS = 12000;
+  const VINKA_TIMEOUT_MS = 26000;
   const VINKA_RETRIES = 0;
   const VINKA_CACHE_DATA_KEY = "vinka:v2:data";
   const VINKA_CACHE_TS_KEY = "vinka:v2:lastGoodTs";
@@ -1623,26 +1623,26 @@
         {
           name:"worker",
           label:"Worker",
-          timeoutMs:5000,
+          timeoutMs:26000,
           url:`${VINKA_PROXY_URL}?_cb=${encodeURIComponent(token)}`
+        },
+        {
+          name:"jina",
+          label:"Jina Reader",
+          timeoutMs:20000,
+          url:`${JINA_READER_URL}${VINKA_SOURCE_URL}?_cb=${encodeURIComponent(token)}`
         },
         {
           name:"allorigins",
           label:"AllOrigins",
-          timeoutMs:7000,
+          timeoutMs:16000,
           url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(freshUrl)}&_cb=${encodeURIComponent(token)}`
         },
         {
           name:"codetabs",
           label:"CodeTabs",
-          timeoutMs:7000,
+          timeoutMs:16000,
           url:`${CODETABS_PROXY_URL}${encodeURIComponent(freshUrl)}`
-        },
-        {
-          name:"jina",
-          label:"Jina Reader",
-          timeoutMs:9000,
-          url:`${JINA_READER_URL}${freshUrl}`
         }
       ];
     }
@@ -1881,10 +1881,10 @@
 
       setError(
         elBody,
-        "Vinka meni ni dosegljiv. " +
-        (refreshError ? `Podrobnosti: ${refreshError}` : "Vsi viri so vrnili napako.")
+        "Aktualnega Vinkinega menija trenutno ni mogoče potrditi. Poskusi osvežiti čez nekaj trenutkov."
       );
-      elStatus.textContent = "Napaka";
+      elStatus.textContent = "Ni potrjeno";
+      if (refreshError) console.warn("Vinka viri:", refreshError);
     });
 
     elRefresh.addEventListener("click", () => {
