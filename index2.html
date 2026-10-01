@@ -894,6 +894,7 @@
   const ATRIO_SOURCE_URL  = "https://atrio151.si/";
   const ALLORIGINS_RAW_URL = "https://api.allorigins.win/raw?url=";
   const JINA_READER_URL = "https://r.jina.ai/";
+  const CODETABS_PROXY_URL = "https://api.codetabs.com/v1/proxy/?quest=";
 
   const FETCH_TIMEOUT_MS = 8500;
 
@@ -1516,6 +1517,7 @@
       const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const source = new URL(VINKA_SOURCE_URL);
       source.searchParams.set("_cb", token);
+      const freshUrl = source.toString();
 
       return [
         {
@@ -1525,16 +1527,22 @@
           url:`${VINKA_PROXY_URL}?_cb=${encodeURIComponent(token)}`
         },
         {
-          name:"official",
+          name:"allorigins",
           label:"AllOrigins",
-          timeoutMs:9000,
-          url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(source.toString())}&_cb=${encodeURIComponent(token)}`
+          timeoutMs:7000,
+          url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(freshUrl)}&_cb=${encodeURIComponent(token)}`
+        },
+        {
+          name:"codetabs",
+          label:"CodeTabs",
+          timeoutMs:7000,
+          url:`${CODETABS_PROXY_URL}${encodeURIComponent(freshUrl)}`
         },
         {
           name:"jina",
           label:"Jina Reader",
-          timeoutMs:15000,
-          url:`${JINA_READER_URL}${source.toString()}`
+          timeoutMs:9000,
+          url:`${JINA_READER_URL}${freshUrl}`
         }
       ];
     }
@@ -1556,36 +1564,58 @@
     async function fetchBestVinka(){
       const sources = makeVinkaSources();
 
-      // Primarna vira sta hitrejša. Jina je samo rezervni vir.
-      const primary = sources.slice(0, 2);
-      const primaryResults = await Promise.all(
-        primary.map((source, index) =>
-          fetchVinkaCandidate(source)
-            .then(value => ({ ok:true, value, index }))
-            .catch(error => ({ ok:false, error, index }))
-        )
+      const jobs = sources.map((source, index) =>
+        fetchVinkaCandidate(source)
+          .then(value => ({ ok:true, value, index }))
+          .catch(error => ({ ok:false, error, index }))
       );
 
-      const valid = primaryResults.filter(x => x.ok).map(x => x.value);
+      const pending = jobs.map((promise, index) => ({ promise, index }));
+      const valid = [];
+      const errors = [];
 
-      if (valid.length){
-        // Če je kateri vir današnji, ga uporabi.
-        const today = valid.find(x => isTodaySourceDate(x.sourceDate));
-        if (today) return today;
-
-        // Sicer takoj uporabi najnovejši veljavni rezultat.
-        // Ne čakamo še dodatnih 15 s na Jina Reader samo zato,
-        // ker Vinka na svoji strani še ni objavila današnjega menija.
-        valid.sort((a, b) =>
-          (b.sourceTs - a.sourceTs) ||
-          ((b.source === "official" ? 1 : 0) - (a.source === "official" ? 1 : 0))
+      while (pending.length){
+        const settled = await Promise.race(
+          pending.map(entry =>
+            entry.promise.then(result => ({ result, pendingIndex:entry.index }))
+          )
         );
-        return valid[0];
+
+        const removeAt = pending.findIndex(x => x.index === settled.pendingIndex);
+        if (removeAt !== -1) pending.splice(removeAt, 1);
+
+        if (settled.result.ok){
+          const value = settled.result.value;
+          if (value?.sourceDate && value?.sourceTs){
+            valid.push(value);
+
+            // Današnji meni je po definiciji najnovejši relevanten meni.
+            // Ko ga dobimo iz kateregakoli vira, ga lahko prikažemo takoj.
+            if (isTodaySourceDate(value.sourceDate)){
+              return value;
+            }
+          }
+        } else {
+          const source = sources[settled.result.index];
+          errors.push(
+            `${source?.label || source?.name || "Vir"}: ${settled.result.error?.message || "napaka"}`
+          );
+        }
       }
 
-      // Šele če oba primarna vira odpovesta, poskusi Jina Reader.
-      const fallback = sources[2];
-      return await fetchVinkaCandidate(fallback);
+      if (!valid.length){
+        throw new Error(errors.join(" | ") || "Noben Vinkin vir ni vrnil veljavnega menija.");
+      }
+
+      // Če današnjega menija ni vrnil noben vir, vedno izberi vsebinsko
+      // najnovejšega, ne pa prvega ali najhitrejšega odgovora.
+      const priority = { worker:4, allorigins:3, codetabs:2, jina:1 };
+      valid.sort((a, b) =>
+        (b.sourceTs - a.sourceTs) ||
+        ((priority[b.source] || 0) - (priority[a.source] || 0))
+      );
+
+      return valid[0];
     }
 
     function startOfDay(ts){
