@@ -1085,6 +1085,7 @@
         femec.render();
         vinka.render();
         rotonda.render();
+        atrio.render();
         toast("Izbran dan: " + d.label);
       };
       dayChips.appendChild(b);
@@ -1531,50 +1532,37 @@
 
     async function fetchBestVinka(){
       const sources = makeVinkaSources();
-      const wrapped = sources.map((source, index) =>
-        fetchVinkaCandidate(source)
-          .then(value => ({ index, ok:true, value }))
-          .catch(error => ({ index, ok:false, error }))
+
+      // Primarna vira sta hitrejša. Jina je samo rezervni vir.
+      const primary = sources.slice(0, 2);
+      const primaryResults = await Promise.all(
+        primary.map((source, index) =>
+          fetchVinkaCandidate(source)
+            .then(value => ({ ok:true, value, index }))
+            .catch(error => ({ ok:false, error, index }))
+        )
       );
 
-      const pending = wrapped.map((promise, index) => ({ index, promise }));
-      const valid = [];
-      const errors = [];
+      const valid = primaryResults.filter(x => x.ok).map(x => x.value);
 
-      while (pending.length){
-        const settled = await Promise.race(
-          pending.map(entry => entry.promise.then(result => ({ pendingIndex:entry.index, result })))
+      if (valid.length){
+        // Če je kateri vir današnji, ga uporabi.
+        const today = valid.find(x => isTodaySourceDate(x.sourceDate));
+        if (today) return today;
+
+        // Sicer takoj uporabi najnovejši veljavni rezultat.
+        // Ne čakamo še dodatnih 15 s na Jina Reader samo zato,
+        // ker Vinka na svoji strani še ni objavila današnjega menija.
+        valid.sort((a, b) =>
+          (b.sourceTs - a.sourceTs) ||
+          ((b.source === "official" ? 1 : 0) - (a.source === "official" ? 1 : 0))
         );
-        const removeAt = pending.findIndex(entry => entry.index === settled.pendingIndex);
-        if (removeAt !== -1) pending.splice(removeAt, 1);
-
-        if (settled.result.ok){
-          valid.push(settled.result.value);
-          // Današnji meni je dovolj svež; ni treba čakati na počasnejši vir.
-          if (isTodaySourceDate(settled.result.value.sourceDate)) {
-            return settled.result.value;
-          }
-        } else {
-          const source = sources[settled.result.index];
-          const error = settled.result.error;
-          const reason = error?.name === "AbortError"
-            ? "časovna omejitev"
-            : (error?.message || "neznana napaka");
-          errors.push(`${source?.label || source?.name || "Vir"}: ${reason}`);
-        }
+        return valid[0];
       }
 
-      if (!valid.length) {
-        throw new Error(errors.length ? errors.join(" | ") : "Noben Vinkin vir ni dosegljiv.");
-      }
-
-      // Če noben vir nima današnjega datuma, uporabi najnovejšega.
-      // Pri enakem datumu ima prednost neposredna kopija uradne strani.
-      valid.sort((a, b) =>
-        (b.sourceTs - a.sourceTs) ||
-        ((b.source === "official" ? 1 : 0) - (a.source === "official" ? 1 : 0))
-      );
-      return valid[0];
+      // Šele če oba primarna vira odpovesta, poskusi Jina Reader.
+      const fallback = sources[2];
+      return await fetchVinkaCandidate(fallback);
     }
 
     function startOfDay(ts){
@@ -1659,8 +1647,16 @@
     }
 
     const load = makeSingleFlight(async (force=false) => {
-      setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
-      elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+      // Če imamo zadnji uspešen meni, ga pokažemo takoj in v ozadju preverimo svežega.
+      // Tako uporabnik ne gleda praznega loaderja med omrežnim preverjanjem.
+      if (vinkaData){
+        render();
+        elStatus.textContent = force ? "Preverjam nov meni…" :
+          (vinkaData?.sourceDate ? `Meni: ${vinkaData.sourceDate}` : "Preverjam nov meni…");
+      } else {
+        setLoading(elBody, force ? "Osvežujem Vinka…" : "Nalagam Vinka…");
+        elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+      }
       let refreshError = "";
 
       try {
@@ -1949,26 +1945,41 @@
     function toItems(lines){
       const out = [];
       let buffer = [];
+
       const flush = (price="") => {
         if (!buffer.length) return;
-        out.push({ title:buffer[0], details:buffer.slice(1), price });
+        out.push({
+          title: buffer[0],
+          details: buffer.slice(1),
+          price: String(price || "").trim()
+        });
         buffer = [];
       };
 
       for (const raw of lines){
-        const line = raw.trim();
+        const line = String(raw || "").trim();
         if (!line) continue;
-        if (isPrice(line)){
-          const p = splitPrice(line);
-          if (p.text) buffer.push(p.text);
-          const pm = line.match(/\d{1,3}(?:[.,]\d{1,2})?\s*€/i);
-          flush(p.price || (pm ? pm[0] : ""));
-        } else {
-          buffer.push(line);
+
+        // Samostojna cena: "9,60 €" ali "7 / 7,50 €".
+        const priceOnly = line.match(/^((?:\d{1,3}(?:[.,]\d{1,2})?)(?:\s*\/\s*\d{1,3}(?:[.,]\d{1,2})?)*)\s*€$/i);
+        if (priceOnly){
+          flush(priceOnly[1].replace(/\s+/g, " ") + " €");
+          continue;
         }
+
+        // Cena na koncu iste vrstice kot jed.
+        const inline = line.match(/^(.*?)\s+((?:\d{1,3}(?:[.,]\d{1,2})?)(?:\s*\/\s*\d{1,3}(?:[.,]\d{1,2})?)*)\s*€$/i);
+        if (inline){
+          if (inline[1].trim()) buffer.push(inline[1].trim());
+          flush(inline[2].replace(/\s+/g, " ") + " €");
+          continue;
+        }
+
+        buffer.push(line);
       }
-      flush("");
-      return out.filter(x => x.title);
+
+      // Element brez cene na koncu ni zanesljivo jed; ga ne dodajamo.
+      return out.filter(x => x.title && x.price);
     }
 
     function parseAtrio(raw){
@@ -1979,59 +1990,63 @@
         regular: []
       };
 
-      const iBreakfast = sectionStart(lines, ["Zajtrk"]);
-      const iLunch = sectionStart(lines, ["Dnevno kosilo", "Kosilo"]);
-      const iRegular = sectionStart(lines, ["Stalna ponudba"]);
+      // Na strani so najprej trije gumbi (Zajtrk / Dnevno kosilo / Stalna ponudba),
+      // nato dejanske jedi za zajtrk in šele nato tedenski meni.
+      const lunchMarker = lines.findIndex(l =>
+        /meni za kosilo se osveži vsak ponedeljek/i.test(l)
+      );
 
-      if (iBreakfast >= 0) {
-        const end = [iLunch, iRegular].filter(i => i > iBreakfast).sort((a,b)=>a-b)[0] ?? lines.length;
-        out.breakfast = toItems(lines.slice(iBreakfast + 1, end));
-      }
+      if (lunchMarker === -1) return out;
 
-      if (iLunch >= 0) {
-        const end = (iRegular > iLunch) ? iRegular : lines.length;
-        const lunchLines = lines.slice(iLunch + 1, end);
-        let currentDay = "";
-        let bucket = [];
-        const pushBucket = () => {
-          if (currentDay && bucket.length) out.lunchByDay[currentDay] = toItems(bucket);
-          bucket = [];
-        };
-        for (const line of lunchLines){
-          if (looksLikeDay(line)){
-            pushBucket();
-            currentDay = dayKey(line);
-          } else if (currentDay) {
-            bucket.push(line);
-          }
+      // ZAJTRK:
+      // poiščemo zadnji navigacijski napis pred markerjem tedenskega kosila.
+      let breakfastStart = -1;
+      for (let i = 0; i < lunchMarker; i++){
+        if (/^(zajtrk|dnevno kosilo|stalna ponudba)(?:\s*[·•].*)?$/i.test(lines[i])){
+          breakfastStart = i;
         }
-        pushBucket();
       }
+      const breakfastLines = lines.slice(breakfastStart + 1, lunchMarker);
+      out.breakfast = toItems(breakfastLines);
 
-      if (iRegular >= 0) out.regular = toItems(lines.slice(iRegular + 1));
-
-      if (!Object.values(out.lunchByDay).some(x => x.length)) {
-        let currentDay = "";
-        let bucket = [];
-        const pushBucket = () => {
-          if (currentDay && bucket.length) out.lunchByDay[currentDay] = toItems(bucket);
-          bucket = [];
-        };
-        for (const line of lines){
-          if (looksLikeDay(line)){
-            pushBucket();
-            currentDay = dayKey(line);
-          } else if (currentDay) {
-            if (/^(zajtrk|stalna ponudba)$/i.test(line)) {
-              pushBucket();
-              currentDay = "";
-            } else {
-              bucket.push(line);
-            }
-          }
+      // DNEVNA KOSILA:
+      // vsak dan ima trenutno 4 jedi. Pri petku se takoj za četrto jedjo
+      // nadaljuje stalna ponudba, zato preostanek ločimo.
+      const dayStarts = [];
+      for (let i = lunchMarker + 1; i < lines.length; i++){
+        if (looksLikeDay(lines[i])){
+          dayStarts.push({ index:i, key:dayKey(lines[i]) });
         }
-        pushBucket();
       }
+
+      let regularStartLine = -1;
+
+      for (let d = 0; d < dayStarts.length; d++){
+        const cur = dayStarts[d];
+        const nextIndex = dayStarts[d + 1]?.index ?? lines.length;
+        const rawDayLines = lines.slice(cur.index + 1, nextIndex);
+        const items = toItems(rawDayLines);
+
+        if (cur.key === "petek" && items.length > 4){
+          out.lunchByDay[cur.key] = items.slice(0, 4);
+
+          // Za stalno ponudbo uporabimo preostale že pravilno razčlenjene jedi.
+          out.regular = items.slice(4);
+          regularStartLine = cur.index;
+        } else {
+          out.lunchByDay[cur.key] = items;
+        }
+      }
+
+      // Odstrani morebitne elemente naslednjih sekcij strani, ki niso jedi.
+      const junk = /^(03\s*[—-]\s*Dogodki|Atrio po urah|04\s*[—-]\s*Ure|Kdaj in kje|Delovni čas|Lokacija|Rezervacije)/i;
+      out.regular = (out.regular || []).filter(item =>
+        item?.title && !junk.test(item.title)
+      );
+
+      // Varnostna omejitev: stalna ponudba je pred sekcijo "03 — Dogodki".
+      // Če je parser zaradi strukture HTML zajel preveč, obdrži le realne jedi s ceno.
+      out.regular = out.regular.filter(item => item.price);
 
       return out;
     }
