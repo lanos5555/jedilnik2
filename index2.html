@@ -1489,6 +1489,29 @@
       return Boolean(ts) && startOfDay(ts) === startOfDay(Date.now());
     }
 
+    function isSourceDateCurrentWeek(sourceDate){
+      const ts = sourceDateTimestamp(sourceDate);
+      if (!ts) return false;
+
+      const nowDate = new Date();
+      let wd = nowDate.getDay();
+      if (wd === 0) wd = 7;
+
+      const monday = new Date(nowDate);
+      monday.setHours(0,0,0,0);
+      monday.setDate(nowDate.getDate() - (wd - 1));
+
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23,59,59,999);
+
+      return ts >= monday.getTime() && ts <= sunday.getTime();
+    }
+
+    function isVinkaFreshForDisplay(){
+      return Boolean(vinkaData?.sourceDate) && isSourceDateCurrentWeek(vinkaData.sourceDate);
+    }
+
     function makeVinkaSources(){
       const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const source = new URL(VINKA_SOURCE_URL);
@@ -1611,11 +1634,24 @@
     }
 
     function render(){
-      if (isFutureSelectedDay()){
+      if (!vinkaData){
         elBody.innerHTML = `<p class="muted">Meni še ni na voljo.</p>`;
         return;
       }
-      if (!vinkaData){
+
+      // Vinkin vir je dnevni. Če je objavljen meni iz prejšnjega tedna,
+      // ga ne smemo prikazati kot aktualnega.
+      if (!isVinkaFreshForDisplay()){
+        elBody.innerHTML = `
+          <div class="err">
+            Aktualni meni še ni objavljen na strani Vinka.
+            ${vinkaData?.sourceDate ? `Zadnji objavljeni meni: ${escapeHtml(vinkaData.sourceDate)}.` : ""}
+          </div>
+        `;
+        return;
+      }
+
+      if (isFutureSelectedDay()){
         elBody.innerHTML = `<p class="muted">Meni še ni na voljo.</p>`;
         return;
       }
@@ -1627,7 +1663,9 @@
       const regularItems = linesToItems(regularLines);
 
       if (!dailyItems.length && !regularItems.length){
-        elBody.innerHTML = globalQuery ? `<p class="muted">Ni zadetkov za iskanje.</p>` : `<p class="muted">Meni še ni na voljo.</p>`;
+        elBody.innerHTML = globalQuery
+          ? `<p class="muted">Ni zadetkov za iskanje.</p>`
+          : `<p class="muted">Meni še ni na voljo.</p>`;
         return;
       }
 
@@ -1679,7 +1717,7 @@
         }
 
         elStatus.textContent = vinkaData?.sourceDate
-          ? `Meni: ${vinkaData.sourceDate}`
+          ? (isVinkaFreshForDisplay() ? `Meni: ${vinkaData.sourceDate}` : `Ni aktualnega menija`)
           : "Posodobljeno";
         setUpdated(elUpdated, lastGoodTs || now());
         render();
@@ -1695,7 +1733,7 @@
           vinkaData = cached.data;
           lastGoodTs = cached.ts || 0;
           elStatus.textContent = vinkaData?.sourceDate
-            ? `Zadnji meni: ${vinkaData.sourceDate}`
+            ? (isVinkaFreshForDisplay() ? `Meni: ${vinkaData.sourceDate}` : `Ni aktualnega menija`)
             : "Zadnji uspešen meni";
           setUpdated(elUpdated, lastGoodTs || now());
           render();
@@ -2060,21 +2098,30 @@
     async function fetchAtrio(){
       const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const direct = `${ATRIO_SOURCE_URL}?_cb=${encodeURIComponent(token)}`;
+
+      // Jina praviloma vrne vsebino hitreje in v bolj stabilni tekstovni obliki.
+      // AllOrigins ostane le rezervni vir.
       const sources = [
-        `${ALLORIGINS_RAW_URL}${encodeURIComponent(direct)}&_cb=${encodeURIComponent(token)}`,
-        `${JINA_READER_URL}${direct}`
+        { name:"jina", url:`${JINA_READER_URL}${direct}`, timeoutMs:7000 },
+        { name:"allorigins", url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(direct)}&_cb=${encodeURIComponent(token)}`, timeoutMs:7000 }
       ];
+
       let lastError = null;
-      for (const url of sources){
+
+      for (const source of sources){
         try{
-          const raw = await fetchTextWithRetry(url, { retries:0, timeoutMs:15000 });
+          const raw = await fetchTextWithRetry(source.url, {
+            retries:0,
+            timeoutMs:source.timeoutMs
+          });
           const data = parseAtrio(raw);
           if (countItems(data) > 0) return data;
-          throw new Error("Ponudbe ni bilo mogoče prepoznati.");
+          throw new Error(`${source.name}: ponudbe ni bilo mogoče prepoznati.`);
         }catch(e){
           lastError = e;
         }
       }
+
       throw lastError || new Error("Atrio 151 meni ni dosegljiv.");
     }
 
@@ -2097,17 +2144,22 @@
 
     function render(){
       let html = "";
-      html += section("Zajtrk · 7.00–10.00", parsed.breakfast);
-      html += `<div style="height:10px"></div>`;
-      html += section("Dnevno kosilo · 10.00–15.00", parsed.lunchByDay?.[globalDayKey] || []);
+      html += section("Malice · 10.00–15.00", parsed.lunchByDay?.[globalDayKey] || []);
       html += `<div style="height:10px"></div>`;
       html += section("Stalna ponudba", parsed.regular);
+      html += `<div style="height:10px"></div>`;
+      html += section("Zajtrk · 7.00–10.00", parsed.breakfast);
       elBody.innerHTML = html;
     }
 
     const load = makeSingleFlight(async (force=false) => {
-      setLoading(elBody, force ? "Osvežujem Atrio 151…" : "Nalagam Atrio 151…");
-      elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+      if (countItems(parsed) > 0){
+        render();
+        elStatus.textContent = "Preverjam nov meni…";
+      } else {
+        setLoading(elBody, force ? "Osvežujem Atrio 151…" : "Nalagam Atrio 151…");
+        elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+      }
       try{
         parsed = await fetchAtrio();
         elStatus.textContent = "Posodobljeno";
