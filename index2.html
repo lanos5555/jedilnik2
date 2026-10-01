@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Malice – Femec, Vinka, Rotonda, Mooi 151</title>
+  <title>Malice – Femec, Vinka, Rotonda, Atrio 151</title>
 
   <style>
     :root{
@@ -736,7 +736,7 @@
         <div class="logo" aria-hidden="true"><span>🍽️</span></div>
         <div class="titleBox">
           <h1>Malice na enem mestu</h1>
-          <p>Femec · Vinka · Rotonda · Mooi 151 — hitro, pregledno</p>
+          <p>Femec · Vinka · Rotonda · Atrio 151 — hitro, pregledno</p>
         </div>
       </div>
 
@@ -852,62 +852,30 @@
         </div>
       </section>
 
-      <!-- MOOI 151 -->
-      <section class="res" id="mooiWidget" aria-label="Mooi 151">
+      <!-- ATRIO 151 -->
+      <section class="res" id="atrioWidget" aria-label="Atrio 151">
         <div class="resHead">
           <div>
             <h2 class="resName">
-              <a href="https://www.mooi151.com/" target="_blank" rel="noopener">Mooi 151</a>
-              <span class="badge">Malice: 10:00–16:00</span>
+              <a href="https://atrio151.si/#meni" target="_blank" rel="noopener">Atrio 151</a>
+              <span class="badge">Zajtrk · kosilo · stalna ponudba</span>
             </h2>
           </div>
           <div class="meta">
             <div class="metaRow">
-              <span class="status" id="statusMooi">Pripravljeno</span>
+              <button class="btn secondary" id="refreshAtrio" type="button">Osveži</button>
+              <span class="status" id="statusAtrio">Nalaganje…</span>
             </div>
-            <span class="updated" id="updatedMooi">Klikni sliko za povečavo</span>
+            <span class="updated" id="updatedAtrio" hidden></span>
           </div>
         </div>
-
         <div class="resBody">
           <div class="panel">
             <div class="panelTitle">
               <b>Meni</b>
-              <span class="dayTag">Slike <small>· klik za povečavo</small></span>
+              <span class="dayTag" id="atrioDayTag">—</span>
             </div>
-
-            <div class="imgGrid">
-              <!-- Mooi 151 (AUTO iz Workerja) -->
-              <div class="imgCard" id="mooi151Card" data-modal-title="Mooi 151 – Meni" data-modal-src="">
-                <img
-                  id="mooi151Img"
-                  src=""
-                  alt="Mooi 151 meni"
-                  loading="lazy"
-                />
-                <div class="imgCap">Mooi 151</div>
-              </div>
-
-              <!-- Mooi Thai (ostane hardcoded) -->
-              <div class="imgCard" data-modal-title="Mooi Thai – Meni" data-modal-src="https://static.wixstatic.com/media/d5b4b8_a9bc699328804631b69ea09b73e8618f~mv2.png/v1/crop/x_4,y_0,w_3367,h_4219/fill/w_980,h_1228,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/2026-01-mooi-Thai-2.png">
-                <img
-                  src="https://static.wixstatic.com/media/d5b4b8_a9bc699328804631b69ea09b73e8618f~mv2.png/v1/crop/x_4,y_0,w_3367,h_4219/fill/w_490,h_614,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/2026-01-mooi-Thai-2.png"
-                  alt="Mooi Thai meni"
-                  loading="lazy"
-                />
-                <div class="imgCap">Mooi Thai</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="sectionHeader">Stalna ponudba s pijačo</div>
-            <div id="mooiPijacaBody"></div>
-
-            <div style="height:10px"></div>
-
-            <div class="sectionHeader">Stalna ponudba brez pijače</div>
-            <div id="mooiBrezBody"></div>
+            <div id="atrioBody"></div>
           </div>
         </div>
       </section>
@@ -916,17 +884,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <div class="modal" id="modal" aria-hidden="true">
-    <div class="modalPanel" role="dialog" aria-modal="true" aria-label="Povečana slika menija">
-      <div class="modalTop">
-        <b id="modalTitle">Meni</b>
-        <button class="modalClose" id="modalClose" type="button">✕</button>
-      </div>
-      <div class="modalImgWrap">
-        <img id="modalImg" alt="Povečana slika menija" />
-      </div>
-    </div>
-  </div>
 
 <script>
 (() => {
@@ -934,11 +891,9 @@
   const VINKA_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/vinka";
   const ROTONDA_PROXY_URL = "https://femec-proxy.lanos5555.workers.dev/api/rotonda";
   const VINKA_SOURCE_URL  = "https://www.vinka.si/malice-in-kosila.html";
+  const ATRIO_SOURCE_URL  = "https://atrio151.si/";
   const ALLORIGINS_RAW_URL = "https://api.allorigins.win/raw?url=";
   const JINA_READER_URL = "https://r.jina.ai/";
-
-  // Mooi 151: auto pridobi URL slike iz Workerja
-  const MOOI151_IMAGE_API = "https://mooi151imagemenu.lanos5555.workers.dev/api/mooi151-image";
 
   const FETCH_TIMEOUT_MS = 8500;
 
@@ -980,23 +935,6 @@
   function bust(u){
     if (!u) return u;
     return u + (u.includes("?") ? "&" : "?") + "v=" + Date.now();
-  }
-
-  async function loadMooi151Image(){
-    try{
-      const r = await fetch(MOOI151_IMAGE_API, { cache: "no-store" });
-      const j = await r.json();
-      if (!j.ok) throw new Error(j.msg || "no ok");
-
-      const img = document.getElementById("mooi151Img");
-      const card = document.getElementById("mooi151Card");
-      if (!img || !card) return;
-
-      img.src = bust(j.thumb);
-      card.setAttribute("data-modal-src", j.full || j.thumb);
-    } catch(e){
-      console.error("Mooi151 image load failed", e);
-    }
   }
 
   function escapeHtml(s){
@@ -1162,7 +1100,7 @@
     femec.render();
     vinka.render();
     rotonda.render();
-    renderMooiFixed();
+    atrio.render();
   }
   searchBox.addEventListener("input", (e) => applySearch(e.target.value || ""));
   clearSearch.addEventListener("click", () => {
@@ -1955,99 +1893,281 @@
   })();
 
   // ==============================
-  // MOOI – stalna ponudba (fiksno)
+  // ATRIO 151
   // ==============================
-  const MOOI_S_PIJACO = [
-    { title: "Pečen piščančji file", details: ["(pire krompir, baby korenček, naravna omaka)"], price: "10,90€" },
-    { title: "Njoki s telečjimi koščki", details: [], price: "11,90€" },
-    { title: "Pljukanci z ratatouille", details: ["(ratatouille, mlada špinača, stracciatella)"], price: "10,90€" },
-    { title: "Mooi bowla s kuskusom – tofu/piščanec/losos", details: ["(kurkuma, mlada špinača, citrusi, rdeča pesa, Mooi koperčova omaka, edamame)"], price: "10,20€ / 10,90€ / 11,60€" },
-    { title: "Mooi bowla z rižem – tofu/piščanec/losos", details: ["(avokado, mlada špinača, hrustljava čebula, marinirana zelenjava, mooi curry omaka, edamame, rdeča pesa, sezam)"], price: "10,20€ / 10,90€ / 11,60€" }
-  ];
+  const atrio = (() => {
+    const elStatus = $("statusAtrio");
+    const elUpdated = $("updatedAtrio");
+    const elRefresh = $("refreshAtrio");
+    const elBody = $("atrioBody");
 
-  const MOOI_BREZ_PIJACE = [
-    { title: "Piščančji zrezek po dunajsko s pomfrijem", details: [], price: "9,90€" },
-    { title: "Ocvrti sir s pomfrijem", details: [], price: "9,50€" },
-    { title: "Mooi krožnik", details: ["Metuljčki v gobovi omaki z ocvrtim piščančjim zrezkom"], price: "10,50€" },
-    { title: "Klasični hamburger s pomfrijem", details: ["(solata, paradižnik, hišna omaka, pleskavica)"], price: "9,90€" }
-  ];
+    let parsed = {
+      breakfast: [],
+      lunchByDay: { ponedeljek:[], torek:[], sreda:[], cetrtek:[], petek:[] },
+      regular: []
+    };
 
-  function filterFixed(list){
-    if (!globalQuery) return list;
-    return list.filter(d => {
-      const blob = [d.title, d.price, Array.isArray(d.details) ? d.details.join(" ") : d.details].join(" ");
-      return includesQuery(blob, globalQuery);
-    });
-  }
+    function cleanLines(raw){
+      const doc = new DOMParser().parseFromString(String(raw || ""), "text/html");
+      const text = doc.body ? (doc.body.innerText || doc.body.textContent || "") : String(raw || "");
+      return text
+        .replace(/\u00a0/g, " ")
+        .replace(/\r/g, "")
+        .split("\n")
+        .map(x => x.replace(/^#+\s*/, "").replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+    }
 
-  function renderMooiFixed(){
-    const pijacaEl = $("mooiPijacaBody");
-    const brezEl = $("mooiBrezBody");
-    renderDishList(pijacaEl, filterFixed(MOOI_S_PIJACO), { titleKey:"title", detailsKey:"details", showIndex:true, priceKey:"price" });
-    renderDishList(brezEl, filterFixed(MOOI_BREZ_PIJACE), { titleKey:"title", detailsKey:"details", showIndex:true, priceKey:"price" });
-  }
+    function isPrice(line){
+      return /\d{1,3}(?:[.,]\d{1,2})?\s*€/i.test(String(line || ""));
+    }
 
-  // ==============================
-  // Modal: klik kjerkoli zapre
-  // ==============================
-  const modal = $("modal");
-  const modalImg = $("modalImg");
-  const modalTitle = $("modalTitle");
-  const modalClose = $("modalClose");
+    function splitPrice(line){
+      const m = String(line || "").match(/^(.*?)(\d{1,3}(?:[.,]\d{1,2})?\s*€(?:\s*\/\s*\d{1,3}(?:[.,]\d{1,2})?\s*€)*)\s*$/i);
+      if (!m) return { text:String(line || "").trim(), price:"" };
+      return { text:m[1].trim(), price:m[2].trim() };
+    }
 
-  function openModal({ title, src }){
-    modalTitle.textContent = title || "Meni";
-    modalImg.src = src;
-    modal.classList.add("show");
-    modal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
-  }
-  function closeModal(){
-    modal.classList.remove("show");
-    modal.setAttribute("aria-hidden", "true");
-    modalImg.src = "";
-    document.body.style.overflow = "";
-  }
+    function dayKey(line){
+      const t = String(line || "").toLocaleLowerCase("sl-SI");
+      if (t.startsWith("ponedeljek")) return "ponedeljek";
+      if (t.startsWith("torek")) return "torek";
+      if (t.startsWith("sreda")) return "sreda";
+      if (t.startsWith("četrtek") || t.startsWith("cetrtek")) return "cetrtek";
+      if (t.startsWith("petek")) return "petek";
+      return "";
+    }
 
-  modalClose.addEventListener("click", closeModal);
-  modal.addEventListener("click", () => closeModal());
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modal.classList.contains("show")) closeModal();
-  });
+    function looksLikeDay(line){
+      return /^(ponedeljek|torek|sreda|četrtek|cetrtek|petek)\b/i.test(String(line || ""));
+    }
 
-  // Klik na sliko: odpri modal (modal src vedno "bust")
-  document.querySelectorAll(".imgCard").forEach(card => {
-    card.addEventListener("click", () => {
-      openModal({
-        title: card.getAttribute("data-modal-title") || "Meni",
-        src: bust(card.getAttribute("data-modal-src") || "")
+    function sectionStart(lines, labels){
+      return lines.findIndex(l => labels.some(x => l.toLocaleLowerCase("sl-SI") === x.toLocaleLowerCase("sl-SI")));
+    }
+
+    function toItems(lines){
+      const out = [];
+      let buffer = [];
+      const flush = (price="") => {
+        if (!buffer.length) return;
+        out.push({ title:buffer[0], details:buffer.slice(1), price });
+        buffer = [];
+      };
+
+      for (const raw of lines){
+        const line = raw.trim();
+        if (!line) continue;
+        if (isPrice(line)){
+          const p = splitPrice(line);
+          if (p.text) buffer.push(p.text);
+          const pm = line.match(/\d{1,3}(?:[.,]\d{1,2})?\s*€/i);
+          flush(p.price || (pm ? pm[0] : ""));
+        } else {
+          buffer.push(line);
+        }
+      }
+      flush("");
+      return out.filter(x => x.title);
+    }
+
+    function parseAtrio(raw){
+      const lines = cleanLines(raw);
+      const out = {
+        breakfast: [],
+        lunchByDay: { ponedeljek:[], torek:[], sreda:[], cetrtek:[], petek:[] },
+        regular: []
+      };
+
+      const iBreakfast = sectionStart(lines, ["Zajtrk"]);
+      const iLunch = sectionStart(lines, ["Dnevno kosilo", "Kosilo"]);
+      const iRegular = sectionStart(lines, ["Stalna ponudba"]);
+
+      if (iBreakfast >= 0) {
+        const end = [iLunch, iRegular].filter(i => i > iBreakfast).sort((a,b)=>a-b)[0] ?? lines.length;
+        out.breakfast = toItems(lines.slice(iBreakfast + 1, end));
+      }
+
+      if (iLunch >= 0) {
+        const end = (iRegular > iLunch) ? iRegular : lines.length;
+        const lunchLines = lines.slice(iLunch + 1, end);
+        let currentDay = "";
+        let bucket = [];
+        const pushBucket = () => {
+          if (currentDay && bucket.length) out.lunchByDay[currentDay] = toItems(bucket);
+          bucket = [];
+        };
+        for (const line of lunchLines){
+          if (looksLikeDay(line)){
+            pushBucket();
+            currentDay = dayKey(line);
+          } else if (currentDay) {
+            bucket.push(line);
+          }
+        }
+        pushBucket();
+      }
+
+      if (iRegular >= 0) out.regular = toItems(lines.slice(iRegular + 1));
+
+      if (!Object.values(out.lunchByDay).some(x => x.length)) {
+        let currentDay = "";
+        let bucket = [];
+        const pushBucket = () => {
+          if (currentDay && bucket.length) out.lunchByDay[currentDay] = toItems(bucket);
+          bucket = [];
+        };
+        for (const line of lines){
+          if (looksLikeDay(line)){
+            pushBucket();
+            currentDay = dayKey(line);
+          } else if (currentDay) {
+            if (/^(zajtrk|stalna ponudba)$/i.test(line)) {
+              pushBucket();
+              currentDay = "";
+            } else {
+              bucket.push(line);
+            }
+          }
+        }
+        pushBucket();
+      }
+
+      return out;
+    }
+
+    function countItems(data){
+      return (data.breakfast?.length || 0) +
+        (data.regular?.length || 0) +
+        Object.values(data.lunchByDay || {}).reduce((n, arr) => n + (arr?.length || 0), 0);
+    }
+
+    async function fetchAtrio(){
+      const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const direct = `${ATRIO_SOURCE_URL}?_cb=${encodeURIComponent(token)}`;
+      const sources = [
+        `${ALLORIGINS_RAW_URL}${encodeURIComponent(direct)}&_cb=${encodeURIComponent(token)}`,
+        `${JINA_READER_URL}${direct}`
+      ];
+      let lastError = null;
+      for (const url of sources){
+        try{
+          const raw = await fetchTextWithRetry(url, { retries:0, timeoutMs:15000 });
+          const data = parseAtrio(raw);
+          if (countItems(data) > 0) return data;
+          throw new Error("Ponudbe ni bilo mogoče prepoznati.");
+        }catch(e){
+          lastError = e;
+        }
+      }
+      throw lastError || new Error("Atrio 151 meni ni dosegljiv.");
+    }
+
+    function filtered(list){
+      if (!globalQuery) return list || [];
+      return (list || []).filter(d => {
+        const blob = [d.title, d.price, ...(d.details || [])].join(" ");
+        return includesQuery(blob, globalQuery);
       });
+    }
+
+    function section(title, items){
+      const list = filtered(items);
+      let html = `<div class="sectionHeader">${escapeHtml(title)}</div>`;
+      html += list.length
+        ? renderDishCardsHtml(list, { startIndex:1 })
+        : `<p class="muted">${globalQuery ? "Ni zadetkov za iskanje." : "Ponudba ni na voljo."}</p>`;
+      return html;
+    }
+
+    function render(){
+      let html = "";
+      html += section("Zajtrk · 7.00–10.00", parsed.breakfast);
+      html += `<div style="height:10px"></div>`;
+      html += section("Dnevno kosilo · 10.00–15.00", parsed.lunchByDay?.[globalDayKey] || []);
+      html += `<div style="height:10px"></div>`;
+      html += section("Stalna ponudba", parsed.regular);
+      elBody.innerHTML = html;
+    }
+
+    const load = makeSingleFlight(async (force=false) => {
+      setLoading(elBody, force ? "Osvežujem Atrio 151…" : "Nalagam Atrio 151…");
+      elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
+      try{
+        parsed = await fetchAtrio();
+        elStatus.textContent = "Posodobljeno";
+        setUpdated(elUpdated, now());
+        render();
+      }catch(e){
+        setError(elBody, "Atrio 151 meni ni dosegljiv.");
+        elStatus.textContent = "Napaka";
+        console.error(e);
+      }
     });
-  });
+
+    elRefresh.addEventListener("click", () => {
+      withCooldown(elRefresh, CLICK_COOLDOWN_MS);
+      load(true);
+      toast("Osvežujem: Atrio 151");
+    });
+
+    return { load, render, refreshBtn:elRefresh };
+  })();
 
   // ==============================
-  // Global refresh
+  // Global refresh + samodejno osveževanje
   // ==============================
   const refreshAllBtn = $("refreshAll");
   const globalStatus = $("globalStatus");
+  let lastAutoRefresh = 0;
+  let lastKnownDayKey = getDefaultDayKey();
 
-  refreshAllBtn.addEventListener("click", async () => {
-    withCooldown([refreshAllBtn, femec.refreshBtn, vinka.refreshBtn, rotonda.refreshBtn], CLICK_COOLDOWN_MS);
+  async function refreshAllMenus({ showToast=false } = {}){
+    const currentDayKey = getDefaultDayKey();
+    if (currentDayKey !== lastKnownDayKey){
+      lastKnownDayKey = currentDayKey;
+      globalDayKey = currentDayKey;
+      updateDayPill();
+      setDayTags();
+      renderDayChips();
+    }
+
     globalStatus.textContent = "Osvežujem…";
-    toast("Osvežujem vse menije…");
+    if (showToast) toast("Osvežujem vse menije…");
 
     await Promise.allSettled([
       femec.load(true),
       vinka.load(true),
       rotonda.load(true),
+      atrio.load(true)
     ]);
 
-    // osveži tudi Mooi 151 sliko
-    loadMooi151Image();
-
+    lastAutoRefresh = Date.now();
     globalStatus.textContent = "Pripravljeno";
-    toast("Končano");
+    if (showToast) toast("Končano");
+  }
+
+  refreshAllBtn.addEventListener("click", async () => {
+    withCooldown(
+      [refreshAllBtn, femec.refreshBtn, vinka.refreshBtn, rotonda.refreshBtn, atrio.refreshBtn],
+      CLICK_COOLDOWN_MS
+    );
+    await refreshAllMenus({ showToast:true });
   });
+
+  window.addEventListener("pageshow", () => {
+    if (Date.now() - lastAutoRefresh > 60 * 1000) refreshAllMenus();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && Date.now() - lastAutoRefresh > 60 * 1000){
+      refreshAllMenus();
+    }
+  });
+
+  setInterval(() => {
+    if (document.visibilityState === "visible") refreshAllMenus();
+  }, 5 * 60 * 1000);
 
   // ==============================
   // Init
@@ -2055,18 +2175,7 @@
   updateDayPill();
   setDayTags();
   renderDayChips();
-
-  femec.load(false);
-  vinka.load(false);
-  rotonda.load(false);
-
-  femec.render();
-  vinka.render();
-  rotonda.render();
-  renderMooiFixed();
-
-  // Mooi 151 slika iz Workerja
-  loadMooi151Image();
+  refreshAllMenus();
 })();
 </script>
 </body>
