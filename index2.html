@@ -213,7 +213,7 @@
     .btn:disabled{ opacity:.5; cursor:not-allowed; transform:none !important; }
 
     .hero{
-      margin-bottom: 32px;
+      margin-bottom: 24px;
       padding: 0;
       border: 0;
       background: transparent;
@@ -321,7 +321,7 @@
 
     .grid{
       display:grid;
-      gap: 24px;
+      gap: 20px;
       grid-template-columns: repeat(1, minmax(0,1fr));
     }
     @media (min-width: 768px){
@@ -333,20 +333,21 @@
 
     .res{
       background: var(--card-bg);
-      border-radius: var(--radius-2xl);
-      border: 1px solid var(--border-light);
+      border-radius: 22px;
+      border: 1px solid #e6ebf2;
       overflow:hidden;
-      box-shadow: var(--shadow-md);
-      transition: all var(--transition-normal);
+      box-shadow: 0 8px 24px rgba(15,23,42,.06);
+      transition: box-shadow var(--transition-normal), transform var(--transition-normal);
       display:flex;
       flex-direction:column;
       min-width:0;
     }
-    .res:hover{ box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+    .res:hover{ box-shadow: 0 14px 34px rgba(15,23,42,.10); transform: translateY(-2px); }
 
     .resHead{
-      padding: 20px;
-      border-bottom: 1px solid var(--border-light);
+      padding: 20px 20px 18px;
+      border-bottom: 1px solid #edf1f5;
+      background: linear-gradient(180deg,#fff 0%,#fbfdff 100%);
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
@@ -371,14 +372,24 @@
       display:inline-flex;
       align-items:center;
       gap: 6px;
-      padding: 6px 12px;
+      padding: 7px 12px;
       border-radius: var(--radius-full);
       background: var(--accent-blue-light);
       color: var(--accent-blue);
-      border: 1px solid var(--border-light);
+      border: 1px solid #dbeafe;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       white-space:nowrap;
+      letter-spacing:.01em;
+    }
+    .hoursBadge::before{
+      content:"";
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:var(--accent-green);
+      box-shadow:0 0 0 3px rgba(16,185,129,.10);
+      flex:0 0 auto;
     }
 
     .meta{
@@ -423,10 +434,10 @@
     }
 
     .resBody{
-      padding: 20px;
+      padding: 18px 20px 22px;
       display:flex;
       flex-direction:column;
-      gap: 20px;
+      gap: 18px;
     }
 
     .panel{ padding: 0; border:0; background:transparent; }
@@ -440,9 +451,10 @@
       flex-wrap:wrap;
     }
     .panelTitle b{
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 800;
       color: var(--primary-text);
+      letter-spacing:.01em;
     }
 
     .dayTag{
@@ -468,13 +480,16 @@
       align-items:center;
       justify-content:space-between;
       gap: 10px;
-      padding: 12px 14px;
-      border-radius: var(--radius-lg);
-      background: var(--accent-blue-light);
-      border: 1px solid var(--border-light);
-      color: var(--accent-blue);
+      padding: 10px 2px;
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      border-bottom: 2px solid #dbeafe;
+      color: #1d4ed8;
       font-weight: 800;
-      font-size: 14px;
+      font-size: 13px;
+      letter-spacing:.02em;
+      text-transform: uppercase;
       margin: 0 0 12px;
     }
     .sectionHeader small{
@@ -484,14 +499,14 @@
     }
 
     .dish{
-      padding: 16px;
-      border-radius: var(--radius-lg);
-      background: var(--secondary-bg);
-      border: 1px solid var(--border-light);
-      margin: 0 0 12px;
-      transition: all var(--transition-fast);
+      padding: 14px 15px;
+      border-radius: 14px;
+      background: #fbfcfe;
+      border: 1px solid #e8edf3;
+      margin: 0 0 10px;
+      transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
     }
-    .dish:hover{ background: var(--surface-bg); border-color: var(--border-medium); }
+    .dish:hover{ background:#f8fafc; border-color:#d7e0ea; transform:translateY(-1px); }
 
     .dishRow{
       display:grid;
@@ -740,7 +755,7 @@
         <div class="logo" aria-hidden="true"><span>🍽️</span></div>
         <div class="titleBox">
           <h1>Malice na enem mestu</h1>
-          <p>Femec · Vinka · Rotonda · Atrio 151 — hitro, pregledno</p>
+          <p>Dnevna ponudba na enem mestu</p>
         </div>
       </div>
 
@@ -775,7 +790,7 @@
           <div>
             <h2 class="resName">
               <a href="https://www.femec.si/" target="_blank" rel="noopener">Femec</a>
-              <span class="badge">Malice: 11:00–14:00</span>
+              <span class="badge hoursBadge">Pon–Pet · 11.00–13.30</span>
             </h2>
           </div>
           <div class="meta">
@@ -790,7 +805,7 @@
         <div class="resBody">
           <div class="panel">
             <div class="panelTitle">
-              <b>Meni</b>
+              <b>Ponudba</b>
               <span class="dayTag" id="femecDayTag">—</span>
             </div>
             <div id="femecBody"></div>
@@ -804,7 +819,7 @@
           <div>
             <h2 class="resName">
               <a href="https://www.vinka.si/malice-in-kosila.html" target="_blank" rel="noopener">Vinka</a>
-              <span class="badge">Malice: 10:30–15:00</span>
+              <span class="badge hoursBadge">Pon–Pet · 10.30–15.00</span>
             </h2>
           </div>
           <div class="meta">
@@ -819,7 +834,7 @@
         <div class="resBody">
           <div class="panel">
             <div class="panelTitle">
-              <b>Meni</b>
+              <b>Ponudba</b>
               <span class="dayTag" id="vinkaDayTag">—</span>
             </div>
             <div id="vinkaBody"></div>
@@ -833,7 +848,7 @@
           <div>
             <h2 class="resName">
               <a href="https://www.rotonda.si/bistro" target="_blank" rel="noopener">Rotonda – Bistro Chika</a>
-              <span class="badge">Tedenski meni</span>
+              <span class="badge hoursBadge">Pon–Pet · 11.30–16.00</span>
             </h2>
           </div>
           <div class="meta">
@@ -848,7 +863,7 @@
         <div class="resBody">
           <div class="panel">
             <div class="panelTitle">
-              <b>Meni</b>
+              <b>Ponudba</b>
               <span class="dayTag" id="rotondaDayTag">—</span>
             </div>
             <div id="rotondaBody"></div>
@@ -862,7 +877,7 @@
           <div>
             <h2 class="resName">
               <a href="https://atrio151.si/#meni" target="_blank" rel="noopener">Atrio 151</a>
-              <span class="badge">Zajtrk · kosilo · stalna ponudba</span>
+              <span class="badge hoursBadge">Pon–Pet · 7.00–15.00</span>
             </h2>
           </div>
           <div class="meta">
@@ -876,7 +891,7 @@
         <div class="resBody">
           <div class="panel">
             <div class="panelTitle">
-              <b>Meni</b>
+              <b>Ponudba</b>
               <span class="dayTag" id="atrioDayTag">—</span>
             </div>
             <div id="atrioBody"></div>
@@ -1313,7 +1328,7 @@
         : (globalQuery ? `<p class="muted">Ni zadetkov za iskanje.</p>` : `<p class="muted">Meni še ni na voljo.</p>`);
 
       if (weekly.length){
-        html += `<div class="sectionHeader" style="margin-top:14px">Tedenska ponudba</div>`;
+        html += `<div class="sectionHeader" style="margin-top:14px">Stalna ponudba</div>`;
         html += weekly.map(w => ({
           title: w.title,
           details: [],
@@ -1727,7 +1742,7 @@
       }
 
       if (regularItems.length){
-        html += `<div class="sectionHeader">Redna ponudba (stalnice)</div>`;
+        html += `<div class="sectionHeader">Stalna ponudba</div>`;
         html += renderDishCardsHtml(regularItems, { startIndex: 1 });
       }
 
@@ -1943,7 +1958,19 @@
     function render(){
       const listRaw = parsedByDay?.[globalDayKey] || [];
       const list = filterForQuery(listRaw);
-      renderDishList(elBody, list, { titleKey:"title", detailsKey:"details", showIndex:true, priceKey:"price" });
+
+      let html = `<div class="sectionHeader">Dnevna ponudba</div>`;
+
+      if (!list.length){
+        html += globalQuery
+          ? `<p class="muted">Ni zadetkov za iskanje.</p>`
+          : `<p class="muted">Meni še ni na voljo.</p>`;
+        elBody.innerHTML = html;
+        return;
+      }
+
+      html += renderDishCardsHtml(list, { startIndex:1 });
+      elBody.innerHTML = html;
     }
 
     const load = makeSingleFlight(async (force=false) => {
@@ -2272,11 +2299,11 @@
 
     function render(){
       let html = "";
-      html += section("Malice · 10.00–15.00", parsed.lunchByDay?.[globalDayKey] || []);
+      html += section("Dnevna ponudba", parsed.lunchByDay?.[globalDayKey] || []);
       html += `<div style="height:10px"></div>`;
       html += section("Stalna ponudba", parsed.regular);
       html += `<div style="height:10px"></div>`;
-      html += section("Zajtrk · 7.00–10.00", parsed.breakfast);
+      html += section("Zajtrk", parsed.breakfast);
       elBody.innerHTML = html;
     }
 
