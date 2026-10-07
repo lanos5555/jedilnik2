@@ -1465,7 +1465,7 @@
 
   const VINKA_TIMEOUT_MS = 15000;
 
-  const ROTONDA_TIMEOUT_MS = 8500;
+  const ROTONDA_TIMEOUT_MS = 2500;
   const ROTONDA_RETRIES = 1;
 
   const CLICK_COOLDOWN_MS = 3500;
@@ -2463,65 +2463,68 @@
         console.warn("Rotonda Worker ni uspel, preverjam rezervne vire.", e);
       }
 
+      // Worker ni uspel ali ni vseboval potrjenega aktualnega tedna.
+      // Jina se je pri Rotondi izkazala kot najhitrejši rezervni vir,
+      // zato jo preverimo najprej. Počasnejše proxyje kličemo samo po potrebi.
       const token = Date.now() + "-" + Math.random().toString(36).slice(2);
       const direct = ROTONDA_SOURCE_URL + "?_cb=" + encodeURIComponent(token);
 
       const sources = [
         {
-          name:"allorigins",
+          name:"jina",
           run: () => fetchTextWithRetry(
-            ALLORIGINS_RAW_URL + encodeURIComponent(direct) + "&_cb=" + encodeURIComponent(token),
-            { retries:0, timeoutMs:9000 }
+            JINA_READER_URL + ROTONDA_SOURCE_URL,
+            { retries:0, timeoutMs:3500 }
           )
         },
         {
           name:"codetabs",
           run: () => fetchTextWithRetry(
             CODETABS_PROXY_URL + encodeURIComponent(direct),
-            { retries:0, timeoutMs:9000 }
+            { retries:0, timeoutMs:5000 }
           )
         },
         {
-          name:"jina",
+          name:"allorigins",
           run: () => fetchTextWithRetry(
-            JINA_READER_URL + ROTONDA_SOURCE_URL,
-            { retries:0, timeoutMs:10000 }
+            ALLORIGINS_RAW_URL + encodeURIComponent(direct) + "&_cb=" + encodeURIComponent(token),
+            { retries:0, timeoutMs:5000 }
           )
         }
       ];
 
-      try{
-        const valid = await Promise.any(
-          sources.map(async source => {
-            const raw = await source.run();
-            const parsed = parseRotonda(raw);
+      for (const source of sources){
+        try{
+          const raw = await source.run();
+          const parsed = parseRotonda(raw);
 
-            if (!rotondaCurrentWeek(raw) || !rotondaHasItems(parsed)){
-              throw new Error(`${source.name}: vir nima potrjenega aktualnega tedna.`);
-            }
+          if (!rotondaCurrentWeek(raw) || !rotondaHasItems(parsed)){
+            throw new Error(`${source.name}: vir nima potrjenega aktualnega tedna.`);
+          }
 
-            return { source:source.name, parsed };
-          })
-        );
-
-        // Takoj ko prvi vir vrne potrjen aktualni teden, ga uporabimo.
-        // Ne čakamo več na počasnejši AllOrigins timeout.
-        return { parsed:valid.parsed, source:valid.source };
-      }catch(error){
-        throw new Error("Aktualnega Rotonda menija trenutno ni mogoče potrditi.");
+          return { parsed, source:source.name };
+        }catch(error){
+          console.warn(`Rotonda ${source.name} ni uspel.`, error);
+        }
       }
+
+      throw new Error("Aktualnega Rotonda menija trenutno ni mogoče potrditi.");
     }
 
     function parseRotonda(html){
       const doc = new DOMParser().parseFromString(html, "text/html");
-      const fullText = doc.body ? (doc.body.innerText || doc.body.textContent || "") : (doc.documentElement?.textContent || "");
+      const fullText = doc.body
+        ? (doc.body.innerText || doc.body.textContent || "")
+        : (doc.documentElement?.textContent || "");
       const lines = normalizeLines(fullText);
 
       const startIdx = lines.findIndex(l => l.toLowerCase() === "weekly menu");
-      const endIdx = lines.findIndex(l => {
+      const endIdx = lines.findIndex((l, idx) => {
+        if (idx <= startIdx) return false;
         const low = l.toLowerCase();
         return low.includes("subscribe") || low.includes("newsletter") || low.includes("sign up");
       });
+
       const slice = (startIdx !== -1)
         ? lines.slice(startIdx + 1, endIdx !== -1 ? endIdx : lines.length)
         : lines;
@@ -2529,51 +2532,111 @@
       let i = 0;
       if (slice.length && looksLikeWeekRange(slice[0])) i = 1;
 
-      const out = { ponedeljek:[], torek:[], sreda:[], cetrtek:[], petek:[] };
+      const out = {
+        ponedeljek:[],
+        torek:[],
+        sreda:[],
+        cetrtek:[],
+        petek:[]
+      };
+
       let activeDays = [];
+
+      const priceKey = (value) =>
+        String(value || "")
+          .replace(/\s+/g, "")
+          .replace(/,/g, ".")
+          .toLowerCase();
 
       while (i < slice.length){
         const line = slice[i];
 
-        if (isDayHeadingLine(line)) { activeDays = dayHeadingToKeys(line); i++; continue; }
-        if (!activeDays.length) { i++; continue; }
-
-        if (looksLikePrice(line)) {
-          let price = line.trim();
+        if (isDayHeadingLine(line)){
+          activeDays = dayHeadingToKeys(line);
           i++;
+          continue;
+        }
 
-          while (i < slice.length && looksLikePrice(slice[i])) {
-            const p2 = slice[i].trim();
-            if (p2 !== price && !price.includes(p2)) price = price + " / " + p2;
-            i++;
-          }
+        if (!activeDays.length || !looksLikePrice(line)){
+          i++;
+          continue;
+        }
 
-          let title = "";
-          while (i < slice.length) {
-            const cand = slice[i];
-            if (isDayHeadingLine(cand) || looksLikePrice(cand)) break;
-            if (isJunkTitle(cand)) { i++; continue; }
-            title = cand.trim();
-            i++;
+        let price = line.trim();
+        const openingPriceKey = priceKey(price);
+        i++;
+
+        let title = "";
+        const details = [];
+
+        while (i < slice.length){
+          const current = slice[i];
+
+          if (isDayHeadingLine(current)){
             break;
           }
 
-          const details = [];
-          while (i < slice.length) {
-            const nxt = slice[i];
-            if (isDayHeadingLine(nxt) || looksLikePrice(nxt)) break;
-            const t = nxt.trim();
-            if (t && t !== "/" && t !== "-" && t !== "—") details.push(t);
-            i++;
+          if (looksLikePrice(current)){
+            const currentPriceKey = priceKey(current);
+
+            // Rotondin Squarespace HTML pogosto vsebuje isto ceno dvakrat:
+            // enkrat pred jedjo in še enkrat za mobilni/desktop prikaz.
+            // Enako ponovljeno ceno zato preskočimo in nadaljujemo z opisi.
+            if (currentPriceKey === openingPriceKey){
+              i++;
+              continue;
+            }
+
+            // Drugačna cena pomeni začetek naslednje jedi.
+            break;
           }
 
-          if (!title || isJunkTitle(title)) continue;
+          const text = current.trim();
+          i++;
 
-          const dish = { title, price, details };
-          for (const dk of activeDays) out[dk].push(dish);
+          if (!text || text === "/" || text === "-" || text === "—"){
+            continue;
+          }
+
+          if (!title){
+            if (isJunkTitle(text)) continue;
+            title = text;
+            continue;
+          }
+
+          // Dodatne vrstice (with side salad, optional..., pre-order...)
+          // pripadajo isti jedi, tudi če je bila vmes v HTML ponovljena cena.
+          if (!/^(weekly menu)$/i.test(text)){
+            details.push(text);
+          }
+        }
+
+        if (!title || isJunkTitle(title)){
           continue;
         }
-        i++;
+
+        // Odstrani podvojene zaporedne opise, ki jih lahko Squarespace
+        // ustvari zaradi ločenega desktop/mobile markupa.
+        const cleanDetails = [];
+        for (const detail of details){
+          if (!cleanDetails.length || cleanDetails[cleanDetails.length - 1] !== detail){
+            cleanDetails.push(detail);
+          }
+        }
+
+        const dish = {
+          title,
+          price,
+          details: cleanDetails
+        };
+
+        for (const dayKey of activeDays){
+          out[dayKey].push({
+            title:dish.title,
+            price:dish.price,
+            details:[...dish.details]
+          });
+        }
       }
 
       return out;
