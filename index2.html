@@ -1463,7 +1463,8 @@
   const FEMEC_TIMEOUT_MS = 8500;
   const FEMEC_RETRIES = 1;
 
-  const VINKA_TIMEOUT_MS = 26000;
+  const VINKA_TIMEOUT_MS = 18000;
+  const VINKA_CACHE_MAX_AGE_MS = 60 * 1000;
   const VINKA_RETRIES = 0;
   // v3: ne podeduj zastarelih Vinka rezultatov iz starega cachea
   const VINKA_CACHE_DATA_KEY = "vinka:v3:data";
@@ -2009,9 +2010,11 @@
         const data = JSON.parse(raw);
         const ts = Number(localStorage.getItem(VINKA_CACHE_TS_KEY) || 0);
 
-        // V cacheu dovolimo samo meni, ki je bil pridobljen za današnji datum.
-        // Tako stari proxy/Worker odgovor ne more preživeti v naslednji dan.
+        // V cacheu dovolimo samo današnji in zelo svež meni.
+        // Tako se včerajšnji meni nikoli ne prikaže, morebitna sprememba
+        // današnjega menija pa lahko zaostaja največ približno minuto.
         if (!isTodaySourceDate(data?.sourceDate)) return null;
+        if (!ts || (Date.now() - ts) > VINKA_CACHE_MAX_AGE_MS) return null;
 
         return { data, ts };
       }catch(e){
@@ -2151,145 +2154,41 @@
       return startOfDay(ts) === startOfDay(timestampForDayKey(globalDayKey));
     }
 
-    function makeVinkaSources(){
-      // Vinka je občutljiva na naključne query parametre na izvornem URL-ju.
-      // Zato mora ciljni URL ostati natančno tak, kot ga uporablja njihov javni meni.
-      // Cache-buster dodamo samo našemu Workerju/proxy zahtevam, ne vinka.si URL-ju.
-      const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    async function fetchBestVinka(){
+      // Vinka se zdaj pridobiva izključno prek našega Workerja.
+      // Worker uporablja Browser Run in sam preveri, da je datum menija današnji.
+      // Starih javnih proxyjev (AllOrigins/CodeTabs/Jina) ne kličemo več,
+      // ker so počasni in so pri Vinki vračali blokirane ali zastarele rezultate.
+      const result = await fetchWorkerHtml(VINKA_PROXY_URL, {
+        timeoutMs: VINKA_TIMEOUT_MS
+      });
 
-      return [
-        {
-          name:"worker",
-          label:"Worker",
-          timeoutMs:26000,
-          url:`${VINKA_PROXY_URL}?_cb=${encodeURIComponent(token)}`
-        },
-        {
-          name:"allorigins",
-          label:"AllOrigins",
-          timeoutMs:18000,
-          url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(VINKA_SOURCE_URL)}&_cb=${encodeURIComponent(token)}`
-        },
-        {
-          name:"codetabs",
-          label:"CodeTabs",
-          timeoutMs:18000,
-          url:`${CODETABS_PROXY_URL}${encodeURIComponent(VINKA_SOURCE_URL)}`
-        },
-        {
-          name:"jina",
-          label:"Jina Reader",
-          timeoutMs:20000,
-          url:`${JINA_READER_URL}${VINKA_SOURCE_URL}`
-        }
-      ];
-    }
-
-    async function fetchVinkaCandidate(source){
-      let html;
-
-      let resolvedSource = source.name;
-
-      if (source.name === "worker"){
-        const result = await fetchWorkerHtml(source.url, {
-          timeoutMs: source.timeoutMs || VINKA_TIMEOUT_MS
-        });
-        html = result.html;
-        resolvedSource = `worker/${result.source}`;
-      } else {
-        html = await fetchTextWithRetry(source.url, {
-          retries: VINKA_RETRIES,
-          timeoutMs: source.timeoutMs || VINKA_TIMEOUT_MS
-        });
+      const parsed = parseVinka(result.html);
+      if (!parsed.ok){
+        throw new Error(parsed.msg || "Vinka: menija ni bilo mogoče razčleniti.");
       }
 
-      const parsed = parseVinka(html);
-      if (!parsed.ok) throw new Error(`${source.name}: ${parsed.msg || "Parse fail"}`);
+      if (!isTodaySourceDate(parsed.sourceDate)){
+        throw new Error(
+          `Worker ni vrnil današnjega Vinkinega menija: ${parsed.sourceDate || "brez datuma"}.`
+        );
+      }
 
       return {
         ...parsed,
-        source:resolvedSource,
-        sourceTs:sourceDateTimestamp(parsed.sourceDate)
+        source: `worker/${result.source}`,
+        sourceTs: sourceDateTimestamp(parsed.sourceDate)
       };
     }
-
-    async function fetchBestVinka(){
-      const sources = makeVinkaSources();
-
-      const jobs = sources.map((source, index) =>
-        fetchVinkaCandidate(source)
-          .then(value => ({ ok:true, value, index }))
-          .catch(error => ({ ok:false, error, index }))
-      );
-
-      const pending = jobs.map((promise, index) => ({ promise, index }));
-      const valid = [];
-      const errors = [];
-
-      while (pending.length){
-        const settled = await Promise.race(
-          pending.map(entry =>
-            entry.promise.then(result => ({ result, pendingIndex:entry.index }))
-          )
-        );
-
-        const removeAt = pending.findIndex(x => x.index === settled.pendingIndex);
-        if (removeAt !== -1) pending.splice(removeAt, 1);
-
-        if (settled.result.ok){
-          const value = settled.result.value;
-          if (value?.sourceDate && value?.sourceTs){
-            valid.push(value);
-
-            // Današnji meni je po definiciji najnovejši relevanten meni.
-            // Ko ga dobimo iz kateregakoli vira, ga lahko prikažemo takoj.
-            if (isTodaySourceDate(value.sourceDate)){
-              return value;
-            }
-          }
-        } else {
-          const source = sources[settled.result.index];
-          errors.push(
-            `${source?.label || source?.name || "Vir"}: ${settled.result.error?.message || "napaka"}`
-          );
-        }
-      }
-
-      if (!valid.length){
-        throw new Error(errors.join(" | ") || "Noben Vinkin vir ni vrnil veljavnega menija.");
-      }
-
-      // Nikoli ne sprejmi starejšega menija kot uspešno današnjo osvežitev.
-      // Proxyji in Worker lahko zaradi upstream cachea vrnejo včerajšnjo vsebino.
-      const priority = { "worker/direct":5, "worker/allorigins":4, worker:4, allorigins:3, codetabs:2, jina:1 };
-      const todayValid = valid
-        .filter(v => isTodaySourceDate(v.sourceDate))
-        .sort((a, b) => (priority[b.source] || 0) - (priority[a.source] || 0));
-
-      if (todayValid.length){
-        return todayValid[0];
-      }
-
-      valid.sort((a, b) =>
-        (b.sourceTs - a.sourceTs) ||
-        ((priority[b.source] || 0) - (priority[a.source] || 0))
-      );
-
-      const newest = valid[0];
-      throw new Error(
-        `Noben Vinkin vir ni vrnil današnjega menija. Najnovejši prejeti meni: ${newest?.sourceDate || "brez datuma"} (${newest?.source || "neznan vir"}).`
-      );
-    }
-
 
     async function fetchBestVinkaWithRetry(){
       try{
         return await fetchBestVinka();
       }catch(firstError){
-        // Vinka občasno začasno blokira avtomatizirane klice.
-        // Ker je aktualnost pomembnejša od hitrosti, naredimo še en čist poskus
-        // z novim cache-busterjem in novimi zahtevami.
-        await new Promise(resolve => setTimeout(resolve, 1800));
+        // En sam kratek ponovni poskus je dovolj za prehodne Browser Run napake.
+        // Ne čakamo več na tri zunanje proxyje.
+        await new Promise(resolve => setTimeout(resolve, 600));
+
         try{
           return await fetchBestVinka();
         }catch(secondError){
