@@ -2563,6 +2563,31 @@
           .replace(/,/g, ".")
           .toLowerCase();
 
+      const isLikelyDetail = (text) => {
+        const t = String(text || "").trim().toLowerCase();
+        return (
+          !t ||
+          t === "/" ||
+          t === "-" ||
+          t === "—" ||
+          t.startsWith("with ") ||
+          t.startsWith("optional") ||
+          t.startsWith("add:") ||
+          t.startsWith("homemade ") ||
+          t.startsWith("pre-order") ||
+          t.startsWith("preorder") ||
+          t.startsWith("fish /") ||
+          t.startsWith("vegetable soup") ||
+          t.startsWith("side ")
+        );
+      };
+
+      const isLikelyTitle = (text) => {
+        const t = String(text || "").trim();
+        if (!t || isJunkTitle(t) || isLikelyDetail(t)) return false;
+        return /^[A-ZÀ-Ž]/.test(t);
+      };
+
       while (i < slice.length){
         const line = slice[i];
 
@@ -2577,8 +2602,8 @@
           continue;
         }
 
-        let price = line.trim();
-        const openingPriceKey = priceKey(price);
+        const openingPrice = line.trim();
+        const openingPriceKey = priceKey(openingPrice);
         i++;
 
         let title = "";
@@ -2594,16 +2619,35 @@
           if (looksLikePrice(current)){
             const currentPriceKey = priceKey(current);
 
-            // Rotondin Squarespace HTML pogosto vsebuje isto ceno dvakrat:
-            // enkrat pred jedjo in še enkrat za mobilni/desktop prikaz.
-            // Enako ponovljeno ceno zato preskočimo in nadaljujemo z opisi.
-            if (currentPriceKey === openingPriceKey){
-              i++;
-              continue;
+            if (currentPriceKey !== openingPriceKey){
+              // Drugačna cena pomeni začetek naslednje jedi.
+              break;
             }
 
-            // Drugačna cena pomeni začetek naslednje jedi.
-            break;
+            // Ista cena je pri Rotondi pogosto samo podvojena zaradi
+            // ločenega desktop/mobile markupa. Vendar lahko naslednja jed
+            // stane popolnoma enako (npr. Chicken in Teriyaki oba €12,90).
+            //
+            // Zato pogledamo naslednjo vsebinsko vrstico:
+            // - "with side salad", "optional..." ipd. => ista jed
+            // - nova vrstica z naslovom jedi => meja med dvema jedema
+            let j = i + 1;
+            while (j < slice.length && looksLikePrice(slice[j])) j++;
+
+            const nextText = j < slice.length ? slice[j].trim() : "";
+
+            if (
+              title &&
+              isLikelyTitle(nextText)
+            ){
+              // Pusti trenutno ceno na mestu, da jo zunanji loop uporabi
+              // kot začetno ceno naslednje jedi.
+              break;
+            }
+
+            // Sicer gre za podvojeno ceno trenutne jedi.
+            i++;
+            continue;
           }
 
           const text = current.trim();
@@ -2619,8 +2663,6 @@
             continue;
           }
 
-          // Dodatne vrstice (with side salad, optional..., pre-order...)
-          // pripadajo isti jedi, tudi če je bila vmes v HTML ponovljena cena.
           if (!/^(weekly menu)$/i.test(text)){
             details.push(text);
           }
@@ -2630,8 +2672,6 @@
           continue;
         }
 
-        // Odstrani podvojene zaporedne opise, ki jih lahko Squarespace
-        // ustvari zaradi ločenega desktop/mobile markupa.
         const cleanDetails = [];
         for (const detail of details){
           if (!cleanDetails.length || cleanDetails[cleanDetails.length - 1] !== detail){
@@ -2641,7 +2681,7 @@
 
         const dish = {
           title,
-          price,
+          price: openingPrice,
           details: cleanDetails
         };
 
