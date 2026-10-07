@@ -1463,7 +1463,7 @@
   const FEMEC_TIMEOUT_MS = 8500;
   const FEMEC_RETRIES = 1;
 
-  const VINKA_TIMEOUT_MS = 18000;
+  const VINKA_TIMEOUT_MS = 9000;
 
   const ROTONDA_TIMEOUT_MS = 8500;
   const ROTONDA_RETRIES = 1;
@@ -2163,7 +2163,7 @@
       }catch(firstError){
         // En sam kratek ponovni poskus je dovolj za prehodne Browser Run napake.
         // Ne čakamo več na tri zunanje proxyje.
-        await new Promise(resolve => setTimeout(resolve, 600));
+        await new Promise(resolve => setTimeout(resolve, 250));
 
         try{
           return await fetchBestVinka();
@@ -2490,29 +2490,26 @@
         }
       ];
 
-      const results = await Promise.all(
-        sources.map(async source => {
-          try{
+      try{
+        const valid = await Promise.any(
+          sources.map(async source => {
             const raw = await source.run();
             const parsed = parseRotonda(raw);
 
             if (!rotondaCurrentWeek(raw) || !rotondaHasItems(parsed)){
-              throw new Error("Vir nima potrjenega aktualnega tedna.");
+              throw new Error(`${source.name}: vir nima potrjenega aktualnega tedna.`);
             }
 
-            return { ok:true, source:source.name, parsed };
-          }catch(error){
-            return { ok:false, source:source.name, error };
-          }
-        })
-      );
+            return { source:source.name, parsed };
+          })
+        );
 
-      const valid = results.find(r => r.ok);
-      if (!valid){
+        // Takoj ko prvi vir vrne potrjen aktualni teden, ga uporabimo.
+        // Ne čakamo več na počasnejši AllOrigins timeout.
+        return { parsed:valid.parsed, source:valid.source };
+      }catch(error){
         throw new Error("Aktualnega Rotonda menija trenutno ni mogoče potrditi.");
       }
-
-      return { parsed:valid.parsed, source:valid.source };
     }
 
     function parseRotonda(html){
@@ -2920,9 +2917,9 @@
         }
       ];
 
-      const results = await Promise.all(
-        sources.map(async source => {
-          try{
+      try{
+        const valid = await Promise.any(
+          sources.map(async source => {
             const raw = await fetchTextWithRetry(source.url, {
               retries:0,
               timeoutMs:source.timeoutMs
@@ -2932,25 +2929,18 @@
             const week = atrioSourceWeekTs(raw);
 
             if (countItems(data) <= 0 || !week.currentWeek){
-              throw new Error("Vir ne vsebuje potrjenega aktualnega tedna.");
+              throw new Error(`${source.name}: vir ne vsebuje potrjenega aktualnega tedna.`);
             }
 
-            return { ok:true, data, week, source:source.name };
-          }catch(error){
-            return { ok:false, error, source:source.name };
-          }
-        })
-      );
+            return { data, week, source:source.name };
+          })
+        );
 
-      const valid = results
-        .filter(r => r.ok)
-        .sort((a,b) => b.week.newest - a.week.newest);
-
-      if (!valid.length){
+        // Takoj uporabi prvi potrjen aktualni meni.
+        return { data:valid.data, source:valid.source };
+      }catch(error){
         throw new Error("Aktualnega Atrio menija trenutno ni mogoče potrditi.");
       }
-
-      return { data:valid[0].data, source:valid[0].source };
     }
 
     function filtered(list){
