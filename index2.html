@@ -2003,25 +2003,6 @@
     let vinkaData = null;
     let lastGoodTs = 0;
 
-    function readVinkaCache(){
-      const raw = localStorage.getItem(VINKA_CACHE_DATA_KEY);
-      if (!raw) return null;
-      try{
-        const data = JSON.parse(raw);
-        const ts = Number(localStorage.getItem(VINKA_CACHE_TS_KEY) || 0);
-
-        // V cacheu dovolimo samo današnji in zelo svež meni.
-        // Tako se včerajšnji meni nikoli ne prikaže, morebitna sprememba
-        // današnjega menija pa lahko zaostaja največ približno minuto.
-        if (!isTodaySourceDate(data?.sourceDate)) return null;
-        if (!ts || (Date.now() - ts) > VINKA_CACHE_MAX_AGE_MS) return null;
-
-        return { data, ts };
-      }catch(e){
-        return null;
-      }
-    }
-
     function cleanHtmlToText(htmlSnippet){
       const withBreaks = String(htmlSnippet || "")
         .replace(/<br\s*\/?>/gi, "\n")
@@ -2326,8 +2307,6 @@
           };
           lastGoodTs = Date.now();
 
-          localStorage.setItem(VINKA_CACHE_DATA_KEY, JSON.stringify(vinkaData));
-          localStorage.setItem(VINKA_CACHE_TS_KEY, String(lastGoodTs));
         }
 
         elStatus.textContent = vinkaData?.sourceDate
@@ -2346,25 +2325,6 @@
         console.error("Vinka refresh failed", error);
       }
 
-      const cached = readVinkaCache();
-      if (cached) {
-        try{
-          vinkaData = cached.data;
-          lastGoodTs = cached.ts || 0;
-          elStatus.textContent = vinkaData?.sourceDate
-            ? (isVinkaFreshForDisplay() ? `Meni: ${vinkaData.sourceDate}` : `Ni aktualnega menija`)
-            : "Zadnji uspešen meni";
-          setUpdated(
-            elUpdated,
-            lastGoodTs || now(),
-            "cache",
-            vinkaData?.sourceDate ? `meni: ${vinkaData.sourceDate}` : ""
-          );
-          render();
-          return;
-        } catch(e){}
-      }
-
       setError(
         elBody,
         "Aktualnega Vinkinega menija trenutno ni mogoče potrditi. Poskusi osvežiti čez nekaj trenutkov."
@@ -2379,25 +2339,9 @@
       toast("Osvežujem: Vinka");
     });
 
-    (() => {
-      const cached = readVinkaCache();
-      if (cached) {
-        try{
-          vinkaData = cached.data;
-          lastGoodTs = cached.ts || 0;
-          elStatus.textContent = vinkaData?.sourceDate
-            ? `Zadnji meni: ${vinkaData.sourceDate}`
-            : "Zadnji uspešen meni";
-          setUpdated(
-            elUpdated,
-            lastGoodTs || now(),
-            "cache",
-            vinkaData?.sourceDate ? `meni: ${vinkaData.sourceDate}` : ""
-          );
-        } catch(e){}
-      }
-      render();
-    })();
+    // Ob zagonu ne prikazujemo lokalno shranjene Vinka vsebine.
+    // Vedno počakamo na sveže, datumsko potrjeno vsebino Workerja.
+    render();
 
     return { load, render, refreshBtn: elRefresh };
   })();
