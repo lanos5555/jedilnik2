@@ -1465,8 +1465,9 @@
 
   const VINKA_TIMEOUT_MS = 26000;
   const VINKA_RETRIES = 0;
-  const VINKA_CACHE_DATA_KEY = "vinka:v2:data";
-  const VINKA_CACHE_TS_KEY = "vinka:v2:lastGoodTs";
+  // v3: ne podeduj zastarelih Vinka rezultatov iz starega cachea
+  const VINKA_CACHE_DATA_KEY = "vinka:v3:data";
+  const VINKA_CACHE_TS_KEY = "vinka:v3:lastGoodTs";
 
   const ROTONDA_TIMEOUT_MS = 8500;
   const ROTONDA_RETRIES = 1;
@@ -2001,29 +2002,20 @@
     let lastGoodTs = 0;
 
     function readVinkaCache(){
-      const candidates = [
-        {
-          dataKey:VINKA_CACHE_DATA_KEY,
-          tsKey:VINKA_CACHE_TS_KEY
-        },
-        {
-          // Enkratna združljivost s predpomnilnikom iz prvotne kode.
-          dataKey:"vinka:data",
-          tsKey:"vinka:lastGoodTs"
-        }
-      ];
+      const raw = localStorage.getItem(VINKA_CACHE_DATA_KEY);
+      if (!raw) return null;
+      try{
+        const data = JSON.parse(raw);
+        const ts = Number(localStorage.getItem(VINKA_CACHE_TS_KEY) || 0);
 
-      for (const candidate of candidates){
-        const raw = localStorage.getItem(candidate.dataKey);
-        if (!raw) continue;
-        try{
-          return {
-            data:JSON.parse(raw),
-            ts:Number(localStorage.getItem(candidate.tsKey) || 0)
-          };
-        }catch(e){}
+        // V cacheu dovolimo samo meni, ki je bil pridobljen za današnji datum.
+        // Tako stari proxy/Worker odgovor ne more preživeti v naslednji dan.
+        if (!isTodaySourceDate(data?.sourceDate)) return null;
+
+        return { data, ts };
+      }catch(e){
+        return null;
       }
-      return null;
     }
 
     function cleanHtmlToText(htmlSnippet){
@@ -2266,15 +2258,26 @@
         throw new Error(errors.join(" | ") || "Noben Vinkin vir ni vrnil veljavnega menija.");
       }
 
-      // Če današnjega menija ni vrnil noben vir, vedno izberi vsebinsko
-      // najnovejšega, ne pa prvega ali najhitrejšega odgovora.
+      // Nikoli ne sprejmi starejšega menija kot uspešno današnjo osvežitev.
+      // Proxyji in Worker lahko zaradi upstream cachea vrnejo včerajšnjo vsebino.
       const priority = { "worker/direct":5, "worker/allorigins":4, worker:4, allorigins:3, codetabs:2, jina:1 };
+      const todayValid = valid
+        .filter(v => isTodaySourceDate(v.sourceDate))
+        .sort((a, b) => (priority[b.source] || 0) - (priority[a.source] || 0));
+
+      if (todayValid.length){
+        return todayValid[0];
+      }
+
       valid.sort((a, b) =>
         (b.sourceTs - a.sourceTs) ||
         ((priority[b.source] || 0) - (priority[a.source] || 0))
       );
 
-      return valid[0];
+      const newest = valid[0];
+      throw new Error(
+        `Noben Vinkin vir ni vrnil današnjega menija. Najnovejši prejeti meni: ${newest?.sourceDate || "brez datuma"} (${newest?.source || "neznan vir"}).`
+      );
     }
 
 
@@ -2353,7 +2356,7 @@
         elBody.innerHTML = `
           <div class="err">
             Aktualnega Vinkinega menija za izbrani dan ni mogoče potrditi.
-            ${vinkaData?.sourceDate ? `Zadnji objavljeni meni: ${escapeHtml(vinkaData.sourceDate)}.` : ""}
+            ${vinkaData?.sourceDate ? `Zadnji uspešno pridobljeni meni: ${escapeHtml(vinkaData.sourceDate)}.` : ""}
           </div>
         `;
         return;
@@ -2404,6 +2407,12 @@
 
       try {
         const p = await fetchBestVinkaWithRetry();
+
+        // Dodatna varovalka: v cache in prikaz sme samo današnji Vinkin meni.
+        if (!isTodaySourceDate(p.sourceDate)){
+          throw new Error(`Vinka je vrnila zastarel meni: ${p.sourceDate || "brez datuma"}.`);
+        }
+
         const incomingTs = p.sourceTs || 0;
         const currentTs = sourceDateTimestamp(vinkaData?.sourceDate);
 
