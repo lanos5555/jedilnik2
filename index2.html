@@ -2158,21 +2158,10 @@
     }
 
     async function fetchBestVinkaWithRetry(){
-      try{
-        return await fetchBestVinka();
-      }catch(firstError){
-        // En sam kratek ponovni poskus je dovolj za prehodne Browser Run napake.
-        // Ne čakamo več na tri zunanje proxyje.
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        try{
-          return await fetchBestVinka();
-        }catch(secondError){
-          const first = firstError?.message || "prvi poskus ni uspel";
-          const second = secondError?.message || "drugi poskus ni uspel";
-          throw new Error(first + " | ponovni poskus: " + second);
-        }
-      }
+      // Samo en klic Workerja na posamezno osveževanje.
+      // Browser Run ima lahko omejitve pogostosti, zato hiter avtomatski retry
+      // povzroči več škode kot koristi (naslednji klic lahko takoj dobi 502).
+      return await fetchBestVinka();
     }
 
     function startOfDay(ts){
@@ -2318,6 +2307,16 @@
       } catch (error) {
         refreshError = error?.message || "Neznana napaka.";
         console.error("Vinka refresh failed", error);
+      }
+
+      // Če imamo v pomnilniku že potrjen današnji meni, ga ob začasni
+      // napaki Browser Run ne izbrišemo. Tako uporabnik ne vidi rdeče napake
+      // samo zato, ker je kasnejše preverjanje začasno spodletelo.
+      if (vinkaData && isTodaySourceDate(vinkaData.sourceDate)){
+        elStatus.textContent = "Aktualno · preverjanje začasno ni uspelo";
+        render();
+        if (refreshError) console.warn("Vinka preverjanje:", refreshError);
+        return;
       }
 
       setError(
@@ -3078,30 +3077,45 @@
   const globalStatus = $("globalStatus");
   let lastAutoRefresh = 0;
   let lastKnownDayKey = getDefaultDayKey();
+  let globalRefreshInFlight = null;
 
-  async function refreshAllMenus({ showToast=false } = {}){
-    const currentDayKey = getDefaultDayKey();
-    if (currentDayKey !== lastKnownDayKey){
-      lastKnownDayKey = currentDayKey;
-      globalDayKey = currentDayKey;
-      updateDayPill();
-      setDayTags();
-      renderDayChips();
-    }
+  async function refreshAllMenus({ showToast=false, manual=false } = {}){
+    // Prepreči dvojno osveževanje ob začetnem load/pageshow/visibility dogodkih.
+    if (globalRefreshInFlight) return globalRefreshInFlight;
 
-    globalStatus.textContent = "Osvežujem…";
-    if (showToast) toast("Osvežujem vse menije…");
-
-    await Promise.allSettled([
-      femec.load(true),
-      vinka.load(true),
-      rotonda.load(true),
-      atrio.load(true)
-    ]);
-
+    // Čas zabeležimo že ob začetku, ne šele po koncu. S tem pageshow ne more
+    // med počasnejšim Vinka klicem sprožiti še enega globalnega osveževanja.
     lastAutoRefresh = Date.now();
-    globalStatus.textContent = "Pripravljeno";
-    if (showToast) toast("Končano");
+
+    globalRefreshInFlight = (async () => {
+      const currentDayKey = getDefaultDayKey();
+      if (currentDayKey !== lastKnownDayKey){
+        lastKnownDayKey = currentDayKey;
+        globalDayKey = currentDayKey;
+        updateDayPill();
+        setDayTags();
+        renderDayChips();
+      }
+
+      globalStatus.textContent = "Osvežujem…";
+      if (showToast) toast("Osvežujem vse menije…");
+
+      await Promise.allSettled([
+        femec.load(manual),
+        vinka.load(manual),
+        rotonda.load(manual),
+        atrio.load(manual)
+      ]);
+
+      globalStatus.textContent = "Pripravljeno";
+      if (showToast) toast("Končano");
+    })();
+
+    try{
+      await globalRefreshInFlight;
+    } finally {
+      globalRefreshInFlight = null;
+    }
   }
 
   refreshAllBtn.addEventListener("click", async () => {
@@ -3109,22 +3123,27 @@
       [refreshAllBtn, femec.refreshBtn, vinka.refreshBtn, rotonda.refreshBtn, atrio.refreshBtn],
       CLICK_COOLDOWN_MS
     );
-    await refreshAllMenus({ showToast:true });
+    await refreshAllMenus({ showToast:true, manual:true });
   });
 
+  // Ob vrnitvi na stran osveži samo, če je zadnje preverjanje starejše od 5 min.
   window.addEventListener("pageshow", () => {
-    if (Date.now() - lastAutoRefresh > 60 * 1000) refreshAllMenus();
+    if (Date.now() - lastAutoRefresh > 5 * 60 * 1000) refreshAllMenus();
   });
 
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && Date.now() - lastAutoRefresh > 60 * 1000){
+    if (
+      document.visibilityState === "visible" &&
+      Date.now() - lastAutoRefresh > 5 * 60 * 1000
+    ){
       refreshAllMenus();
     }
   });
 
+  // Redno preverjanje je dovolj na 10 min. Ročni gumb ostane takojšen.
   setInterval(() => {
     if (document.visibilityState === "visible") refreshAllMenus();
-  }, 5 * 60 * 1000);
+  }, 10 * 60 * 1000);
 
   // ==============================
   // Init
