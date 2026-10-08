@@ -2351,6 +2351,21 @@
         .filter(Boolean);
     }
 
+    // Browser Run vrne serializiran HTML. Pri DOMParser.textContent se meje
+    // med blokovnimi elementi lahko izgubijo, zato jih pred odstranitvijo
+    // tagov izrecno pretvorimo v prelome vrstic.
+    function rotondaHtmlToLines(html){
+      const structured = String(html || "")
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+        .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/(?:p|div|li|section|article|h[1-6]|tr|td|th|button|a|span|strong|em)>/gi, "\n");
+
+      const doc = new DOMParser().parseFromString(structured, "text/html");
+      const text = doc.body?.textContent || doc.documentElement?.textContent || structured;
+      return normalizeLines(text);
+    }
+
     function canonicalDayLine(line){
       return (line || "").replace(/[^A-Za-z/ ]/g, "").replace(/\s+/g, " ").trim().toUpperCase();
     }
@@ -2363,7 +2378,10 @@
       const parts = s.split("/").map(x => x.trim()).filter(Boolean);
       return parts.map(p => DAY_EN_TO_SI[p]).filter(Boolean);
     }
-    function looksLikePrice(s){ return /^€\s*\d/.test(s) || /^€\d/.test(s); }
+    function looksLikePrice(s){
+      const t = String(s || "").trim();
+      return /^€\s*\d/.test(t) || /^€\d/.test(t) || /^\d{1,3}(?:[.,]\d{1,2})?\s*€/.test(t);
+    }
     function looksLikeWeekRange(s){ return /^\d{1,2}\s*-\s*\d{1,2}\s+[A-Za-z]/.test(s); }
     function isJunkTitle(s){
       const t = (s || "").trim();
@@ -2446,22 +2464,22 @@
 
       const parsed = parseRotonda(worker.html);
 
-      // Dvojna varovalka: tudi frontend sprejme samo potrjen aktualni teden.
-      if (!rotondaCurrentWeek(worker.html) || !rotondaHasItems(parsed)){
-        throw new Error("Worker ni vrnil potrjenega Rotonda menija aktualnega tedna.");
+      // Aktualnost tedna preverja Worker pred zapisom v KV. Frontend zato
+      // preveri samo še, ali je iz potrjenega zapisa dejansko prebral jedi.
+      if (!rotondaHasItems(parsed)){
+        throw new Error("Potrjen Rotonda zapis je bil prejet, jedi pa niso bile razčlenjene.");
       }
 
       return { parsed, source:`worker/${worker.source}` };
     }
 
     function parseRotonda(html){
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      const fullText = doc.body
-        ? (doc.body.innerText || doc.body.textContent || "")
-        : (doc.documentElement?.textContent || "");
-      const lines = normalizeLines(fullText);
+      const lines = rotondaHtmlToLines(html);
 
-      const startIdx = lines.findIndex(l => l.toLowerCase() === "weekly menu");
+      const startIdx = lines.findIndex(l =>
+        l.toLowerCase() === "weekly menu" ||
+        l.toLowerCase().startsWith("weekly menu ")
+      );
       const endIdx = lines.findIndex((l, idx) => {
         if (idx <= startIdx) return false;
         const low = l.toLowerCase();
