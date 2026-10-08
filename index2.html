@@ -1463,7 +1463,7 @@
   const FEMEC_TIMEOUT_MS = 8500;
   const FEMEC_RETRIES = 1;
 
-  const VINKA_TIMEOUT_MS = 5000;
+  const VINKA_TIMEOUT_MS = 12000;
 
   const ROTONDA_TIMEOUT_MS = 2500;
   const ROTONDA_RETRIES = 1;
@@ -2346,7 +2346,7 @@
 
       setError(
         elBody,
-        "Današnjega Vinkinega menija trenutno še ni mogoče potrditi. Sistem ga samodejno preverja vsakih 5 minut."
+        "Današnji Vinkin meni se trenutno še pridobiva. Sistem bo poskusil znova samodejno."
       );
       elStatus.textContent = "Čakam na današnji meni";
       if (refreshError) console.warn("Vinka viri:", refreshError);
@@ -3219,7 +3219,7 @@
     ){
       vinka.load(false);
     }
-  }, 2 * 60 * 1000);
+  }, 60 * 1000);
 
   // ==============================
   // Init
