@@ -1448,25 +1448,14 @@
   const FEMEC_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/femec";
   const VINKA_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/vinka";
   const ROTONDA_PROXY_URL = "https://femec-proxy.lanos5555.workers.dev/api/rotonda";
-  const ROTONDA_SOURCE_URL = "https://www.rotonda.si/bistro";
   const ATRIO_PROXY_URL   = "https://femec-proxy.lanos5555.workers.dev/api/atrio";
-  const VINKA_SOURCE_URL  = "https://www.vinka.si/malice-in-kosila.html";
-  const ATRIO_SOURCE_URL  = "https://atrio151.si/";
-  const ATRIO_CACHE_DATA_KEY = "atrio:v1:data";
-  const ATRIO_CACHE_TS_KEY = "atrio:v1:ts";
-  const ALLORIGINS_RAW_URL = "https://api.allorigins.win/raw?url=";
-  const JINA_READER_URL = "https://r.jina.ai/";
-  const CODETABS_PROXY_URL = "https://api.codetabs.com/v1/proxy/?quest=";
 
-  const FETCH_TIMEOUT_MS = 8500;
-
-  const FEMEC_TIMEOUT_MS = 8500;
-  const FEMEC_RETRIES = 1;
-
-  const VINKA_TIMEOUT_MS = 12000;
-
-  const ROTONDA_TIMEOUT_MS = 2500;
-  const ROTONDA_RETRIES = 1;
+  // Vsi endpointi berejo preverjeno vsebino iz Cloudflare KV, zato so timeouti kratki.
+  const FETCH_TIMEOUT_MS = 5000;
+  const FEMEC_TIMEOUT_MS = 5000;
+  const VINKA_TIMEOUT_MS = 5000;
+  const ROTONDA_TIMEOUT_MS = 5000;
+  const ATRIO_TIMEOUT_MS = 5000;
 
   const CLICK_COOLDOWN_MS = 3500;
 
@@ -1537,7 +1526,7 @@
       "worker/codetabs":"Worker · CodeTabs",
       "worker/jina":"Worker · Jina",
       "worker/browser":"Worker · Browser",
-      "worker/kv":"Worker · preverjeno",
+      "worker/kv":"Preverjeno · KV",
       "worker/unknown":"Worker",
       "worker":"Worker",
       "direct":"Direct",
@@ -1621,29 +1610,6 @@
       })();
       return inflight;
     };
-  }
-
-  async function fetchTextWithTimeout(url, timeoutMs){
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), timeoutMs ?? FETCH_TIMEOUT_MS);
-    try{
-      const resp = await fetch(url, {
-        signal: ctrl.signal,
-        cache: "no-store",
-        headers:{ "Accept":"text/html,*/*" }
-      });
-      if (!resp.ok) throw new Error("HTTP " + resp.status);
-      return await resp.text();
-    } finally { clearTimeout(t); }
-  }
-
-  async function fetchTextWithRetry(url, { retries = 0, timeoutMs = FETCH_TIMEOUT_MS } = {}){
-    let last;
-    for (let i=0; i<=retries; i++){
-      try { return await fetchTextWithTimeout(url, timeoutMs ?? FETCH_TIMEOUT_MS); }
-      catch(e){ last = e; if (i < retries) await new Promise(r => setTimeout(r, 300*(i+1))); }
-    }
-    throw last;
   }
 
   async function fetchWorkerHtml(
@@ -1986,13 +1952,13 @@
       elStatus.textContent = force ? "Osvežujem…" : "Nalaganje…";
 
       try {
-        const result = await fetchWorkerHtml(FEMEC_PROXY_URL, { timeoutMs: FEMEC_TIMEOUT_MS });
+        const result = await fetchWorkerHtml(FEMEC_PROXY_URL, { timeoutMs: FEMEC_TIMEOUT_MS, cacheBust:false, cacheMode:"default" });
         parsed = parseFemecMenu(result.html);
         elStatus.textContent = "Posodobljeno";
         setUpdated(elUpdated, now(), `worker/${result.source}`);
         render();
       } catch (e) {
-        setError(elBody, "Femec meni ni dosegljiv.");
+        setError(elBody, "Aktualna Femec ponudba se trenutno še pridobiva. Sistem jo bo preveril samodejno.");
         elStatus.textContent = "Napaka";
         console.error(e);
       }
@@ -2158,10 +2124,8 @@
       // ker so počasni in so pri Vinki vračali blokirane ali zastarele rezultate.
       const result = await fetchWorkerHtml(VINKA_PROXY_URL, {
         timeoutMs: VINKA_TIMEOUT_MS,
-        // Stabilen URL je nujen, da lahko 12-sekundni Worker/browser cache zadene.
-        // Vinka Worker sam strogo preveri današnji datum pred cacheiranjem.
-        cacheBust: false,
-        cacheMode: "default"
+        cacheBust:false,
+        cacheMode:"default"
       });
 
       const parsed = parseVinka(result.html);
@@ -2474,65 +2438,20 @@
     }
 
     async function fetchRotondaVerified(){
-      // Najprej naš Worker. Če že ta vrne pravilen aktualni meni,
-      // ni razloga čakati na počasnejše rezervne proxyje.
-      try{
-        const worker = await fetchWorkerHtml(ROTONDA_PROXY_URL, { timeoutMs: ROTONDA_TIMEOUT_MS });
-        const parsed = parseRotonda(worker.html);
+      const worker = await fetchWorkerHtml(ROTONDA_PROXY_URL, {
+        timeoutMs: ROTONDA_TIMEOUT_MS,
+        cacheBust:false,
+        cacheMode:"default"
+      });
 
-        if (rotondaCurrentWeek(worker.html) && rotondaHasItems(parsed)){
-          return { parsed, source:`worker/${worker.source}` };
-        }
-      }catch(e){
-        console.warn("Rotonda Worker ni uspel, preverjam rezervne vire.", e);
+      const parsed = parseRotonda(worker.html);
+
+      // Dvojna varovalka: tudi frontend sprejme samo potrjen aktualni teden.
+      if (!rotondaCurrentWeek(worker.html) || !rotondaHasItems(parsed)){
+        throw new Error("Worker ni vrnil potrjenega Rotonda menija aktualnega tedna.");
       }
 
-      // Worker ni uspel ali ni vseboval potrjenega aktualnega tedna.
-      // Jina se je pri Rotondi izkazala kot najhitrejši rezervni vir,
-      // zato jo preverimo najprej. Počasnejše proxyje kličemo samo po potrebi.
-      const token = Date.now() + "-" + Math.random().toString(36).slice(2);
-      const direct = ROTONDA_SOURCE_URL + "?_cb=" + encodeURIComponent(token);
-
-      const sources = [
-        {
-          name:"jina",
-          run: () => fetchTextWithRetry(
-            JINA_READER_URL + ROTONDA_SOURCE_URL,
-            { retries:0, timeoutMs:3500 }
-          )
-        },
-        {
-          name:"codetabs",
-          run: () => fetchTextWithRetry(
-            CODETABS_PROXY_URL + encodeURIComponent(direct),
-            { retries:0, timeoutMs:5000 }
-          )
-        },
-        {
-          name:"allorigins",
-          run: () => fetchTextWithRetry(
-            ALLORIGINS_RAW_URL + encodeURIComponent(direct) + "&_cb=" + encodeURIComponent(token),
-            { retries:0, timeoutMs:5000 }
-          )
-        }
-      ];
-
-      for (const source of sources){
-        try{
-          const raw = await source.run();
-          const parsed = parseRotonda(raw);
-
-          if (!rotondaCurrentWeek(raw) || !rotondaHasItems(parsed)){
-            throw new Error(`${source.name}: vir nima potrjenega aktualnega tedna.`);
-          }
-
-          return { parsed, source:source.name };
-        }catch(error){
-          console.warn(`Rotonda ${source.name} ni uspel.`, error);
-        }
-      }
-
-      throw new Error("Aktualnega Rotonda menija trenutno ni mogoče potrditi.");
+      return { parsed, source:`worker/${worker.source}` };
     }
 
     function parseRotonda(html){
@@ -2762,7 +2681,7 @@
         render();
       } catch(e){
         parsedByDay = null;
-        setError(elBody, "Aktualnega Rotonda menija trenutno ni mogoče potrditi.");
+        setError(elBody, "Aktualna Rotonda ponudba se trenutno še pridobiva. Sistem jo bo preveril samodejno.");
         elStatus.textContent = "Ni potrjeno";
         console.error(e);
       }
@@ -2791,33 +2710,6 @@
       lunchByDay: { ponedeljek:[], torek:[], sreda:[], cetrtek:[], petek:[] },
       regular: []
     };
-
-    function readAtrioCache(){
-      try{
-        const raw = localStorage.getItem(ATRIO_CACHE_DATA_KEY);
-        if (!raw) return null;
-        const data = JSON.parse(raw);
-        const ts = Number(localStorage.getItem(ATRIO_CACHE_TS_KEY) || 0);
-        return { data, ts };
-      }catch(e){
-        return null;
-      }
-    }
-
-    function writeAtrioCache(data){
-      try{
-        localStorage.setItem(ATRIO_CACHE_DATA_KEY, JSON.stringify(data));
-        localStorage.setItem(ATRIO_CACHE_TS_KEY, String(Date.now()));
-      }catch(e){}
-    }
-
-    function atrioCacheLooksCurrent(data){
-      if (!data) return false;
-      const total = (data.breakfast?.length || 0) +
-        (data.regular?.length || 0) +
-        Object.values(data.lunchByDay || {}).reduce((n, arr) => n + (arr?.length || 0), 0);
-      return total > 0;
-    }
 
     function cleanLines(raw){
       const doc = new DOMParser().parseFromString(String(raw || ""), "text/html");
@@ -3007,67 +2899,21 @@
     }
 
     async function fetchAtrio(){
-      // 1) GLAVNI VIR: naš Cloudflare Worker
-      try{
-        const worker = await fetchWorkerHtml(ATRIO_PROXY_URL, { timeoutMs: 10000 });
-        const data = parseAtrio(worker.html);
-        const week = atrioSourceWeekTs(worker.html);
+      const worker = await fetchWorkerHtml(ATRIO_PROXY_URL, {
+        timeoutMs: ATRIO_TIMEOUT_MS,
+        cacheBust:false,
+        cacheMode:"default"
+      });
 
-        if (countItems(data) > 0 && week.currentWeek){
-          return { data, source:`worker/${worker.source}` };
-        }
+      const data = parseAtrio(worker.html);
+      const week = atrioSourceWeekTs(worker.html);
 
-        throw new Error("Atrio Worker ni vrnil potrjenega menija aktualnega tedna.");
-      }catch(workerError){
-        console.warn("Atrio Worker ni uspel, preverjam rezervne vire.", workerError);
+      // Dvojna varovalka: samo meni, ki pripada aktualnemu tednu.
+      if (countItems(data) <= 0 || !week.currentWeek){
+        throw new Error("Worker ni vrnil potrjenega Atrio menija aktualnega tedna.");
       }
 
-      // 2) REZERVNI VIRI: dovoljeni samo, če vsebina potrjeno pripada aktualnemu tednu
-      const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const direct = `${ATRIO_SOURCE_URL}?_cb=${encodeURIComponent(token)}`;
-
-      const sources = [
-        {
-          name:"allorigins",
-          timeoutMs:8000,
-          url:`${ALLORIGINS_RAW_URL}${encodeURIComponent(direct)}&_cb=${encodeURIComponent(token)}`
-        },
-        {
-          name:"codetabs",
-          timeoutMs:8000,
-          url:`${CODETABS_PROXY_URL}${encodeURIComponent(direct)}`
-        },
-        {
-          name:"jina",
-          timeoutMs:9000,
-          url:`${JINA_READER_URL}${direct}`
-        }
-      ];
-
-      try{
-        const valid = await Promise.any(
-          sources.map(async source => {
-            const raw = await fetchTextWithRetry(source.url, {
-              retries:0,
-              timeoutMs:source.timeoutMs
-            });
-
-            const data = parseAtrio(raw);
-            const week = atrioSourceWeekTs(raw);
-
-            if (countItems(data) <= 0 || !week.currentWeek){
-              throw new Error(`${source.name}: vir ne vsebuje potrjenega aktualnega tedna.`);
-            }
-
-            return { data, week, source:source.name };
-          })
-        );
-
-        // Takoj uporabi prvi potrjen aktualni meni.
-        return { data:valid.data, source:valid.source };
-      }catch(error){
-        throw new Error("Aktualnega Atrio menija trenutno ni mogoče potrditi.");
-      }
+      return { data, source:`worker/${worker.source}` };
     }
 
     function filtered(list){
@@ -3120,7 +2966,7 @@
           regular: []
         };
 
-        setError(elBody, "Aktualnega menija trenutno ni mogoče potrditi.");
+        setError(elBody, "Aktualna Atrio ponudba se trenutno še pridobiva. Sistem jo bo preveril samodejno.");
         elStatus.textContent = "Ni potrjeno";
         console.error(e);
       }
@@ -3205,21 +3051,10 @@
     }
   });
 
-  // Redno preverjanje je dovolj na 10 min. Ročni gumb ostane takojšen.
+  // Vsi meniji prihajajo iz KV, zato je 5-minutno preverjanje poceni in ne obremenjuje gostiln.
   setInterval(() => {
     if (document.visibilityState === "visible") refreshAllMenus();
-  }, 10 * 60 * 1000);
-
-  // Če današnji Vinkin meni še ni v KV, ga med odprto stranjo poceni
-  // preverjamo na 2 minuti. Ta klic samo bere KV in ne zaganja Browser Run-a.
-  setInterval(() => {
-    if (
-      document.visibilityState === "visible" &&
-      (!vinkaData || !isTodaySourceDate(vinkaData.sourceDate))
-    ){
-      vinka.load(false);
-    }
-  }, 60 * 1000);
+  }, 5 * 60 * 1000);
 
   // ==============================
   // Init
