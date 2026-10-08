@@ -1463,7 +1463,7 @@
   const FEMEC_TIMEOUT_MS = 8500;
   const FEMEC_RETRIES = 1;
 
-  const VINKA_TIMEOUT_MS = 15000;
+  const VINKA_TIMEOUT_MS = 5000;
 
   const ROTONDA_TIMEOUT_MS = 2500;
   const ROTONDA_RETRIES = 1;
@@ -1537,6 +1537,7 @@
       "worker/codetabs":"Worker · CodeTabs",
       "worker/jina":"Worker · Jina",
       "worker/browser":"Worker · Browser",
+      "worker/kv":"Worker · preverjeno",
       "worker/unknown":"Worker",
       "worker":"Worker",
       "direct":"Direct",
@@ -1667,7 +1668,15 @@
         headers:{ "Accept":"text/html,*/*" }
       });
 
-      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      if (!resp.ok){
+        const body = await resp.text().catch(() => "");
+        const err = new Error(
+          "HTTP " + resp.status + (body ? ": " + body.slice(0, 180) : "")
+        );
+        err.status = resp.status;
+        err.menuState = (resp.headers.get("X-Menu-State") || "").toLowerCase();
+        throw err;
+      }
 
       const html = await resp.text();
       const source = (resp.headers.get("X-Menu-Source") || "").toLowerCase();
@@ -2337,9 +2346,9 @@
 
       setError(
         elBody,
-        "Aktualnega Vinkinega menija trenutno ni mogoče potrditi. Poskusi osvežiti čez nekaj trenutkov."
+        "Današnjega Vinkinega menija trenutno še ni mogoče potrditi. Sistem ga samodejno preverja vsakih 5 minut."
       );
-      elStatus.textContent = "Ni potrjeno";
+      elStatus.textContent = "Čakam na današnji meni";
       if (refreshError) console.warn("Vinka viri:", refreshError);
     });
 
@@ -3200,6 +3209,17 @@
   setInterval(() => {
     if (document.visibilityState === "visible") refreshAllMenus();
   }, 10 * 60 * 1000);
+
+  // Če današnji Vinkin meni še ni v KV, ga med odprto stranjo poceni
+  // preverjamo na 2 minuti. Ta klic samo bere KV in ne zaganja Browser Run-a.
+  setInterval(() => {
+    if (
+      document.visibilityState === "visible" &&
+      (!vinkaData || !isTodaySourceDate(vinkaData.sourceDate))
+    ){
+      vinka.load(false);
+    }
+  }, 2 * 60 * 1000);
 
   // ==============================
   // Init
