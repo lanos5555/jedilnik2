@@ -1594,6 +1594,66 @@
     return target.getTime();
   }
 
+  function selectedDayMeta(){
+    const ts = timestampForDayKey(globalDayKey);
+    const target = new Date(ts);
+    target.setHours(0,0,0,0);
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const label = DAYS.find(x => x.key === globalDayKey)?.label || globalDayKey;
+    const date = formatDateForDayKey(globalDayKey);
+
+    return {
+      ts,
+      label,
+      date,
+      relation:
+        target.getTime() < today.getTime()
+          ? "past"
+          : (target.getTime() > today.getTime() ? "future" : "today")
+    };
+  }
+
+  function menuAvailabilityMessage(){
+    const info = selectedDayMeta();
+    const dayLabel = String(info.label || "").toLocaleLowerCase("sl-SI");
+
+    if (info.relation === "past"){
+      return `Ponudba za ${dayLabel}, ${info.date}, ni več objavljena na strani restavracije, zato je ni mogoče prikazati.`;
+    }
+
+    if (info.relation === "future"){
+      return `Ponudba za ${dayLabel}, ${info.date}, še ni objavljena. Prikazala se bo samodejno, ko jo restavracija objavi.`;
+    }
+
+    return "Današnja ponudba še ni objavljena oziroma je restavracija trenutno še ne prikazuje. Sistem jo bo preveril samodejno.";
+  }
+
+  function menuAvailabilityStatus(){
+    const relation = selectedDayMeta().relation;
+    if (relation === "past") return "Ni več objavljeno";
+    if (relation === "future") return "Še ni objavljeno";
+    return "Čakam na objavo";
+  }
+
+  function menuAvailabilityHtml(){
+    return `<p class="muted">${escapeHtml(menuAvailabilityMessage())}</p>`;
+  }
+
+  function menuTechnicalMessage(){
+    return "Ponudbe trenutno ni mogoče preveriti zaradi začasne težave pri pridobivanju podatkov. Sistem bo poskusil znova samodejno.";
+  }
+
+  function isExpectedMenuWaiting(error){
+    return Number(error?.status) === 404 || String(error?.menuState || "").toLowerCase() === "waiting";
+  }
+
+  function noSearchResultsHtml(){
+    return '<p class="muted">Za vneseni iskalni izraz ni zadetkov.</p>';
+  }
+
   function withCooldown(buttons, ms){
     const list = Array.isArray(buttons) ? buttons : [buttons];
     list.forEach(b => { if (b) b.disabled = true; });
@@ -1758,8 +1818,8 @@
   } = {}){
     if (!list || !list.length){
       el.innerHTML = globalQuery
-        ? `<p class="muted">Ni zadetkov za iskanje.</p>`
-        : `<p class="muted">Meni še ni na voljo.</p>`;
+        ? noSearchResultsHtml()
+        : menuAvailabilityHtml();
       return;
     }
 
@@ -1920,7 +1980,7 @@
       html += `<div class="sectionHeader">Dnevna ponudba</div>`;
       html += daily.length
         ? renderDishCardsHtml(daily.map(x => ({ title:x.title, details:x.details, price:"" })), { startIndex: 1 })
-        : (globalQuery ? `<p class="muted">Ni zadetkov za iskanje.</p>` : `<p class="muted">Meni še ni na voljo.</p>`);
+        : (globalQuery ? noSearchResultsHtml() : menuAvailabilityHtml());
 
       if (weekly.length){
         html += `<div class="sectionHeader" style="margin-top:14px">Stalna ponudba</div>`;
@@ -1958,8 +2018,13 @@
         setUpdated(elUpdated, now(), `worker/${result.source}`);
         render();
       } catch (e) {
-        setError(elBody, "Aktualna Femec ponudba se trenutno še pridobiva. Sistem jo bo preveril samodejno.");
-        elStatus.textContent = "Napaka";
+        if (isExpectedMenuWaiting(e)){
+          elBody.innerHTML = menuAvailabilityHtml();
+          elStatus.textContent = menuAvailabilityStatus();
+        } else {
+          setError(elBody, menuTechnicalMessage());
+          elStatus.textContent = "Začasno ni mogoče preveriti";
+        }
         console.error(e);
       }
     });
@@ -2200,24 +2265,22 @@
 
     function render(){
       if (!vinkaData){
-        elBody.innerHTML = `<p class="muted">Meni še ni na voljo.</p>`;
+        elBody.innerHTML = menuAvailabilityHtml();
+        elStatus.textContent = menuAvailabilityStatus();
         return;
       }
 
-      // Vinkin vir je dnevni. Če je objavljen meni iz prejšnjega tedna,
-      // ga ne smemo prikazati kot aktualnega.
+      // Vinka objavlja dnevni meni. Za drug izbrani dan uporabniku
+      // razložimo, ali meni še ni ali pa ni več objavljen.
       if (!isVinkaFreshForDisplay()){
-        elBody.innerHTML = `
-          <div class="err">
-            Aktualnega Vinkinega menija za izbrani dan ni mogoče potrditi.
-            ${vinkaData?.sourceDate ? `Zadnji uspešno pridobljeni meni: ${escapeHtml(vinkaData.sourceDate)}.` : ""}
-          </div>
-        `;
+        elBody.innerHTML = menuAvailabilityHtml();
+        elStatus.textContent = menuAvailabilityStatus();
         return;
       }
 
       if (isFutureSelectedDay()){
-        elBody.innerHTML = `<p class="muted">Meni še ni na voljo.</p>`;
+        elBody.innerHTML = menuAvailabilityHtml();
+        elStatus.textContent = menuAvailabilityStatus();
         return;
       }
 
@@ -2229,8 +2292,8 @@
 
       if (!dailyItems.length && !regularItems.length){
         elBody.innerHTML = globalQuery
-          ? `<p class="muted">Ni zadetkov za iskanje.</p>`
-          : `<p class="muted">Meni še ni na voljo.</p>`;
+          ? noSearchResultsHtml()
+          : menuAvailabilityHtml();
         return;
       }
 
@@ -2308,11 +2371,8 @@
         return;
       }
 
-      setError(
-        elBody,
-        "Današnji Vinkin meni se trenutno še pridobiva. Sistem bo poskusil znova samodejno."
-      );
-      elStatus.textContent = "Čakam na današnji meni";
+      elBody.innerHTML = menuAvailabilityHtml();
+      elStatus.textContent = menuAvailabilityStatus();
       if (refreshError) console.warn("Vinka viri:", refreshError);
     });
 
@@ -2715,8 +2775,8 @@
 
       if (!list.length){
         html += globalQuery
-          ? `<p class="muted">Ni zadetkov za iskanje.</p>`
-          : `<p class="muted">Meni še ni na voljo.</p>`;
+          ? noSearchResultsHtml()
+          : menuAvailabilityHtml();
         elBody.innerHTML = html;
         return;
       }
@@ -2743,8 +2803,13 @@
         render();
       } catch(e){
         parsedByDay = null;
-        setError(elBody, "Aktualna Rotonda ponudba se trenutno še pridobiva. Sistem jo bo preveril samodejno.");
-        elStatus.textContent = "Ni potrjeno";
+        if (isExpectedMenuWaiting(e)){
+          elBody.innerHTML = menuAvailabilityHtml();
+          elStatus.textContent = menuAvailabilityStatus();
+        } else {
+          setError(elBody, menuTechnicalMessage());
+          elStatus.textContent = "Začasno ni mogoče preveriti";
+        }
         console.error(e);
       }
     });
@@ -2986,18 +3051,34 @@
       });
     }
 
-    function section(title, items){
+    function section(title, items, { daySpecific=false } = {}){
       const list = filtered(items);
       let html = `<div class="sectionHeader">${escapeHtml(title)}</div>`;
-      html += list.length
-        ? renderDishCardsHtml(list, { startIndex:1 })
-        : `<p class="muted">${globalQuery ? "Ni zadetkov za iskanje." : "Ponudba ni na voljo."}</p>`;
+
+      if (list.length){
+        html += renderDishCardsHtml(list, { startIndex:1 });
+        return html;
+      }
+
+      if (globalQuery){
+        html += noSearchResultsHtml();
+        return html;
+      }
+
+      if (daySpecific){
+        html += menuAvailabilityHtml();
+      } else if (title === "Zajtrk"){
+        html += '<p class="muted">Ponudba za zajtrk trenutno ni objavljena.</p>';
+      } else {
+        html += '<p class="muted">Stalna ponudba trenutno ni objavljena.</p>';
+      }
+
       return html;
     }
 
     function render(){
       let html = "";
-      html += section("Dnevna ponudba", parsed.lunchByDay?.[globalDayKey] || []);
+      html += section("Dnevna ponudba", parsed.lunchByDay?.[globalDayKey] || [], { daySpecific:true });
       html += `<div style="height:10px"></div>`;
       html += section("Stalna ponudba", parsed.regular);
       html += `<div style="height:10px"></div>`;
@@ -3028,8 +3109,13 @@
           regular: []
         };
 
-        setError(elBody, "Aktualna Atrio ponudba se trenutno še pridobiva. Sistem jo bo preveril samodejno.");
-        elStatus.textContent = "Ni potrjeno";
+        if (isExpectedMenuWaiting(e)){
+          elBody.innerHTML = menuAvailabilityHtml();
+          elStatus.textContent = menuAvailabilityStatus();
+        } else {
+          setError(elBody, menuTechnicalMessage());
+          elStatus.textContent = "Začasno ni mogoče preveriti";
+        }
         console.error(e);
       }
     });
