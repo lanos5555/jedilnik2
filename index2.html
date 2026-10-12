@@ -2840,9 +2840,55 @@
 
     function cleanLines(raw){
       const doc = new DOMParser().parseFromString(String(raw || ""), "text/html");
-      const text = doc.body ? (doc.body.innerText || doc.body.textContent || "") : String(raw || "");
+      const root = doc.body || doc.documentElement;
+      if (!root) return [];
+
+      // Atrio ima del vsebine v gnezdenih blokih, kjer body.textContent
+      // izgubi meje med dnevom, jedjo in ceno. Zato preberemo posamezne
+      // tekstovne vozle v vrstnem redu, kot so v DOM-u.
+      const chunks = [];
+      const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
+      let node;
+      while ((node = walker.nextNode())){
+        const parent = node.parentElement;
+        if (parent && /^(SCRIPT|STYLE|NOSCRIPT|SVG)$/i.test(parent.tagName)) continue;
+
+        const value = String(node.nodeValue || "")
+          .replace(/\u00a0/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        if (value) chunks.push(value);
+      }
+
+      let text = chunks.join("\n");
+
+      // Dnevi morajo biti samostojne vrstice tudi, če jih je Atriojev
+      // markup združil z datumom ali prvo jedjo.
+      text = text.replace(
+        /\b(ponedeljek|torek|sreda|četrtek|cetrtek|petek)\s+(\d{1,2})\.\s*(\d{1,2})\.?/giu,
+        "\n$1 $2. $3.\n"
+      );
+
+      // Cene ločimo od naslova jedi. Parser spodaj podpira tako
+      // JED -> CENA kot CENA -> JED.
+      text = text
+        .replace(
+          /(€\s*\d{1,3}(?:[.,]\d{1,2})?(?:\s*\/\s*€?\s*\d{1,3}(?:[.,]\d{1,2})?)*)/g,
+          "\n$1\n"
+        )
+        .replace(
+          /((?:\d{1,3}(?:[.,]\d{1,2})?)(?:\s*\/\s*\d{1,3}(?:[.,]\d{1,2})?)*)\s*€/g,
+          "\n$1 €\n"
+        );
+
+      // Pomembne sekcije naj bodo vedno na svoji vrstici.
+      text = text
+        .replace(/\b(meni za kosilo se osveži vsak ponedeljek)\b/giu, "\n$1\n")
+        .replace(/\b(zajtrk|dnevno kosilo|stalna ponudba)\b/giu, "\n$1\n");
+
       return text
-        .replace(/\u00a0/g, " ")
         .replace(/\r/g, "")
         .split("\n")
         .map(x => x.replace(/^#+\s*/, "").replace(/\s+/g, " ").trim())
@@ -2870,7 +2916,7 @@
     }
 
     function looksLikeDay(line){
-      return /^(ponedeljek|torek|sreda|četrtek|cetrtek|petek)\b/i.test(String(line || ""));
+      return /^(ponedeljek|torek|sreda|četrtek|cetrtek|petek)\b/iu.test(String(line || "").trim());
     }
 
     function sectionStart(lines, labels){
@@ -3012,7 +3058,7 @@
       // Na strani so najprej trije gumbi (Zajtrk / Dnevno kosilo / Stalna ponudba),
       // nato dejanske jedi za zajtrk in šele nato tedenski meni.
       const lunchMarker = lines.findIndex(l =>
-        /meni za kosilo se osveži vsak ponedeljek/i.test(l)
+        /meni za kosilo.*osveži.*ponedeljek/iu.test(l)
       );
 
       if (lunchMarker === -1) return out;
