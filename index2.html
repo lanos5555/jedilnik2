@@ -2916,7 +2916,7 @@
     }
 
     function looksLikeDay(line){
-      return /^(ponedeljek|torek|sreda|četrtek|cetrtek|petek)\b/iu.test(String(line || "").trim());
+      return /^(ponedeljek|torek|sreda|četrtek|cetrtek|petek)\s+\d{1,2}\.\s*\d{1,2}\.?/iu.test(String(line || "").trim());
     }
 
     function sectionStart(lines, labels){
@@ -3080,7 +3080,7 @@
       const dayStarts = [];
       for (let i = lunchMarker + 1; i < lines.length; i++){
         if (looksLikeDay(lines[i])){
-          dayStarts.push({ index:i, key:dayKey(lines[i]) });
+          dayStarts.push({ index:i, key:dayKey(lines[i]), label:lines[i] });
         }
       }
 
@@ -3093,12 +3093,21 @@
         const items = toItems(rawDayLines);
 
         if (cur.key === "petek" && items.length > 4){
-          out.lunchByDay[cur.key] = items.slice(0, 4);
+          const lunchItems = items.slice(0, 4);
 
-          // Za stalno ponudbo uporabimo preostale že pravilno razčlenjene jedi.
-          out.regular = items.slice(4);
+          // Pri podvojenem desktop/mobile markupu obdržimo bogatejši rezultat,
+          // namesto da bi kasnejši prazen blok prepisal že pravilno prebran meni.
+          if (lunchItems.length > (out.lunchByDay[cur.key]?.length || 0)){
+            out.lunchByDay[cur.key] = lunchItems;
+          }
+
+          const regularItems = items.slice(4);
+          if (regularItems.length > (out.regular?.length || 0)){
+            out.regular = regularItems;
+          }
+
           regularStartLine = cur.index;
-        } else {
+        } else if (items.length > (out.lunchByDay[cur.key]?.length || 0)) {
           out.lunchByDay[cur.key] = items;
         }
       }
