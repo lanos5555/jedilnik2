@@ -2880,40 +2880,91 @@
     function toItems(lines){
       const out = [];
       let buffer = [];
+      let leadingPrice = "";
+
+      const normalizePrice = (value) =>
+        String(value || "").replace(/\s+/g, " ").trim();
 
       const flush = (price="") => {
-        if (!buffer.length) return;
+        const finalPrice = normalizePrice(price || leadingPrice);
+        if (!buffer.length || !finalPrice){
+          buffer = [];
+          leadingPrice = "";
+          return;
+        }
+
         out.push({
           title: buffer[0],
           details: buffer.slice(1),
-          price: String(price || "").trim()
+          price: finalPrice
         });
+
         buffer = [];
+        leadingPrice = "";
       };
 
       for (const raw of lines){
-        const line = String(raw || "").trim();
+        const line = String(raw || "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
         if (!line) continue;
 
-        // Samostojna cena: "9,60 €" ali "7 / 7,50 €".
-        const priceOnly = line.match(/^((?:\d{1,3}(?:[.,]\d{1,2})?)(?:\s*\/\s*\d{1,3}(?:[.,]\d{1,2})?)*)\s*€$/i);
-        if (priceOnly){
-          flush(priceOnly[1].replace(/\s+/g, " ") + " €");
+        // Samostojna cena: "9,60 €", "7 / 7,50 €" ali "€ 9,60".
+        const priceOnly = line.match(
+          /^(?:€\s*)?((?:\d{1,3}(?:[.,]\d{1,2})?)(?:\s*\/\s*(?:€\s*)?\d{1,3}(?:[.,]\d{1,2})?)*)\s*€?$/i
+        );
+
+        if (priceOnly && /[€]/.test(line)){
+          const price = normalizePrice(priceOnly[1] + " €");
+
+          if (leadingPrice && buffer.length){
+            // Oblika: CENA -> JED -> CENA -> JED ...
+            // Nova cena pomeni začetek naslednje jedi.
+            flush(leadingPrice);
+            leadingPrice = price;
+          } else if (buffer.length){
+            // Klasična oblika: JED -> CENA.
+            flush(price);
+          } else {
+            // Cena je pred naslovom jedi.
+            leadingPrice = price;
+          }
           continue;
         }
 
-        // Cena na koncu iste vrstice kot jed.
-        const inline = line.match(/^(.*?)\s+((?:\d{1,3}(?:[.,]\d{1,2})?)(?:\s*\/\s*\d{1,3}(?:[.,]\d{1,2})?)*)\s*€$/i);
+        // Cena na začetku iste vrstice: "12,00 € Piščančji file ..."
+        let inline = line.match(
+          /^((?:\d{1,3}(?:[.,]\d{1,2})?)(?:\s*\/\s*\d{1,3}(?:[.,]\d{1,2})?)*)\s*€\s+(.+)$/i
+        );
         if (inline){
-          if (inline[1].trim()) buffer.push(inline[1].trim());
-          flush(inline[2].replace(/\s+/g, " ") + " €");
+          if (leadingPrice && buffer.length) flush(leadingPrice);
+          out.push({
+            title: inline[2].trim(),
+            details: [],
+            price: normalizePrice(inline[1] + " €")
+          });
+          leadingPrice = "";
+          buffer = [];
+          continue;
+        }
+
+        // Cena na koncu iste vrstice: "Piščančji file ... 12,00 €".
+        inline = line.match(
+          /^(.*?)\s+((?:\d{1,3}(?:[.,]\d{1,2})?)(?:\s*\/\s*\d{1,3}(?:[.,]\d{1,2})?)*)\s*€$/i
+        );
+        if (inline){
+          const text = inline[1].trim();
+          if (text) buffer.push(text);
+          flush(inline[2]);
           continue;
         }
 
         buffer.push(line);
       }
 
-      // Element brez cene na koncu ni zanesljivo jed; ga ne dodajamo.
+      // Pri obliki CENA -> JED je zadnjo jed treba zaključiti ob koncu sekcije.
+      if (leadingPrice && buffer.length){
+        flush(leadingPrice);
+      }
+
       return out.filter(x => x.title && x.price);
     }
 
